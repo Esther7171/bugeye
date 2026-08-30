@@ -14,6 +14,14 @@ export async function fetchCrtSh(domain: string): Promise<CrtShResult> {
   return { hostnames: result.hostnames, status: result.status, error: result.error };
 }
 
+// crt.name is a second, independent certificate-transparency search source
+// used to cross-check crt.sh - its own log coverage sometimes surfaces
+// subdomains crt.sh's index misses, and vice versa.
+export async function fetchCrtName(domain: string): Promise<CrtShResult> {
+  const result = await sendToBackground({ type: 'FETCH_CRTNAME', domain });
+  return { hostnames: result.hostnames, status: result.status, error: result.error };
+}
+
 export async function fetchOtxPassiveDns(domain: string): Promise<string[]> {
   const result = await sendToBackground({
     type: 'FETCH_JSON',
