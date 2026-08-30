@@ -1,5 +1,9 @@
 # BugEye
 
+<div align="center">
+  <img width="1254" height="1254" alt="logo" src="https://github.com/user-attachments/assets/e26102fa-658e-4d6c-9c80-5f88a726b0f2" />
+</div>
+
 **BugEye - spot what others miss**
 
 A minimal-permission MV3 browser extension for passive recon, OSINT and web-app
