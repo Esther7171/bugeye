@@ -211,6 +211,35 @@ async function handleFetchCrtshCerts(rawDomain: string): Promise<BgResponseMap['
   return { ok: true, entries, status };
 }
 
+async function handleFetchCrtName(rawDomain: string): Promise<BgResponseMap['FETCH_CRTNAME']> {
+  const domain = rawDomain.trim().toLowerCase().replace(/^www\./, '');
+  if (!domain) return { ok: false, hostnames: [], status: null, error: 'Empty domain' };
+
+  try {
+    const res = await fetchWithTimeout(
+      `https://crt.name/v1/search?apex=${encodeURIComponent(domain)}`,
+      { headers: { Accept: 'text/plain' } },
+      12000,
+    );
+    const text = await res.text();
+    if (!res.ok) {
+      return { ok: false, hostnames: [], status: res.status, error: httpStatusMessage(res.status) };
+    }
+
+    const names = new Set<string>();
+    for (const line of text.split('\n')) {
+      const clean = line.trim().toLowerCase().replace(/^\*\./, '');
+      if (clean && (clean === domain || clean.endsWith(`.${domain}`))) names.add(clean);
+    }
+
+    const hostnames = Array.from(names).sort();
+    console.log(`[BugEye] crt.name parsed ${hostnames.length} unique hostnames for ${domain} (status ${res.status})`);
+    return { ok: true, hostnames, status: res.status };
+  } catch (err) {
+    return { ok: false, hostnames: [], status: null, error: describeFetchError(err) };
+  }
+}
+
 async function handleGetUrlHeaders(url: string): Promise<UrlHeadersResult> {
   try {
     const res = await fetchWithTimeout(url, { method: 'GET', redirect: 'follow' }, 8000);
@@ -879,6 +908,9 @@ export default defineBackground(() => {
         }
         case 'FETCH_CRTSH':
           sendResponse(await handleFetchCrtsh(message.domain));
+          break;
+        case 'FETCH_CRTNAME':
+          sendResponse(await handleFetchCrtName(message.domain));
           break;
         case 'GET_URL_HEADERS':
           sendResponse(await handleGetUrlHeaders(message.url));
