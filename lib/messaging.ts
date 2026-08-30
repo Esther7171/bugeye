@@ -9,6 +9,7 @@ export type BgRequest =
   | { type: 'HEAD_PROBE'; url: string }
   | { type: 'DOH_RESOLVE'; hostname: string }
   | { type: 'FETCH_CRTSH'; domain: string }
+  | { type: 'FETCH_CRTNAME'; domain: string }
   | { type: 'GET_URL_HEADERS'; url: string }
   | { type: 'GET_TAB_HEADERS'; tabId: number; url: string }
   | { type: 'REQUEST_HOST_PERMISSION'; origin: string }
@@ -154,6 +155,7 @@ export interface BgResponseMap {
   HEAD_PROBE: { ok: boolean; status: number | null; error?: string };
   DOH_RESOLVE: { ok: boolean; addresses?: string[]; error?: string };
   FETCH_CRTSH: { ok: boolean; hostnames: string[]; status: number | null; error?: string };
+  FETCH_CRTNAME: { ok: boolean; hostnames: string[]; status: number | null; error?: string };
   GET_URL_HEADERS: UrlHeadersResult;
   GET_TAB_HEADERS: TabHeadersResult;
   REQUEST_HOST_PERMISSION: { granted: boolean };
