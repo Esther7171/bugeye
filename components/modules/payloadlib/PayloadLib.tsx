@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, ArrowRight } from 'lucide-react';
 import { ModuleHeader } from '@/components/shell/ModuleHeader';
 import { CopyButton } from '@/components/shell/CopyButton';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { PAYLOAD_CATEGORIES } from '@/lib/payloads';
 import type { ModuleComponentProps } from '@/types';
 
-export function PayloadLib({ onBack }: ModuleComponentProps) {
+export function PayloadLib({ onBack, onNavigate }: ModuleComponentProps) {
   const [query, setQuery] = useState('');
   const [urlEncode, setUrlEncode] = useState(false);
 
@@ -51,15 +51,30 @@ export function PayloadLib({ onBack }: ModuleComponentProps) {
           <Switch checked={urlEncode} onCheckedChange={setUrlEncode} />
         </div>
 
+        <p className="text-[11px] text-muted-foreground">
+          Copy and use manually on authorized targets. BugEye does not send these.
+        </p>
+
         {filtered.length === 0 && (
           <p className="text-xs text-muted-foreground">No payloads match "{query}".</p>
         )}
 
         {filtered.map((cat) => (
           <div key={cat.id} className="flex flex-col gap-2">
-            <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              {cat.name}
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                {cat.name}
+              </p>
+              {cat.crossLink && (
+                <button
+                  onClick={() => onNavigate(cat.crossLink!.pillar, cat.crossLink!.moduleId)}
+                  className="flex shrink-0 items-center gap-1 text-[11px] text-primary hover:underline"
+                >
+                  {cat.crossLink.label} <ArrowRight className="size-3" />
+                </button>
+              )}
+            </div>
+            {cat.note && <p className="text-[11px] text-muted-foreground">{cat.note}</p>}
             {cat.payloads.map((p) => {
               const display = urlEncode ? encodeURIComponent(p.value) : p.value;
               return (

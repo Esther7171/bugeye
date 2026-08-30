@@ -93,4 +93,65 @@ Initial public build.
   explicitly.
 - JSList: each script URL now renders on its own row in monospace with a
   title tooltip for the full URL and a per-row copy button, instead of a
-  single cramped truncated line.
+  single cramped truncated line. Added "Send to BulkOpen" (same pattern as
+  LinkGrab).
+- Fixed HeaderInject actually applying rules: `declarativeNetRequest`'s
+  `RuleCondition.resourceTypes`, when left unspecified, defaults to "all
+  resource types except main_frame" - so with only a `{ tabIds }` condition,
+  rules silently never touched the tab's own page navigation, only its
+  sub-resources. That's exactly what visiting a URL directly to check
+  headers does. Fixed by listing `resourceTypes` explicitly (including
+  `main_frame`) on every session rule (HeaderInject, UASwitch, RefControl).
+- ShellGen: added a link to revshells.com and several more shell variants
+  (Python2, base64-encoded PowerShell, Go, Lua, Node.js, Groovy, Telnet).
+  Investigated the "not working" report: the module itself has no bug: this
+  machine's Windows Defender has been quarantining every built ShellGen
+  chunk on-access (confirmed via `Get-MpThreatDetection`) because it
+  contains literal reverse-shell one-liners, a real-time AV false positive
+  local to this dev machine, not a code defect.
+- PayloadLib: added 13 new reference-only categories (SQLi advanced bypass,
+  XSS modern bypasses, path traversal + encoded, command injection encoded,
+  SSRF + protocol smuggling, NoSQL injection + advanced, LDAP injection,
+  CRLF injection, HTTP parameter pollution, HTTP request smuggling
+  (reference/manual only), UTF-8/Unicode bypass, and four header-based
+  categories that cross-link to HeaderInject/UASwitch), plus expanded XXE
+  and SSTI with framework-specific vectors. All copy-only reference strings;
+  BugEye does not send them.
+- Added BlindSQLi (Encode/Payload): out-of-band (DNS-exfil via xp_dirtree,
+  LOAD_FILE, UTL_INADDR, XXE-via-XMLType) and time-based blind SQLi payload
+  generator pointing at a collector domain, mirroring BlindXSS's exact
+  generation-only UX. Confirmed BlindXSS/PayloadLib never auto-send payloads
+  to a live target before building this, so this mirrors that safe pattern.
+- GuideBook: added "WAF Bypass Testing (manual methodology)": one payload at
+  a time through a proxy, reading the response, never automated spraying.
+  Did not build an active WAF-bypass tester that sends live payloads: that
+  would be auto-exploitation, against BugEye's own policy and store rules.
+- ContactGrab/EmailHunter: clarified in the UI that both already work off
+  the current tab's DOM and existing session, no separate login or
+  third-party service involved.
+- TechStack: added version extraction where a real signal exists (CDN paths
+  with an embedded version, "Name X.Y.Z" meta generator content, and
+  version properties read directly off React/Vue/jQuery/Angular globals
+  when present), left blank everywhere else rather than guessing. Evaluated
+  and declined bundling Wappalyzer's dataset or calling its API: the
+  dataset's license and the API are both restrictive/paid; kept the
+  hand-authored fingerprint set.
+- HTTPMethods: layout polish (more room around the Allow-methods badges, a
+  bordered CORS/best-effort caveat box). No behavior change; still OPTIONS
+  only.
+- Added WhoisLookup (OSINT): registrar, registration/expiry/last-changed
+  dates, status flags, nameservers and DNSSEC-signed status, plus a
+  color-coded expiry countdown, via RDAP (the IETF/ICANN HTTP+JSON
+  replacement for the legacy WHOIS protocol, which needs a raw TCP socket
+  a browser cannot open at all). rdap.org's bootstrap and the registries it
+  redirects to both send permissive CORS headers, so this needs no host
+  permission, same as HackerTarget/CertSpotter. When a domain is not
+  currently registered, shows that plainly with buy/check-availability
+  links (Namecheap, Porkbun, GoDaddy) instead of an error.
+- Fixed AutoFinder's cached-report restore firing mid-scan (or right after
+  a target change during one), which could show mismatched or stale data;
+  it now only restores/clears once no scan is in flight.
+- Fixed exported files sometimes downloading under the blob's internal UUID
+  instead of the intended name: the code revoked the blob URL after a fixed
+  2-second timer, which could race a "Save As" dialog if the user has "Ask
+  where to save each file" on. Delay increased to 60 seconds.

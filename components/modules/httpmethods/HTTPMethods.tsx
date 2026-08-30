@@ -62,16 +62,19 @@ export function HTTPMethods({ onBack }: ModuleComponentProps) {
 
         {methods.length > 0 && (
           <Card>
-            <CardContent className="flex flex-col gap-2 p-3">
-              <div className="flex flex-wrap gap-1.5">
+            <CardContent className="flex flex-col gap-3 p-4">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                Allowed methods
+              </p>
+              <div className="flex flex-wrap gap-2">
                 {methods.map((m) => (
-                  <Badge key={m} variant={NOTABLE.has(m) ? 'warning' : 'outline'}>
+                  <Badge key={m} variant={NOTABLE.has(m) ? 'warning' : 'outline'} className="px-2.5 py-1 text-xs">
                     {m}
                   </Badge>
                 ))}
               </div>
               {methods.some((m) => NOTABLE.has(m)) && (
-                <div className="flex items-start gap-2 text-[11px] text-warning">
+                <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-2 text-[11px] text-warning">
                   <AlertTriangle className="mt-0.5 size-3 shrink-0" />
                   <p>State-changing methods are advertised. Verify they require proper authorization.</p>
                 </div>
@@ -80,11 +83,13 @@ export function HTTPMethods({ onBack }: ModuleComponentProps) {
           </Card>
         )}
 
-        <p className="text-[11px] text-muted-foreground">
-          Only sends OPTIONS, never PUT/DELETE/PATCH directly, to avoid making real state-changing
-          requests. Some servers do not implement OPTIONS accurately; treat this as best-effort and
-          CORS may hide the true picture for cross-origin requests.
-        </p>
+        <div className="rounded-md border border-border bg-muted/30 p-3">
+          <p className="text-[11px] text-muted-foreground">
+            Only sends OPTIONS, never PUT/DELETE/PATCH directly, to avoid making real state-changing
+            requests. Some servers do not implement OPTIONS accurately, treat this as best-effort, and
+            CORS may hide the true picture for cross-origin requests.
+          </p>
+        </div>
       </div>
     </div>
   );

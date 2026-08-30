@@ -310,6 +310,69 @@ async function handleFetchCertSpotter(rawDomain: string): Promise<BgResponseMap[
   }
 }
 
+// RDAP is the IETF/ICANN-standard HTTP+JSON replacement for the legacy
+// WHOIS protocol (which needs a raw TCP socket on port 43 - not something a
+// browser can open at all). rdap.org is ICANN's public bootstrap service: it
+// 302s to the correct registry's own RDAP server for the TLD, and both ends
+// send permissive CORS headers, so this needs no host permission, same as
+// HackerTarget/CertSpotter above. A 404 here is a normal, meaningful result
+// (the domain is not currently registered), not a failure.
+async function handleFetchRdap(rawDomain: string): Promise<BgResponseMap['FETCH_RDAP']> {
+  const domain = rawDomain.trim().toLowerCase().replace(/^www\./, '');
+  if (!domain) return { ok: false, status: null, error: 'Empty domain' };
+
+  try {
+    const res = await fetchWithTimeout(
+      `https://rdap.org/domain/${encodeURIComponent(domain)}`,
+      { headers: { Accept: 'application/rdap+json' } },
+      12000,
+    );
+    // rdap.org 302-redirects to the TLD's actual registry RDAP server when
+    // one exists. If res.url is still rdap.org itself, no redirect happened,
+    // meaning this TLD (e.g. .us) has no RDAP service at all - a registry
+    // limitation, not "domain not registered". Distinct from a redirected
+    // 404, which IS a real "not registered" answer from the registry.
+    const tldUnsupported = new URL(res.url).hostname === 'rdap.org';
+    if (res.status === 404) {
+      return { ok: true, status: 404, tldUnsupported };
+    }
+    if (!res.ok) {
+      return { ok: false, status: res.status, error: httpStatusMessage(res.status) };
+    }
+    const raw = await res.json();
+    return { ok: true, status: res.status, raw };
+  } catch (err) {
+    return { ok: false, status: null, error: describeFetchError(err) };
+  }
+}
+
+// Reverse WHOIS (find every domain registered under the same
+// name/company/email/keyword) has no free public data source: it requires
+// indexing every registry's records, which is why vendors charge for it.
+// Whoxy is the one BugEye supports, BYO API key (same optional-key pattern
+// as Shodan/HIBP), stored locally only. Its API sends permissive CORS, so
+// this still needs no host permission.
+async function handleReverseWhois(
+  mode: 'keyword' | 'company' | 'email' | 'name',
+  query: string,
+  apiKey: string,
+): Promise<BgResponseMap['REVERSE_WHOIS']> {
+  if (!apiKey.trim()) return { ok: false, error: 'A Whoxy API key is required for reverse WHOIS.' };
+  if (!query.trim()) return { ok: false, error: 'Empty query' };
+
+  try {
+    const url = `https://api.whoxy.com/?key=${encodeURIComponent(apiKey.trim())}&reverse=whois&${mode}=${encodeURIComponent(query.trim())}&mode=micro`;
+    const res = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } }, 15000);
+    if (!res.ok) {
+      return { ok: false, error: httpStatusMessage(res.status) };
+    }
+    const raw = await res.json();
+    return { ok: true, raw };
+  } catch (err) {
+    return { ok: false, error: describeFetchError(err) };
+  }
+}
+
 async function handleGetUrlHeaders(url: string): Promise<UrlHeadersResult> {
   try {
     const res = await fetchWithTimeout(url, { method: 'GET', redirect: 'follow' }, 8000);
@@ -762,6 +825,28 @@ function refererRuleId(tabId: number): number {
   return 70000 + (tabId % 1000);
 }
 
+// declarativeNetRequest's RuleCondition.resourceTypes, when left unspecified,
+// defaults to "all resource types except main_frame" - so a rule with a bare
+// { tabIds } condition silently never touches the top-level page navigation
+// itself, only its sub-resources. That's exactly the request a header-check
+// test (visiting a URL directly and reading the echoed headers) makes, so
+// every rule below must list resourceTypes explicitly, main_frame included.
+const ALL_RESOURCE_TYPES: `${Browser.declarativeNetRequest.ResourceType}`[] = [
+  'main_frame',
+  'sub_frame',
+  'stylesheet',
+  'script',
+  'image',
+  'font',
+  'object',
+  'xmlhttprequest',
+  'ping',
+  'csp_report',
+  'media',
+  'websocket',
+  'other',
+];
+
 async function handleSetHeaderRules(
   tabId: number,
   rules: { name: string; value: string; enabled: boolean }[],
@@ -778,7 +863,7 @@ async function handleSetHeaderRules(
           type: 'modifyHeaders' as const,
           requestHeaders: [{ header: r.name.trim(), operation: 'set' as const, value: r.value }],
         },
-        condition: { tabIds: [tabId] },
+        condition: { tabIds: [tabId], resourceTypes: ALL_RESOURCE_TYPES },
       }));
     await browser.declarativeNetRequest.updateSessionRules({ removeRuleIds: ids, addRules });
     return { ok: true };
@@ -804,7 +889,7 @@ async function handleSetUaRule(
                 type: 'modifyHeaders' as const,
                 requestHeaders: [{ header: 'User-Agent', operation: 'set' as const, value }],
               },
-              condition: { tabIds: [tabId] },
+              condition: { tabIds: [tabId], resourceTypes: ALL_RESOURCE_TYPES },
             },
           ]
         : [];
@@ -832,7 +917,7 @@ async function handleSetRefererRule(
             type: 'modifyHeaders',
             requestHeaders: [{ header: 'Referer', operation: 'remove' }],
           },
-          condition: { tabIds: [tabId] },
+          condition: { tabIds: [tabId], resourceTypes: ALL_RESOURCE_TYPES },
         },
       ];
     } else if (mode === 'spoof' && spoofValue.trim()) {
@@ -844,7 +929,7 @@ async function handleSetRefererRule(
             type: 'modifyHeaders',
             requestHeaders: [{ header: 'Referer', operation: 'set', value: spoofValue.trim() }],
           },
-          condition: { tabIds: [tabId] },
+          condition: { tabIds: [tabId], resourceTypes: ALL_RESOURCE_TYPES },
         },
       ];
     }
@@ -987,6 +1072,12 @@ export default defineBackground(() => {
           break;
         case 'FETCH_CERTSPOTTER':
           sendResponse(await handleFetchCertSpotter(message.domain));
+          break;
+        case 'FETCH_RDAP':
+          sendResponse(await handleFetchRdap(message.domain));
+          break;
+        case 'REVERSE_WHOIS':
+          sendResponse(await handleReverseWhois(message.mode, message.query, message.apiKey));
           break;
         case 'GET_URL_HEADERS':
           sendResponse(await handleGetUrlHeaders(message.url));

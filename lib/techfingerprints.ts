@@ -31,13 +31,19 @@ export interface TechFingerprint {
   styleSrc?: RegExp[];
   metaGenerator?: RegExp;
   jsGlobals?: string[];
+  // Tested against whichever raw string actually matched (the script/style
+  // URL or the meta generator content), first capture group is the version.
+  // Most stacks do not expose a version client-side at all, so this is only
+  // set where one realistically does: a CDN path with an embedded version,
+  // or a "Name X.Y.Z" generator tag.
+  versionPattern?: RegExp;
 }
 
 export const TECH_FINGERPRINTS: TechFingerprint[] = [
   // Frameworks
-  { name: 'React', category: 'Frameworks', jsGlobals: ['React', 'ReactDOM'], scriptSrc: [/react(-dom)?(\.production)?(\.min)?\.js/i] },
+  { name: 'React', category: 'Frameworks', jsGlobals: ['React', 'ReactDOM'], scriptSrc: [/react(-dom)?(\.production)?(\.min)?\.js/i, /react(-dom)?@[\d.]+/i], versionPattern: /react(?:-dom)?@(\d+\.\d+\.\d+)/i },
   { name: 'Next.js', category: 'Frameworks', jsGlobals: ['__NEXT_DATA__'], scriptSrc: [/_next\/static\//i] },
-  { name: 'Vue.js', category: 'Frameworks', jsGlobals: ['Vue', '__VUE__'], scriptSrc: [/vue(\.global)?(\.runtime)?(\.min)?\.js/i] },
+  { name: 'Vue.js', category: 'Frameworks', jsGlobals: ['Vue', '__VUE__'], scriptSrc: [/vue(\.global)?(\.runtime)?(\.min)?\.js/i, /vue@[\d.]+/i], versionPattern: /vue@(\d+\.\d+\.\d+)/i },
   { name: 'Nuxt.js', category: 'Frameworks', jsGlobals: ['__NUXT__'], scriptSrc: [/_nuxt\//i] },
   { name: 'Angular', category: 'Frameworks', jsGlobals: ['angular', 'ng'], scriptSrc: [/angular(\.min)?\.js/i] },
   { name: 'Ember.js', category: 'Frameworks', jsGlobals: ['Ember'], scriptSrc: [/ember(\.min|\.debug)?\.js/i] },
@@ -58,7 +64,7 @@ export const TECH_FINGERPRINTS: TechFingerprint[] = [
   { name: 'Swiper', category: 'JS libraries', jsGlobals: ['Swiper'], scriptSrc: [/swiper(-bundle)?(\.min)?\.js/i] },
 
   // UI / CSS frameworks (also see class-token heuristics in TechStack.tsx)
-  { name: 'Bootstrap', category: 'UI', jsGlobals: ['bootstrap'], scriptSrc: [/bootstrap(\.bundle)?(\.min)?\.js/i], styleSrc: [/bootstrap(\.min)?\.css/i] },
+  { name: 'Bootstrap', category: 'UI', jsGlobals: ['bootstrap'], scriptSrc: [/bootstrap(\.bundle)?(\.min)?\.js/i, /bootstrap@[\d.]+/i], styleSrc: [/bootstrap(\.min)?\.css/i, /bootstrap@[\d.]+/i], versionPattern: /bootstrap@(\d+\.\d+\.\d+)/i },
   { name: 'Bulma', category: 'UI', styleSrc: [/bulma(\.min)?\.css/i] },
   { name: 'Foundation', category: 'UI', jsGlobals: ['Foundation'], scriptSrc: [/foundation(\.min)?\.js/i] },
   { name: 'Semantic UI', category: 'UI', styleSrc: [/semantic(\.min)?\.css/i] },
@@ -111,7 +117,7 @@ export const TECH_FINGERPRINTS: TechFingerprint[] = [
   { name: 'Klarna', category: 'Payment', jsGlobals: ['Klarna'], scriptSrc: [/x\.klarnacdn\.net/i] },
 
   // CMS / Ecommerce
-  { name: 'WordPress', category: 'CMS / Ecommerce', metaGenerator: /wordpress/i, scriptSrc: [/wp-content\/|wp-includes\//i] },
+  { name: 'WordPress', category: 'CMS / Ecommerce', metaGenerator: /wordpress/i, scriptSrc: [/wp-content\/|wp-includes\//i], versionPattern: /WordPress\s+([\d.]+)/i },
   { name: 'Shopify', category: 'CMS / Ecommerce', jsGlobals: ['Shopify'], scriptSrc: [/cdn\.shopify\.com/i], cookies: [/^_shopify_/i] },
   { name: 'WooCommerce', category: 'CMS / Ecommerce', scriptSrc: [/woocommerce/i] },
   { name: 'Magento', category: 'CMS / Ecommerce', scriptSrc: [/mage\/cookies\.js|Magento_/i] },
@@ -119,8 +125,8 @@ export const TECH_FINGERPRINTS: TechFingerprint[] = [
   { name: 'Wix', category: 'CMS / Ecommerce', metaGenerator: /wix\.com/i, scriptSrc: [/static\.wixstatic\.com/i] },
   { name: 'Squarespace', category: 'CMS / Ecommerce', metaGenerator: /squarespace/i, scriptSrc: [/static1\.squarespace\.com/i] },
   { name: 'Webflow', category: 'CMS / Ecommerce', jsGlobals: ['Webflow'], metaGenerator: /webflow/i },
-  { name: 'Ghost', category: 'CMS / Ecommerce', metaGenerator: /ghost/i },
-  { name: 'Drupal', category: 'CMS / Ecommerce', metaGenerator: /drupal/i },
+  { name: 'Ghost', category: 'CMS / Ecommerce', metaGenerator: /ghost/i, versionPattern: /Ghost\s+([\d.]+)/i },
+  { name: 'Drupal', category: 'CMS / Ecommerce', metaGenerator: /drupal/i, versionPattern: /Drupal\s+(\d+(?:\.\d+)*)/i },
   { name: 'Joomla', category: 'CMS / Ecommerce', metaGenerator: /joomla/i },
 
   // Hosting
@@ -173,13 +179,13 @@ export function matchFingerprints(input: MatchInputs): TechHit[] {
   const hits: TechHit[] = [];
 
   for (const fp of TECH_FINGERPRINTS) {
-    let matched: { source: TechHit['source']; detail: string } | null = null;
+    let matched: { source: TechHit['source']; detail: string; rawMatch: string } | null = null;
 
     if (!matched && fp.headers) {
       for (const h of fp.headers) {
         const val = getHeader(input.headers, h.header);
         if (val !== undefined && (!h.pattern || h.pattern.test(val))) {
-          matched = { source: 'header', detail: `${h.header} header` };
+          matched = { source: 'header', detail: `${h.header} header`, rawMatch: val };
           break;
         }
       }
@@ -188,19 +194,19 @@ export function matchFingerprints(input: MatchInputs): TechHit[] {
       for (const pattern of fp.cookies) {
         const hit = input.cookieNames.find((n) => pattern.test(n));
         if (hit) {
-          matched = { source: 'cookie', detail: `Cookie: ${hit}` };
+          matched = { source: 'cookie', detail: `Cookie: ${hit}`, rawMatch: hit };
           break;
         }
       }
     }
     if (!matched && fp.metaGenerator && input.metaGenerator && fp.metaGenerator.test(input.metaGenerator)) {
-      matched = { source: 'meta', detail: 'meta[name=generator]' };
+      matched = { source: 'meta', detail: 'meta[name=generator]', rawMatch: input.metaGenerator };
     }
     if (!matched && fp.scriptSrc) {
       for (const pattern of fp.scriptSrc) {
         const hit = input.scriptSrcs.find((s) => pattern.test(s));
         if (hit) {
-          matched = { source: 'script', detail: hit };
+          matched = { source: 'script', detail: hit, rawMatch: hit };
           break;
         }
       }
@@ -209,17 +215,21 @@ export function matchFingerprints(input: MatchInputs): TechHit[] {
       for (const pattern of fp.styleSrc) {
         const hit = input.styleSrcs.find((s) => pattern.test(s));
         if (hit) {
-          matched = { source: 'script', detail: hit };
+          matched = { source: 'script', detail: hit, rawMatch: hit };
           break;
         }
       }
     }
     if (!matched && fp.jsGlobals) {
       const hit = fp.jsGlobals.find((g) => input.globals.includes(g));
-      if (hit) matched = { source: 'dom', detail: `window.${hit}` };
+      if (hit) matched = { source: 'dom', detail: `window.${hit}`, rawMatch: '' };
     }
 
-    if (matched) hits.push({ name: fp.name, category: fp.category, source: matched.source, detail: matched.detail });
+    if (matched) {
+      const version = fp.versionPattern?.exec(matched.rawMatch)?.[1];
+      const name = version ? `${fp.name} ${version}` : fp.name;
+      hits.push({ name, category: fp.category, source: matched.source, detail: matched.detail });
+    }
   }
 
   return hits;

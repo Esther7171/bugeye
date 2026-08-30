@@ -22,6 +22,7 @@ interface PageSignals {
   styleSrcs: string[];
   globals: string[];
   classHeuristics: { name: string; count: number }[];
+  globalVersions: Record<string, string>;
 }
 
 // Self-contained: executed in the page's isolated world via
@@ -83,7 +84,35 @@ function scanPageSignals(globalNames: string[]): PageSignals {
     .filter(([, count]) => count >= 8)
     .map(([name, count]) => ({ name, count }));
 
-  return { generator, scriptSrcs, styleSrcs, globals, classHeuristics };
+  // A handful of libraries expose their own version as a real, reliable
+  // client-side property, unlike most stacks. Read those directly rather
+  // than guessing from a filename.
+  const w = window as unknown as Record<string, Record<string, unknown> | undefined>;
+  const globalVersions: Record<string, string> = {};
+  try {
+    const jq = w.jQuery?.fn as Record<string, unknown> | undefined;
+    if (typeof jq?.jquery === 'string') globalVersions['jQuery'] = jq.jquery;
+  } catch {
+    // ignore
+  }
+  try {
+    if (typeof w.React?.version === 'string') globalVersions['React'] = w.React.version as string;
+  } catch {
+    // ignore
+  }
+  try {
+    if (typeof w.Vue?.version === 'string') globalVersions['Vue.js'] = w.Vue.version as string;
+  } catch {
+    // ignore
+  }
+  try {
+    const ngVersion = w.angular?.version as Record<string, unknown> | undefined;
+    if (typeof ngVersion?.full === 'string') globalVersions['Angular'] = ngVersion.full;
+  } catch {
+    // ignore
+  }
+
+  return { generator, scriptSrcs, styleSrcs, globals, classHeuristics, globalVersions };
 }
 
 const CATEGORY_ORDER = [
@@ -133,7 +162,14 @@ export function TechStack({ onBack, onNavigate }: ModuleComponentProps) {
 
       // Best-effort DOM read: header/cookie-based fingerprints below still
       // work even if this permission is denied or the tab is not the target.
-      let pageData: PageSignals = { generator: null, scriptSrcs: [], styleSrcs: [], globals: [], classHeuristics: [] };
+      let pageData: PageSignals = {
+        generator: null,
+        scriptSrcs: [],
+        styleSrcs: [],
+        globals: [],
+        classHeuristics: [],
+        globalVersions: {},
+      };
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
       if (tab?.id && tab.url) {
         const tabOrigin = originOf(tab.url);
@@ -157,6 +193,12 @@ export function TechStack({ onBack, onNavigate }: ModuleComponentProps) {
           styleSrcs: pageData.styleSrcs,
           metaGenerator: pageData.generator,
           globals: pageData.globals,
+        }).map((h) => {
+          // A script/style-URL version (e.g. from a CDN path) may already be
+          // appended to h.name; a live JS-global version is a stronger,
+          // directly-read signal, so it takes priority when both exist.
+          const globalVersion = h.source === 'dom' ? pageData.globalVersions[h.name] : undefined;
+          return globalVersion ? { ...h, name: `${h.name} ${globalVersion}` } : h;
         }),
       ];
 

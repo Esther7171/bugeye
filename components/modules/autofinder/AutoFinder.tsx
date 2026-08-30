@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2, Zap, CheckCircle2, XCircle, Circle, Send } from 'lucide-react';
 import { ModuleHeader } from '@/components/shell/ModuleHeader';
 import { ModuleNote } from '@/components/shell/ModuleNote';
@@ -17,8 +17,9 @@ import {
   type ProgressMap,
   type TaskStatus,
 } from '@/lib/autofinder';
-import { exportMarkdown, exportJson } from '@/lib/export';
-import { bulkListStore } from '@/lib/storage';
+import { exportMarkdown, exportJson, exportWord } from '@/lib/export';
+import { bulkListStore, autoFinderReportStore } from '@/lib/storage';
+import { formatTimestamp } from '@/lib/utils';
 import type { ModuleComponentProps } from '@/types';
 
 function emptyProgress(): ProgressMap {
@@ -49,13 +50,43 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<ProgressMap>(emptyProgress());
   const [report, setReport] = useState<AutoFinderReport | null>(null);
+  const [cachedAt, setCachedAt] = useState('');
   const [note, setNote] = useState('');
   const { ensureMany, pending } = useHostPermission();
+
+  // Restored from chrome.storage.local whenever the target matches a
+  // previously completed scan, so switching tabs and back (or navigating
+  // away to another module and back) does not lose the result and force a
+  // rescan. A stored report for a different domain is left untouched in
+  // storage, not deleted, for whenever the user switches back to it.
+  //
+  // Skipped entirely while a scan is running: auto-follow can change target
+  // mid-scan (switching tabs), and this must not clobber the in-progress
+  // run's own display. Once the run finishes and this re-fires, if the
+  // report on screen no longer matches the (possibly now different) target,
+  // it is replaced with whatever is actually cached for the current target,
+  // or cleared, rather than silently continuing to show another site's data
+  // under the current target's name.
+  useEffect(() => {
+    if (running) return;
+    if (!target) return;
+    autoFinderReportStore.get().then((stored) => {
+      if (stored && stored.domain === target) {
+        setReport(stored.report);
+        setProgress(stored.progress);
+        setCachedAt(stored.generatedAt);
+      } else {
+        setReport((prev) => (prev && prev.domain !== target ? null : prev));
+        setCachedAt((prev) => (prev ? '' : prev));
+      }
+    });
+  }, [target, running]);
 
   async function run() {
     if (!target) return;
     setNote('');
     setReport(null);
+    setCachedAt('');
     setProgress(emptyProgress());
     const granted = await ensureMany([`https://${target}/*`, 'https://crt.sh/*', 'https://crt.name/*', 'https://web.archive.org/*']);
     if (!granted) {
@@ -63,11 +94,14 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
       return;
     }
     setRunning(true);
+    let finalProgress = emptyProgress();
     try {
       const result = await runAutoFinder(target, (id: AutoFinderTaskId, patch) => {
-        setProgress((prev) => ({ ...prev, [id]: patch }));
+        finalProgress = { ...finalProgress, [id]: patch };
+        setProgress(finalProgress);
       });
       setReport(result);
+      autoFinderReportStore.set({ domain: target, report: result, progress: finalProgress, generatedAt: formatTimestamp() });
     } finally {
       setRunning(false);
     }
@@ -120,6 +154,12 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
 
         {report && (
           <>
+            {cachedAt && (
+              <p className="text-[11px] text-muted-foreground">
+                Showing the cached result from {cachedAt} for this target. Click Run again for a fresh
+                scan.
+              </p>
+            )}
             <div className="flex flex-wrap gap-2">
               <CopyButton text={autoFinderToMarkdown(report)} label="Copy Markdown" />
               <Button size="sm" variant="outline" onClick={() => exportMarkdown(`autofinder-${report.domain}`, autoFinderToMarkdown(report))}>
@@ -127,6 +167,9 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
               </Button>
               <Button size="sm" variant="outline" onClick={() => exportJson(`autofinder-${report.domain}`, report)}>
                 Export JSON
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => exportWord(`autofinder-${report.domain}`, autoFinderToMarkdown(report))}>
+                Export Word
               </Button>
             </div>
 

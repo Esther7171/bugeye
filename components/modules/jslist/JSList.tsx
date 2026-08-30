@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 import { ModuleHeader } from '@/components/shell/ModuleHeader';
 import { CopyButton } from '@/components/shell/CopyButton';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { useHostPermission } from '@/lib/useHostPermission';
 import { originOf } from '@/lib/utils';
 import { exportJson, exportText } from '@/lib/export';
 import { cn } from '@/lib/utils';
+import { bulkListStore } from '@/lib/storage';
 import type { ModuleComponentProps } from '@/types';
 
 // Self-contained: executed in the page's isolated world via
@@ -36,7 +37,7 @@ function scanPageForScripts(): string[] {
   return Array.from(found).sort();
 }
 
-export function JSList({ onBack }: ModuleComponentProps) {
+export function JSList({ onBack, onNavigate }: ModuleComponentProps) {
   const [scripts, setScripts] = useState<string[]>([]);
   const [scanning, setScanning] = useState(false);
   const [note, setNote] = useState('');
@@ -72,6 +73,11 @@ export function JSList({ onBack }: ModuleComponentProps) {
     } finally {
       setScanning(false);
     }
+  }
+
+  function sendToBulkOpen() {
+    bulkListStore.set(scripts.join('\n'));
+    onNavigate('list-triage', 'bulkopen');
   }
 
   return (
@@ -112,6 +118,9 @@ export function JSList({ onBack }: ModuleComponentProps) {
               </CardContent>
             </Card>
             <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={sendToBulkOpen}>
+                <Send className="size-3" /> Send to BulkOpen
+              </Button>
               <CopyButton text={scripts.join('\n')} label="Copy list" />
               <Button size="sm" variant="outline" onClick={() => exportJson('jslist', scripts)}>
                 Export JSON

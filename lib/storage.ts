@@ -1,6 +1,7 @@
 import { browser } from 'wxt/browser';
 import type { Browser } from 'wxt/browser';
 import type { HeaderRuleDraft, UaPresetId, RefererMode } from '@/lib/traffic';
+import type { AutoFinderReport, ProgressMap } from '@/lib/autofinder';
 
 const KEYS = {
   target: 'bugeye:target',
@@ -16,6 +17,7 @@ const KEYS = {
   savedTargets: 'bugeye:savedTargets',
   targetNotes: 'bugeye:targetNotes',
   lastSubdomains: 'bugeye:lastSubdomains',
+  autoFinderReport: 'bugeye:autoFinderReport',
 } as const;
 
 export type Theme = 'dark' | 'light';
@@ -83,10 +85,11 @@ export const refererConfigStore = {
 export interface ApiKeys {
   shodan: string;
   hibp: string;
+  whoxy: string;
 }
 
 export const apiKeysStore = {
-  get: () => get<ApiKeys>(KEYS.apiKeys, { shodan: '', hibp: '' }),
+  get: () => get<ApiKeys>(KEYS.apiKeys, { shodan: '', hibp: '', whoxy: '' }),
   set: (value: ApiKeys) => set(KEYS.apiKeys, value),
 };
 
@@ -123,6 +126,22 @@ export interface LastSubdomains {
 export const lastSubdomainsStore = {
   get: () => get<LastSubdomains | null>(KEYS.lastSubdomains, null),
   set: (value: LastSubdomains) => set(KEYS.lastSubdomains, value),
+};
+
+export interface StoredAutoFinderReport {
+  domain: string;
+  report: AutoFinderReport;
+  progress: ProgressMap;
+  generatedAt: string;
+}
+
+// chrome.storage.local, so this survives tab switches, panel navigation and
+// browser restarts. Restored on mount only when its domain still matches the
+// current target; a target change does not delete it, it just stops being
+// shown until the user switches back or reruns.
+export const autoFinderReportStore = {
+  get: () => get<StoredAutoFinderReport | null>(KEYS.autoFinderReport, null),
+  set: (value: StoredAutoFinderReport) => set(KEYS.autoFinderReport, value),
 };
 
 export function onStorageChange(

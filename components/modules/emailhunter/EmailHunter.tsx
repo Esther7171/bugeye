@@ -114,7 +114,11 @@ export function EmailHunter({ onBack }: ModuleComponentProps) {
       <div className="flex flex-col gap-3 p-3">
         <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-2 text-[11px] text-warning">
           <ShieldAlert className="size-3.5 shrink-0" />
-          <p>Only aggregates addresses the pages already publish. Handle responsibly.</p>
+          <p>
+            Reads the current tab's DOM using your existing session, no separate login and no
+            third-party service. Only aggregates addresses the pages already publish. Handle
+            responsibly.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">

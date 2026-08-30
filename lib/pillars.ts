@@ -401,6 +401,20 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'blindsqli',
+    pillar: 'encode-payload',
+    name: 'BlindSQLi',
+    description: 'Generates out-of-band and time-based blind SQLi payloads pointing at your collector.',
+    status: 'live',
+  },
+  {
+    id: 'phpfilterchain',
+    pillar: 'encode-payload',
+    name: 'PHPFilterChain',
+    description: 'Generates a php://filter conversion chain that reproduces arbitrary text, for LFI-to-RCE testing.',
+    status: 'live',
+  },
+  {
     id: 'formaudit',
     pillar: 'page-recon',
     name: 'FormAudit',
@@ -461,6 +475,20 @@ export const MODULES: ModuleMeta[] = [
     pillar: 'osint',
     name: 'DNSRecords',
     description: 'Full DNS record lookup: A, AAAA, CNAME, MX, NS, TXT, SOA, CAA, plus SPF/DMARC/DKIM and PTR.',
+    status: 'live',
+  },
+  {
+    id: 'whoislookup',
+    pillar: 'osint',
+    name: 'WhoisLookup',
+    description: 'Registrar, registration/expiry dates and nameservers via RDAP, with a countdown and buy links if the domain is available.',
+    status: 'live',
+  },
+  {
+    id: 'reversewhois',
+    pillar: 'osint',
+    name: 'ReverseWhois',
+    description: 'Finds other domains registered under the same name, company, email or keyword. Needs your own Whoxy API key.',
     status: 'live',
   },
   {

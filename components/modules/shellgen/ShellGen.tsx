@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { ExternalLink } from 'lucide-react';
 import { ModuleHeader } from '@/components/shell/ModuleHeader';
 import { CopyButton } from '@/components/shell/CopyButton';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,15 @@ export function ShellGen({ onBack }: ModuleComponentProps) {
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">
+        <a
+          href="https://www.revshells.com/"
+          target="_blank"
+          rel="noreferrer"
+          className="flex w-fit items-center gap-1 text-[11px] text-primary hover:underline"
+        >
+          <ExternalLink className="size-3" /> Interactive generator (more shells)
+        </a>
+
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">
             <Label className="text-muted-foreground">LHOST</Label>

@@ -113,7 +113,11 @@ export function ContactGrab({ onBack }: ModuleComponentProps) {
       <div className="flex flex-col gap-3 p-3">
         <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 p-2 text-[11px] text-warning">
           <ShieldAlert className="size-3.5 shrink-0" />
-          <p>Only scrapes what the page itself publishes. Handle any personal data you collect responsibly.</p>
+          <p>
+            Reads the current tab's DOM as your browser already sees it, using your existing session
+            (cookies included) if you're logged in. No separate login and no third-party service. Only
+            surfaces what the page itself publishes; handle any personal data you collect responsibly.
+          </p>
         </div>
 
         <Button size="sm" onClick={scan} disabled={scanning || pending} className="w-fit">

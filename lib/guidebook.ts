@@ -270,6 +270,107 @@ export const GUIDES: GuideEntry[] = [
     ],
     note: 'Guide only. BugEye does not add the proxy permission or an in-extension proxy switch.',
   },
+  {
+    id: 'waf-bypass-methodology',
+    title: 'WAF Bypass Testing (manual methodology)',
+    summary: 'How to test WAF bypass responsibly: one payload at a time through a proxy, never automated spraying.',
+    sections: [
+      {
+        heading: 'Concept',
+        body: 'Send ONE payload at a time through an intercepting proxy (Burp Repeater is ideal, see the Burp guide entry), and observe the response code and body for each one individually before trying the next.',
+      },
+      {
+        heading: 'Workflow',
+        body: 'Identify the WAF first with WAFDetect, it tells you what you are up against. Pick a payload from PayloadLib and send it: if it is blocked, try the same payload\'s "advanced bypass" / "encoded" / "modern bypass" variant (already grouped alongside the base payload in PayloadLib: URL-encoding, double-encoding, case variation, comment insertion, Unicode). Send one variant, read the result, then try the next.',
+      },
+      {
+        heading: 'Reading the response',
+        body: 'A 403 or a block page means the WAF caught that payload. A 200 with the payload reflected or executed is a potential bypass, verify actual impact before reporting it. A 3xx means check where the redirect actually points, some WAFs redirect to a block page rather than returning 403 directly.',
+      },
+      {
+        heading: 'Why surgical, not automated',
+        body: 'Only test within authorized scope. Bulk automated payload spraying against a WAF is usually prohibited by program rules, and hammering an endpoint with hundreds of requests can itself become a denial-of-service. Test one payload, read the result, adjust, repeat. BugEye deliberately does not include a tool that sends payloads automatically. That is active exploitation, outside what a passive recon/triage extension should do, and would get an extension rejected from the Chrome/Edge stores.',
+      },
+    ],
+    crossLinks: [
+      { pillar: 'encode-payload', moduleId: 'payloadlib', label: 'Get payloads from PayloadLib' },
+      { pillar: 'tab-inspector', moduleId: 'wafdetect', label: 'Identify the WAF with WAFDetect' },
+    ],
+    note: 'Methodology only. No auto-sending; copy each payload and send it yourself, one at a time.',
+  },
+  {
+    id: 'header-injection-howto',
+    title: 'HTTP Header Injection / Bypass (how-to)',
+    summary: 'Worked examples for testing header-trusting access controls with HeaderInject, category by category.',
+    sections: [
+      {
+        heading: 'What this is',
+        body: 'Many access controls, IP allowlists, and routing decisions trust request headers that a client can set. Testing this means adding or overriding a header and observing whether behavior changes. Authorized scope only.',
+      },
+      {
+        heading: 'How to do it',
+        body: '1. In HeaderInject, add a rule: header name plus value. 2. Toggle it on, click "Apply to this tab". 3. Reload the target page. 4. Compare: did access change (200 vs 403), did content change, did a redirect change? Confirm the header was actually sent by testing against httpbin.org/headers first.',
+      },
+      {
+        heading: 'A. IP / access bypass',
+        body: 'Spoof a trusted client IP: X-Forwarded-For, X-Real-IP, X-Client-IP, X-Remote-IP, X-Remote-Addr, X-Originating-IP, each set to 127.0.0.1 (or the target\'s own internal IP if known). Some apps grant admin or internal access based on these headers alone.',
+      },
+      {
+        heading: 'B. Host / routing',
+        body: 'Host-header attacks, cache poisoning, routing confusion: X-Forwarded-Host, X-Host, X-Original-Host, X-Forwarded-Server, each set to an attacker-controlled domain. Can poison links in emails, password resets, or cache keys.',
+      },
+      {
+        heading: 'C. URL / path override',
+        body: 'Reach restricted paths: X-Original-URL, X-Rewrite-URL, set to /admin. Some front-ends block /admin at the edge while the back-end honors these override headers and serves it anyway. When a header alone does not work, pair it with a path-rewrite trick instead, see PayloadLib\'s "403 / Forbidden bypass" category (trailing slash, double slash, case variation, semicolon parameters, encoded slashes) - a 403 is usually a disagreement between two parsers, not one.',
+      },
+      {
+        heading: 'D. Method override',
+        body: 'Reach restricted verbs: X-HTTP-Method-Override, X-Method-Override, X-HTTP-Method, set to PUT, DELETE or PATCH, to bypass a method-based restriction that only checks the literal request line.',
+      },
+      {
+        heading: 'E. Scheme / proto',
+        body: 'X-Forwarded-Proto and X-Forwarded-Scheme, set to https, can influence redirect or security logic that trusts the proxy-reported scheme instead of the actual connection.',
+      },
+      {
+        heading: 'Reading a result',
+        body: 'For each header: the safe outcome is the server ignoring it entirely. A finding is behavior actually changing, meaning the app trusts a client-controlled header for something security-relevant. Test one header at a time; this is manual verification through HeaderInject, not automated attacking.',
+      },
+    ],
+    crossLinks: [
+      { pillar: 'traffic', moduleId: 'headerinject', label: 'Open HeaderInject' },
+      { pillar: 'encode-payload', moduleId: 'payloadlib', label: 'See the header-based categories in PayloadLib' },
+    ],
+    note: 'Manual, one header at a time. BugEye sets the header; you observe the response.',
+  },
+  {
+    id: 'payload-usage-howto',
+    title: 'Using Payloads (how to test PayloadLib entries manually)',
+    summary: 'The workflow for taking a copied reference payload and testing it responsibly, plus what a real hit looks like per class.',
+    sections: [
+      {
+        heading: 'What PayloadLib is',
+        body: 'PayloadLib holds reference payloads (SQLi, XSS, LFI, SSRF, SSTI, XXE, command injection, CRLF, NoSQL, LDAP and more). BugEye does not send them. You copy one and test it yourself.',
+      },
+      {
+        heading: 'Workflow',
+        body: '1. Identify an input: a URL parameter, form field, header, or JSON body. 2. Copy ONE payload from PayloadLib. 3. Submit it manually, in the browser or via Burp Repeater for more control. 4. Read the response: reflected? executed? an error leaked something? a time delay (blind)? an out-of-band callback (blind)? 5. Confirm actual impact before reporting; a payload that comes back reflected-but-encoded is not the same as one that executed.',
+      },
+      {
+        heading: 'What a hit looks like, by class',
+        body: 'XSS: your script executes, an alert fires, or the payload comes back reflected unencoded. SQLi: a database error, a boolean-driven difference in the response, or a time delay (blind). SSTI: {{7*7}} comes back as 49. LFI: file contents (like /etc/passwd) appear in the response. SSRF: your own collector or out-of-band endpoint receives a request. Command injection: command output appears in the response, or an out-of-band callback fires.',
+      },
+      {
+        heading: 'Responsible use',
+        body: 'Authorized scope only. One payload at a time, never mass-spraying (that is itself a DoS and is usually out of scope for bug bounty programs). Blind and out-of-band tests need your own collector: interactsh or Burp Collaborator, see BlindXSS and BlindSQLi.',
+      },
+    ],
+    crossLinks: [
+      { pillar: 'encode-payload', moduleId: 'payloadlib', label: 'Open PayloadLib' },
+      { pillar: 'encode-payload', moduleId: 'blindxss', label: 'Open BlindXSS' },
+      { pillar: 'encode-payload', moduleId: 'blindsqli', label: 'Open BlindSQLi' },
+    ],
+    note: 'Reference and methodology only. BugEye never submits a payload for you.',
+  },
 ];
 
 export interface ChecklistItem {

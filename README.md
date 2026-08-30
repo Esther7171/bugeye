@@ -56,13 +56,14 @@ CLI Bridge · OSINT · Utility
 - **List Triage**: BulkOpen
 - **Traffic**: HeaderInject, UASwitch, RefControl, ReqLogger
 - **Encode/Payload**: EncoderKit (Base64/URL/HTML/Hex/JWT/Hash/Chain), ShellGen,
-  PayloadLib, BlindXSS
+  PayloadLib, BlindXSS, BlindSQLi
 - **CLI Bridge**: ReconBuild, LinuxCmds, PEASGet, FuzzBuild, WordlistPick,
   StegGen
 - **OSINT**: SubFinder, BucketSpot, ExifPeek, SSLInspect, FaviconHash, IPGeo,
   ShodanPeek, RobotsPeek, SitemapFind, WellKnownScan, PanelHunt, GitFinder,
   Wayback, ContactGrab, EmailHunter, EmailAnalyze, BreachCheck, PhoneAnalyze,
-  GoogleDork, GitDork, TakeoverCheck, DNSRecords, DNSSECCheck, HostCluster
+  GoogleDork, GitDork, TakeoverCheck, DNSRecords, DNSSECCheck, HostCluster,
+  WhoisLookup
 - **Utility**: AutoFinder, GuideBook, UploadTest, TargetSave, ExportAll,
   CopyAsCurl, JSONView
 

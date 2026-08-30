@@ -118,6 +118,12 @@ export function HeaderInject({ onBack }: ModuleComponentProps) {
         </div>
 
         {note && <p className="text-xs text-muted-foreground">{note}</p>}
+
+        <p className="border-t border-border pt-3 text-[11px] text-muted-foreground">
+          To confirm a rule actually applied: enable it, click "Apply to this tab", then navigate that
+          tab to <span className="font-mono">httpbin.org/headers</span> (or reload if you are already
+          there). The response echoes every header your request sent, including the one you injected.
+        </p>
       </div>
     </div>
   );

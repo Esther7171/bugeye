@@ -57,7 +57,12 @@ export function downloadBlob(filename: string, blob: Blob) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  // Revoking too soon can race a "Save As" dialog (if the user has "Ask
+  // where to save each file" on): Chrome then falls back to the blob's
+  // internal UUID as the filename instead of the one we set. A minute is
+  // more than enough time for any save dialog, and the memory cost of a
+  // small blob lingering that long is negligible.
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
 }
 
 export async function copyToClipboard(text: string) {

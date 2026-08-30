@@ -59,6 +59,8 @@ export const MODULE_COMPONENTS: Record<string, LazyExoticComponent<ComponentType
   wordlistpick: lazy(() => import('@/components/modules/wordlistpick/WordlistPick')),
   steggen: lazy(() => import('@/components/modules/steggen/StegGen')),
   blindxss: lazy(() => import('@/components/modules/blindxss/BlindXSS')),
+  blindsqli: lazy(() => import('@/components/modules/blindsqli/BlindSQLi')),
+  phpfilterchain: lazy(() => import('@/components/modules/phpfilterchain/PHPFilterChain')),
   formaudit: lazy(() => import('@/components/modules/formaudit/FormAudit')),
   hiddenfind: lazy(() => import('@/components/modules/hiddenfind/HiddenFind')),
   linkedcontent: lazy(() => import('@/components/modules/linkedcontent/LinkedContent')),
@@ -71,4 +73,6 @@ export const MODULE_COMPONENTS: Record<string, LazyExoticComponent<ComponentType
   dnsseccheck: lazy(() => import('@/components/modules/dnsseccheck/DNSSECCheck')),
   hostcluster: lazy(() => import('@/components/modules/hostcluster/HostCluster')),
   trackerscan: lazy(() => import('@/components/modules/trackerscan/TrackerScan')),
+  whoislookup: lazy(() => import('@/components/modules/whoislookup/WhoisLookup')),
+  reversewhois: lazy(() => import('@/components/modules/reversewhois/ReverseWhois')),
 };
