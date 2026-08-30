@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Loader2, AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
 import { ModuleHeader } from '@/components/shell/ModuleHeader';
 import { ModuleNote } from '@/components/shell/ModuleNote';
 import { CopyButton } from '@/components/shell/CopyButton';
@@ -17,6 +17,7 @@ import {
   cookiesToHeader,
   parseImportInput,
   cookieSetUrl,
+  cookieRemoveUrl,
   type CookieRecord,
 } from '@/lib/cookies';
 import { exportJson, exportText } from '@/lib/export';
@@ -32,6 +33,7 @@ export function CookieJar({ onBack }: ModuleComponentProps) {
   const [loadError, setLoadError] = useState('');
   const [importText, setImportText] = useState('');
   const [importResult, setImportResult] = useState('');
+  const [deletingKey, setDeletingKey] = useState('');
   const { ensureMany, pending } = useHostPermission();
 
   async function loadCookies() {
@@ -49,6 +51,19 @@ export function CookieJar({ onBack }: ModuleComponentProps) {
       setLoaded(true);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function deleteCookie(cookie: CookieRecord) {
+    const key = `${cookie.domain}-${cookie.name}-${cookie.path}`;
+    const ok = confirm(`Delete cookie "${cookie.name}" for ${cookie.domain}? This cannot be undone from here.`);
+    if (!ok) return;
+    setDeletingKey(key);
+    try {
+      await browser.cookies.remove({ url: cookieRemoveUrl(cookie), name: cookie.name, storeId: cookie.storeId });
+      setCookies((prev) => prev.filter((c) => `${c.domain}-${c.name}-${c.path}` !== key));
+    } finally {
+      setDeletingKey('');
     }
   }
 
@@ -135,8 +150,9 @@ export function CookieJar({ onBack }: ModuleComponentProps) {
                   ].filter(Boolean) as string[];
                   const bareDomain = c.domain.replace(/^\./, '');
                   const otherSubdomain = activeHostname && bareDomain !== activeHostname;
+                  const key = `${c.domain}-${c.name}-${c.path}`;
                   return (
-                    <div key={`${c.domain}-${c.name}-${c.path}`} className="flex flex-col gap-1 p-2">
+                    <div key={key} className="flex flex-col gap-1 p-2">
                       <div className="flex items-center justify-between gap-2">
                         <span className="truncate text-xs font-medium">{c.name}</span>
                         <div className="flex shrink-0 items-center gap-1">
@@ -150,6 +166,20 @@ export function CookieJar({ onBack }: ModuleComponentProps) {
                               <AlertTriangle className="size-2.5" /> missing {missing.join(', ')}
                             </Badge>
                           )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="size-6 p-0 text-destructive hover:text-destructive"
+                            disabled={deletingKey === key}
+                            onClick={() => deleteCookie(c)}
+                            title="Delete this cookie"
+                          >
+                            {deletingKey === key ? (
+                              <Loader2 className="size-3 animate-spin" />
+                            ) : (
+                              <Trash2 className="size-3" />
+                            )}
+                          </Button>
                         </div>
                       </div>
                       <span className="truncate text-[11px] text-muted-foreground">

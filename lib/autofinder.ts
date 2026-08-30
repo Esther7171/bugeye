@@ -1,5 +1,5 @@
 import { sendToBackground } from '@/lib/messaging';
-import { fetchCrtSh, fetchOtxPassiveDns } from '@/lib/subfinder';
+import { fetchCrtSh, fetchCrtName, fetchHackerTarget, fetchCertSpotter, fetchOtxPassiveDns } from '@/lib/subfinder';
 import { gradeHeaders, type HeaderGradeReport } from '@/lib/headergrade';
 import { auditCsp, type CspAuditReport } from '@/lib/cspaudit';
 import { assessClickjacking, type ClickjackResult } from '@/lib/clickjack';
@@ -40,7 +40,7 @@ export type AutoFinderTaskId =
 
 export const AUTOFINDER_TASKS: { id: AutoFinderTaskId; label: string }[] = [
   { id: 'dns', label: 'DNS resolution' },
-  { id: 'subdomains', label: 'Subdomains (crt.sh + OTX)' },
+  { id: 'subdomains', label: 'Subdomains (crt.sh + crt.name + CertSpotter + HackerTarget + OTX)' },
   { id: 'headers', label: 'Response headers' },
   { id: 'csp', label: 'CSP audit' },
   { id: 'clickjack', label: 'Clickjack check' },
@@ -179,8 +179,25 @@ export async function runAutoFinder(
     run('dns', () => sendToBackground({ type: 'DOH_RESOLVE', hostname: domain }), (r) => (r.ok ? `${r.addresses?.length ?? 0} address(es)` : r.error)),
     run(
       'subdomains',
-      () => fetchCrtSh(domain),
-      (r) => (r.hostnames.length ? `${r.hostnames.length} found` : r.error ?? 'none found'),
+      async () => {
+        const [crtRes, crtNameRes, hackerTargetRes, certSpotterRes] = await Promise.all([
+          fetchCrtSh(domain),
+          fetchCrtName(domain),
+          fetchHackerTarget(domain),
+          fetchCertSpotter(domain),
+        ]);
+        const merged = Array.from(
+          new Set([...crtRes.hostnames, ...crtNameRes.hostnames, ...hackerTargetRes.hostnames, ...certSpotterRes.hostnames]),
+        ).sort();
+        return {
+          hostnames: merged,
+          crtError: crtRes.error,
+          crtNameError: crtNameRes.error,
+          hackerTargetError: hackerTargetRes.error,
+          certSpotterError: certSpotterRes.error,
+        };
+      },
+      (r) => (r.hostnames.length ? `${r.hostnames.length} found` : r.crtError ?? r.crtNameError ?? r.hackerTargetError ?? r.certSpotterError ?? 'none found'),
     ),
     fetchOtxPassiveDns(domain).catch(() => [] as string[]),
     run('headers', () => sendToBackground({ type: 'GET_URL_HEADERS', url: homeUrl }), (r) => (Object.keys(r.headers).length ? `${Object.keys(r.headers).length} headers` : r.error)),
@@ -322,7 +339,10 @@ export async function runAutoFinder(
     domain,
     generatedAt: new Date().toISOString(),
     dns: { addresses, error: dohResult?.error },
-    subdomains: { list: Array.from(new Set([...(crt?.hostnames ?? []), ...otx])).sort(), error: crt?.error },
+    subdomains: {
+      list: Array.from(new Set([...(crt?.hostnames ?? []), ...otx])).sort(),
+      error: crt?.crtError ?? crt?.crtNameError ?? crt?.hackerTargetError ?? crt?.certSpotterError,
+    },
     headers,
     headerGrade: headerGrade ?? null,
     csp,

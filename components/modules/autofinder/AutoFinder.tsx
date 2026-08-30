@@ -57,7 +57,7 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
     setNote('');
     setReport(null);
     setProgress(emptyProgress());
-    const granted = await ensureMany([`https://${target}/*`, 'https://crt.sh/*', 'https://web.archive.org/*']);
+    const granted = await ensureMany([`https://${target}/*`, 'https://crt.sh/*', 'https://crt.name/*', 'https://web.archive.org/*']);
     if (!granted) {
       setNote('Host permission was not granted.');
       return;

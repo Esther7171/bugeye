@@ -9,6 +9,8 @@ lerna-debug.log*
 
 node_modules
 .output
+bugeye-v1
+bugeye-v1.zip
 stats.html
 stats-*.json
 .wxt

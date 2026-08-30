@@ -51,6 +51,13 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'techstack',
+    pillar: 'tab-inspector',
+    name: 'TechStack',
+    description: 'Fingerprints tech from headers, cookies, meta tags, script filenames and page JS globals.',
+    status: 'live',
+  },
+  {
     id: 'cookiejar',
     pillar: 'tab-inspector',
     name: 'CookieJar',
@@ -61,7 +68,7 @@ export const MODULES: ModuleMeta[] = [
     id: 'subfinder',
     pillar: 'osint',
     name: 'SubFinder',
-    description: 'Enumerate subdomains via crt.sh and passive DNS sources.',
+    description: 'Enumerate subdomains across 5 cross-checked sources: crt.sh, crt.name, CertSpotter, HackerTarget, OTX.',
     status: 'live',
   },
   {
@@ -265,13 +272,6 @@ export const MODULES: ModuleMeta[] = [
     pillar: 'tab-inspector',
     name: 'StorageDump',
     description: 'Reads and exports localStorage, sessionStorage and IndexedDB database names.',
-    status: 'live',
-  },
-  {
-    id: 'techstack',
-    pillar: 'tab-inspector',
-    name: 'TechStack',
-    description: 'Fingerprints tech from headers, cookies, meta tags and script filenames.',
     status: 'live',
   },
   {

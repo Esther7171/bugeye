@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useTarget } from '@/components/shell/TargetProvider';
 import { useHostPermission } from '@/lib/useHostPermission';
 import { sendToBackground } from '@/lib/messaging';
-import { fetchCrtSh, fetchOtxPassiveDns } from '@/lib/subfinder';
+import { fetchCrtSh, fetchCrtName, fetchHackerTarget, fetchCertSpotter, fetchOtxPassiveDns } from '@/lib/subfinder';
 import { mapLimit } from '@/lib/concurrency';
 import { normalizeDomain } from '@/lib/utils';
 import { exportJson, exportText } from '@/lib/export';
@@ -19,13 +19,14 @@ import { bulkListStore, lastSubdomainsStore } from '@/lib/storage';
 import { formatTimestamp } from '@/lib/utils';
 import type { ModuleComponentProps } from '@/types';
 
-const SOURCE_ORIGINS = ['https://crt.sh/*', 'https://otx.alienvault.com/*'];
+const SOURCE_ORIGINS = ['https://crt.sh/*', 'https://crt.name/*', 'https://otx.alienvault.com/*'];
 
 export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
   const { target, setTarget } = useTarget();
   const [domain, setDomain] = useState(target);
   const [loading, setLoading] = useState(false);
   const [subdomains, setSubdomains] = useState<string[]>([]);
+  const [sources, setSources] = useState<Record<string, string[]>>({});
   const [resolved, setResolved] = useState<Record<string, string[]>>({});
   const [resolving, setResolving] = useState(false);
   const [doResolve, setDoResolve] = useState(false);
@@ -38,28 +39,57 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
     setNote('');
     setLoading(true);
     setSubdomains([]);
+    setSources({});
     setResolved({});
     try {
       const granted = await ensureMany(SOURCE_ORIGINS);
       if (!granted) {
-        setNote('Host permission was not granted for crt.sh / OTX.');
+        setNote('Host permission was not granted for crt.sh / crt.name / OTX.');
         return;
       }
-      const [crt, otx] = await Promise.all([fetchCrtSh(clean), fetchOtxPassiveDns(clean)]);
-      const all = Array.from(new Set([...crt.hostnames, ...otx])).sort();
+      // HackerTarget and CertSpotter both send permissive CORS headers, so
+      // they run without any host permission at all, unlike the other three.
+      const [crt, crtName, hackerTarget, certSpotter, otx] = await Promise.all([
+        fetchCrtSh(clean),
+        fetchCrtName(clean),
+        fetchHackerTarget(clean),
+        fetchCertSpotter(clean),
+        fetchOtxPassiveDns(clean),
+      ]);
+
+      const bySource = new Map<string, Set<string>>();
+      const addSource = (hosts: string[], label: string) => {
+        for (const h of hosts) {
+          if (!bySource.has(h)) bySource.set(h, new Set());
+          bySource.get(h)!.add(label);
+        }
+      };
+      addSource(crt.hostnames, 'crt.sh');
+      addSource(crtName.hostnames, 'crt.name');
+      addSource(hackerTarget.hostnames, 'HackerTarget');
+      addSource(certSpotter.hostnames, 'CertSpotter');
+      addSource(otx, 'OTX');
+
+      const all = Array.from(bySource.keys()).sort();
+      const sourceMap: Record<string, string[]> = {};
+      for (const [host, labels] of bySource) sourceMap[host] = Array.from(labels).sort();
+
       setSubdomains(all);
+      setSources(sourceMap);
       if (all.length > 0) {
         lastSubdomainsStore.set({ domain: clean, subdomains: all, generatedAt: formatTimestamp() });
       }
-      if (all.length === 0) {
-        setNote(
-          crt.error
-            ? `No subdomains found. crt.sh: ${crt.error}${crt.status ? ` (status ${crt.status})` : ''}.`
-            : 'No subdomains found from crt.sh or OTX.',
-        );
-      } else if (crt.error) {
-        setNote(`crt.sh had an issue (${crt.error}) but OTX returned results.`);
-      }
+
+      const summary = `crt.sh: ${crt.hostnames.length}, crt.name: ${crtName.hostnames.length}, HackerTarget: ${hackerTarget.hostnames.length}, CertSpotter: ${certSpotter.hostnames.length}, OTX: ${otx.length}, unique total: ${all.length}`;
+      const errors = [
+        crt.error && `crt.sh: ${crt.error}`,
+        crtName.error && `crt.name: ${crtName.error}`,
+        hackerTarget.error && `HackerTarget: ${hackerTarget.error}`,
+        certSpotter.error && `CertSpotter: ${certSpotter.error}`,
+      ]
+        .filter(Boolean)
+        .join(' | ');
+      setNote(errors ? `${summary}. ${errors}` : summary);
 
       if (doResolve && all.length > 0) {
         setResolving(true);
@@ -90,7 +120,7 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
     <div className="flex flex-col">
       <ModuleHeader
         title="SubFinder"
-        description="Enumerates subdomains via crt.sh certificate transparency and OTX passive DNS."
+        description="Enumerates subdomains via 5 sources (crt.sh, crt.name, CertSpotter, HackerTarget, OTX), cross-checked and de-duplicated."
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">
@@ -128,13 +158,20 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
                     >
                       {s}
                     </button>
-                    {resolving && !resolved[s] ? (
-                      <Loader2 className="size-3 animate-spin text-muted-foreground" />
-                    ) : resolved[s] ? (
-                      <Badge variant={resolved[s]!.length ? 'success' : 'muted'}>
-                        {resolved[s]!.length ? resolved[s]![0] : 'no A record'}
-                      </Badge>
-                    ) : null}
+                    <div className="flex shrink-0 items-center gap-1">
+                      {sources[s]?.map((label) => (
+                        <Badge key={label} variant="outline" className="normal-case">
+                          {label}
+                        </Badge>
+                      ))}
+                      {resolving && !resolved[s] ? (
+                        <Loader2 className="size-3 animate-spin text-muted-foreground" />
+                      ) : resolved[s] ? (
+                        <Badge variant={resolved[s]!.length ? 'success' : 'muted'}>
+                          {resolved[s]!.length ? resolved[s]![0] : 'no A record'}
+                        </Badge>
+                      ) : null}
+                    </div>
                   </div>
                 ))}
               </CardContent>
@@ -144,7 +181,7 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
                 <Send className="size-3" /> Send to BulkOpen
               </Button>
               <CopyButton text={subdomains.join('\n')} label="Copy list" />
-              <Button size="sm" variant="outline" onClick={() => exportJson('subfinder', subdomains)}>
+              <Button size="sm" variant="outline" onClick={() => exportJson('subfinder', { subdomains, sources })}>
                 Export JSON
               </Button>
               <Button size="sm" variant="outline" onClick={() => exportText('subfinder', subdomains.join('\n'))}>

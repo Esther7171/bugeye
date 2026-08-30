@@ -94,3 +94,9 @@ export function cookieSetUrl(cookie: ParsedImportCookie): string {
   const scheme = cookie.secure ? 'https' : 'http';
   return `${scheme}://${domain}${cookie.path}`;
 }
+
+export function cookieRemoveUrl(cookie: CookieRecord): string {
+  const domain = cookie.domain.replace(/^\./, '');
+  const scheme = cookie.secure ? 'https' : 'http';
+  return `${scheme}://${domain}${cookie.path}`;
+}

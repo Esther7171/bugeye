@@ -93,15 +93,21 @@ export function JSList({ onBack }: ModuleComponentProps) {
             <Card>
               <CardContent className="flex max-h-72 flex-col overflow-y-auto p-0">
                 {scripts.map((s, i) => (
-                  <p
+                  <div
                     key={s}
                     className={cn(
-                      'truncate border-b border-border p-2 text-xs text-foreground last:border-0',
+                      'flex min-w-0 items-center gap-2 border-b border-border p-2 last:border-0',
                       i % 2 === 1 && 'bg-muted/30',
                     )}
                   >
-                    {s}
-                  </p>
+                    <span
+                      className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground"
+                      title={s}
+                    >
+                      {s}
+                    </span>
+                    <CopyButton text={s} label="" className="size-6 shrink-0 p-0" />
+                  </div>
                 ))}
               </CardContent>
             </Card>

@@ -84,3 +84,28 @@ Declared upfront: `storage`, `cookies`, `tabs`, `sidePanel`, `activeTab`,
 declared statically - each module requests access to a specific origin only
 when you actually use it against that target (see the "why these
 permissions?" info button at the bottom of the sidebar).
+
+## Privacy
+
+BugEye collects no personal data, has no analytics or telemetry, and runs no
+server of its own - every request goes straight from your browser to the
+public service you asked it to query. See [PRIVACY.md](PRIVACY.md) for the
+full policy, also published at
+https://esther7171.github.io/bugeye/privacy.
+
+### Publishing the privacy policy (one-time, manual)
+
+The policy source lives at `docs/privacy.md`. To make it public via GitHub
+Pages:
+
+1. Go to the repo's **Settings > Pages**.
+2. Under **Source**, choose **Deploy from a branch**.
+3. Set **Branch** to `master` (or `main`) and **Folder** to `/docs`, then
+   **Save**.
+4. GitHub builds and serves the site within a few minutes. The final URL to
+   paste into the Chrome Web Store / Edge Add-ons privacy field is:
+   https://esther7171.github.io/bugeye/privacy
+   (GitHub Pages runs Jekyll by default on `/docs`; `docs/privacy.md` sets
+   `permalink: /privacy` in its front matter so it is served at that exact
+   path. If it 404s at first, give the Pages build a minute and check the
+   trailing-slash version, https://esther7171.github.io/bugeye/privacy/.)

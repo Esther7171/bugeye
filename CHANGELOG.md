@@ -56,9 +56,41 @@ Initial public build.
   for passive port viewing and cookie scope categorization.
 - Replaced the logo with a new design and regenerated the icon set
   (16/32/48/96/128) from it.
+- SubFinder and AutoFinder now cross-check subdomains across 5 independent
+  sources instead of 2: crt.sh, crt.name, CertSpotter and HackerTarget
+  (certificate-transparency and DNS-derived), plus OTX passive DNS, merged
+  and de-duplicated. Each result in SubFinder shows which source(s) found it.
+  HackerTarget and CertSpotter both send permissive CORS headers, so they
+  need no host permission at all, unlike the other three.
 - Added WAFDetect (Tab Inspector): passive WAF/CDN fingerprinting via
   response headers, cookies and block-page signatures (Cloudflare, Akamai,
   Imperva/Incapsula, AWS WAF/ALB/CloudFront, Sucuri, F5 BIG-IP ASM,
   Barracuda, Fortinet FortiWeb, Wordfence, generic). No active probing;
   outputs a copy-paste `wafw00f` command for active confirmation. Linked from
   HeaderGrade's report.
+- Added PRIVACY.md and a docs/ site (GitHub Pages, /docs, `docs/privacy.md`)
+  for the Chrome Web Store / Edge Add-ons privacy-policy URL requirement.
+  Added `npm run package`, which builds and copies the unpacked extension to
+  `bugeye-v1/` and the store zip to `bugeye-v1.zip`.
+- CookieJar: added a per-cookie delete button (confirm-before-delete via the
+  existing `confirm()` pattern already used in BulkOpen).
+- TechStack moved up to just under HeaderGrade in the Tab Inspector list, and
+  its detection was substantially expanded: a new, separately lazy-loaded
+  fingerprint dataset (`lib/techfingerprints.ts`, loaded only when a scan
+  runs, not with the module itself) matches ~90 technologies across
+  Frameworks, JS libraries, UI, Analytics, Tag managers, CDN, Security,
+  Payment, CMS/Ecommerce, Hosting, Monitoring, Chat/Support and Fonts,
+  against response headers, real cookie names (via `chrome.cookies`, not just
+  the Set-Cookie response header), meta generator, script and stylesheet
+  URLs, and JS globals read from the page. Adds a small class-token heuristic
+  for CSS frameworks with no runtime JS object (Tailwind, MUI, Ant Design,
+  Chakra). Results are grouped by category, with an honest best-effort note.
+- Fixed the root cause of the target bar not following tab switches: its
+  text input committed (and silently locked auto-follow) on every blur, even
+  an incidental one from clicking away to switch browser tabs, not just on
+  an actual edit. Now it only commits when the draft differs from the
+  current target. Added a pin/unpin toggle to lock or resume auto-follow
+  explicitly.
+- JSList: each script URL now renders on its own row in monospace with a
+  title tooltip for the full URL and a per-row copy button, instead of a
+  single cramped truncated line.

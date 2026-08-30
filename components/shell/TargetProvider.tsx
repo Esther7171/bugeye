@@ -8,20 +8,32 @@ interface TargetContextValue {
   target: string;
   setTarget: (value: string) => void;
   useCurrentTab: () => Promise<void>;
+  locked: boolean;
+  toggleLock: () => void;
 }
 
 const TargetContext = createContext<TargetContextValue>({
   target: '',
   setTarget: () => {},
   useCurrentTab: async () => {},
+  locked: false,
+  toggleLock: () => {},
 });
 
 export function TargetProvider({ children }: { children: ReactNode }) {
   const [target, setTargetState] = useState('');
   // Auto-follow is on by default: opening the panel (or switching tabs) uses
-  // whatever site you're on. Typing a target manually turns it off until you
-  // click "use current tab" again.
+  // whatever site you're on. Typing a target manually, or pinning it, turns it
+  // off until "use current tab" or the pin toggle is used again. Mirrored into
+  // a ref so the tab listeners (registered once, below) never read a stale
+  // value, and into state so the UI (the pin icon) can reflect it.
+  const [locked, setLockedState] = useState(false);
   const autoFollow = useRef(true);
+
+  const setLocked = (value: boolean) => {
+    autoFollow.current = !value;
+    setLockedState(value);
+  };
 
   const applyFromActiveTab = async (): Promise<boolean> => {
     try {
@@ -67,19 +79,31 @@ export function TargetProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setTarget = (value: string) => {
-    autoFollow.current = false;
     const normalized = normalizeDomain(value);
+    // Only actually lock auto-follow off if this is a real change. Re-committing
+    // the same value (for example a text input re-firing on blur) should not
+    // silently disable auto-follow.
+    if (normalized !== target) setLocked(true);
     setTargetState(normalized);
     targetStore.set(normalized);
   };
 
   const useCurrentTab = async () => {
-    autoFollow.current = true;
+    setLocked(false);
     await applyFromActiveTab();
   };
 
+  const toggleLock = () => {
+    if (locked) {
+      setLocked(false);
+      applyFromActiveTab();
+    } else {
+      setLocked(true);
+    }
+  };
+
   return (
-    <TargetContext.Provider value={{ target, setTarget, useCurrentTab }}>
+    <TargetContext.Provider value={{ target, setTarget, useCurrentTab, locked, toggleLock }}>
       {children}
     </TargetContext.Provider>
   );
