@@ -53,6 +53,11 @@ before the files inside can be used.
 Keep track of where that new folder ends up (usually right there in
 Downloads) - you'll pick it in Step 4.
 
+> **Don't run `npm install` or any other command here.** This folder is
+> already a finished, ready-to-use extension - that's what "unpacked" means.
+> There's nothing left to build; the next steps just point your browser at
+> this folder directly.
+
 ### Step 3: Turn on Developer mode
 
 This is a normal, safe setting built into every Chromium/Firefox browser

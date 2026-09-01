@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { sendToBackground, type RequestLogEntry } from '@/lib/messaging';
+import { useHostPermission } from '@/lib/useHostPermission';
 import { useActiveTab } from '@/lib/useActiveTab';
 import { bulkListStore } from '@/lib/storage';
 import { exportJson } from '@/lib/export';
@@ -22,11 +23,13 @@ function statusVariant(status: number | null): 'success' | 'warning' | 'destruct
 }
 
 export function ReqLogger({ onBack, onNavigate }: ModuleComponentProps) {
-  const { tabId, url } = useActiveTab();
+  const { tabId, origin, url } = useActiveTab();
   const [entries, setEntries] = useState<RequestLogEntry[]>([]);
   const [logging, setLogging] = useState(false);
   const [filter, setFilter] = useState('');
+  const [note, setNote] = useState('');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { ensure, pending } = useHostPermission();
 
   async function refresh() {
     if (!tabId) return;
@@ -51,6 +54,20 @@ export function ReqLogger({ onBack, onNavigate }: ModuleComponentProps) {
 
   async function toggleLogging(next: boolean) {
     if (!tabId) return;
+    setNote('');
+    if (next) {
+      if (!origin) {
+        setNote('Active tab is not an http(s) page.');
+        return;
+      }
+      // webRequest only sees traffic for origins BugEye has host permission
+      // for - ensure() must be the first await here, see useActiveTab's comment.
+      const granted = await ensure(origin);
+      if (!granted) {
+        setNote('Host permission was not granted.');
+        return;
+      }
+    }
     const result = await sendToBackground({ type: 'SET_REQUEST_LOGGING', tabId, enabled: next });
     setLogging(result.logging);
     if (next) refresh();
@@ -88,7 +105,7 @@ export function ReqLogger({ onBack, onNavigate }: ModuleComponentProps) {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-1.5">
             <Label className="text-muted-foreground">Log this tab</Label>
-            <Switch checked={logging} onCheckedChange={toggleLogging} />
+            <Switch checked={logging} disabled={pending} onCheckedChange={toggleLogging} />
           </div>
           <Button size="sm" variant="outline" onClick={refresh}>
             <ListRestart className="size-3" /> Refresh
@@ -97,6 +114,8 @@ export function ReqLogger({ onBack, onNavigate }: ModuleComponentProps) {
             <Trash2 className="size-3" /> Clear
           </Button>
         </div>
+
+        {note && <p className="text-xs text-muted-foreground">{note}</p>}
 
         <Input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter by URL or method..." />
 

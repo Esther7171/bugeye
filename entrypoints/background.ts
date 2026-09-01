@@ -1068,7 +1068,13 @@ function recordRequest(tabId: number, entry: RequestLogEntry) {
   requestLogs.set(tabId, list);
 }
 
-export default defineBackground(() => {
+// Chrome logs "you need to request host permissions..." the moment a
+// webRequest listener is registered with no matching host permission
+// granted yet - which is exactly the state of a fresh install, before the
+// one-time broad grant. Registering these only once that grant exists (and
+// picking them up live via onAdded if the user hasn't granted it yet)
+// avoids that noisy, misleading warning on every first run.
+function registerRequestLogListeners() {
   browser.webRequest.onCompleted.addListener(
     (details) => {
       recordRequest(details.tabId, {
@@ -1096,6 +1102,21 @@ export default defineBackground(() => {
     },
     { urls: ['<all_urls>'] },
   );
+}
+
+export default defineBackground(() => {
+  browser.permissions.contains({ origins: ['http://*/*', 'https://*/*'] }).then((granted) => {
+    if (granted) {
+      registerRequestLogListeners();
+      return;
+    }
+    function onPermissionsAdded(perms: Browser.permissions.Permissions) {
+      if (!perms.origins?.some((o) => o === 'http://*/*' || o === 'https://*/*')) return;
+      browser.permissions.onAdded.removeListener(onPermissionsAdded);
+      registerRequestLogListeners();
+    }
+    browser.permissions.onAdded.addListener(onPermissionsAdded);
+  });
 
   // Traffic-rule and request-log state is keyed by tabId; when a tab closes,
   // its session rules and captured requests are unreachable but would
