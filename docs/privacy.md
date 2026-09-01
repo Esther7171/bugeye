@@ -44,8 +44,9 @@ service has its own privacy policy.
 
 BugEye requests the minimum needed (storage, cookies, tabs, activeTab,
 scripting, webRequest, declarativeNetRequest, plus Chromium sidePanel or
-Firefox sidebar). Site access is
-requested per-origin, on demand, only when you run a feature against a site.
+Firefox sidebar). Site access is requested once, the first time any feature
+needs to read a page; after that single grant, every feature works on any
+site with no further per-site prompts.
 
 ## Authorized use only
 

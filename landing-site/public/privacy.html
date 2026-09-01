@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BugEye Privacy Policy</title>
+<meta name="description" content="BugEye's privacy policy: what it collects (nothing), what's stored locally, and what network requests it makes." />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" />
+<style>
+  :root {
+    --void: #0b0908;
+    --shadow: #17130f;
+    --line: #34291f;
+    --line-soft: #241d17;
+    --fog: #bcb1a2;
+    --paper: #ece5d8;
+    --paper-bright: #fbf7ee;
+    --signal: #d8342a;
+    --signal-bright: #f0463a;
+    --signal-dim: #7a201b;
+    --font-display: 'Big Shoulders Display', 'Arial Narrow', sans-serif;
+    --font-body: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-type: 'IBM Plex Mono', 'Courier New', monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--void);
+    color: var(--paper-bright);
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 64px 24px 96px; }
+  a { color: var(--signal-bright); }
+  h1, h2 { font-family: var(--font-display); font-weight: 800; text-transform: uppercase; letter-spacing: 0.01em; margin: 0; color: var(--paper-bright); }
+  h1 { font-size: clamp(34px, 6vw, 52px); line-height: 1; }
+  h2 { font-size: 22px; margin-top: 48px; margin-bottom: 12px; padding-top: 20px; border-top: 1px solid var(--line-soft); }
+  h2:first-of-type { margin-top: 36px; }
+  .eyebrow { font-family: var(--font-type); font-weight: 600; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--signal-bright); display: block; margin-bottom: 14px; }
+  .updated { font-family: var(--font-type); color: var(--fog); font-size: 13px; margin-top: 10px; }
+  p, li { color: var(--fog); font-size: 17px; }
+  ul { padding-left: 22px; margin: 10px 0; }
+  li { margin-bottom: 8px; }
+  li:last-child { margin-bottom: 0; }
+  code { font-family: var(--font-type); background: var(--shadow); border: 1px solid var(--line); color: var(--paper-bright); padding: 1px 6px; font-size: 15px; }
+  .back { display: inline-block; margin-top: 56px; font-family: var(--font-type); font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--fog); text-decoration: none; border-bottom: 1px solid var(--line); }
+  .back:hover { color: var(--paper-bright); border-color: var(--signal); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="eyebrow">Case file</span>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: 2026</p>
+
+    <h2>Summary</h2>
+    <p>BugEye is a browser extension for authorized VAPT, bug bounty and your own assets. It is privacy-respecting and local-first. Recon and OSINT only: it does not auto-send exploit payloads.</p>
+
+    <h2>What BugEye collects</h2>
+    <p>BugEye does NOT collect, store, transmit, or sell any personal data to the developers or any third party. No analytics, no telemetry, no tracking.</p>
+
+    <h2>Data stored locally</h2>
+    <p>Stored ONLY in your browser via <code>chrome.storage.local</code>, never sent to us:</p>
+    <ul>
+      <li>Saved target domains and notes.</li>
+      <li>Settings and preferences.</li>
+      <li>Any optional API keys you enter (for example Shodan or HIBP). These stay local in plaintext and are sent only to that provider's own API when you use the related feature. Never sent to us.</li>
+    </ul>
+    <p>Remove the extension or clear its storage to erase all of this.</p>
+
+    <h2>Network requests</h2>
+    <p>When you use a feature, BugEye sends requests directly from your browser to the relevant public service (for example: crt.sh, crt.name, CertSpotter, HackerTarget including its free WHOIS API, AlienVault OTX, Shodan InternetDB, ipwho.is / ip-api.com, DNS-over-HTTPS resolvers, XposedOrNot, Wayback Machine, rdap.org, who.is, Gravatar, GitHub, hstspreload.org) to provide the result you asked for. There is no BugEye server; nothing is proxied through us. Each service has its own privacy policy.</p>
+
+    <h2>Permissions</h2>
+    <p>BugEye requests the minimum needed (storage, cookies, tabs, activeTab, scripting, webRequest, declarativeNetRequest, plus Chromium sidePanel or Firefox sidebar). Site access is requested once, the first time any feature needs to read a page; after that single grant, every feature works on any site with no further per-site prompts.</p>
+
+    <h2>Authorized use only</h2>
+    <p>BugEye is intended for contracted VAPT, bug bounty, and assets you own or are explicitly authorized to test. You are responsible for how you use it.</p>
+
+    <h2>Changes</h2>
+    <p>Any changes will be posted at this URL.</p>
+
+    <h2>Contact</h2>
+    <p>Open an issue on the BugEye GitHub repository: <a href="https://github.com/Esther7171/bugeye">github.com/Esther7171/bugeye</a></p>
+
+    <a class="back" href="./">&larr; Back to BugEye</a>
+  </div>
+</body>
+</html>
