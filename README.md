@@ -26,10 +26,11 @@ now it's installed manually from a zip - no coding tools required. This is
 the "sideloading" step you'd use to share a build with a friend for feedback
 before submitting to the stores.
 
-**Get the zip:** either build it yourself (`npm install` then `npm run zip` /
-`npm run zip:firefox`, producing `.output/bugeye-<version>-chrome.zip` and
-`.output/bugeye-<version>-firefox.zip`), or receive the zip someone already
-built and sent you.
+**Get the zip:** download the right one for your browser from the
+[**Releases page**](https://github.com/Esther7171/bugeye/releases/latest) -
+no account or coding tools needed. (You can also build your own from source
+with `npm install` then `npm run zip` / `npm run zip:firefox`, which produces
+the same files under `.output/`.)
 
 ### Chrome, Edge, Brave, Opera
 
