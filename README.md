@@ -34,8 +34,8 @@ until then, this "sideloading" process is the only way to install it.
 Go to the [**Releases page**](https://github.com/Esther7171/bugeye/releases/latest)
 and click the file for your browser to download it:
 
-- **Chrome, Edge, Brave, or Opera** → click `bugeye-0.1.0-chrome.zip`
-- **Firefox** → click `bugeye-0.1.0-firefox.zip`
+- **Chrome, Edge, Brave, or Opera** → click the file ending in `-chrome.zip`
+- **Firefox** → click the file ending in `-firefox.zip`
 
 It'll save to your computer's Downloads folder, same as any other download.
 
