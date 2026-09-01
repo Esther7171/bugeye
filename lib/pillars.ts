@@ -284,6 +284,13 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'wpcheck',
+    pillar: 'vuln-hunting',
+    name: 'WPCheck',
+    description: 'Detects the WordPress core version, plugins and themes in use, linking each to its WPScan vulnerability page.',
+    status: 'live',
+  },
+  {
     id: 'redirecttrace',
     pillar: 'tab-inspector',
     name: 'RedirectTrace',

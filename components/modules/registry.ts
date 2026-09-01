@@ -42,6 +42,7 @@ export const MODULE_COMPONENTS: Record<string, LazyExoticComponent<ComponentType
   jwtaudit: lazy(() => import('@/components/modules/jwtaudit/JwtAudit')),
   hstspreload: lazy(() => import('@/components/modules/hstspreload/HstsPreload')),
   retirejs: lazy(() => import('@/components/modules/retirejs/RetireJS')),
+  wpcheck: lazy(() => import('@/components/modules/wpcheck/WPCheck')),
   redirecttrace: lazy(() => import('@/components/modules/redirecttrace/RedirectTrace')),
   cvelookup: lazy(() => import('@/components/modules/cvelookup/CVELookup')),
   httpmethods: lazy(() => import('@/components/modules/httpmethods/HTTPMethods')),
