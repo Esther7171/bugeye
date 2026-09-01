@@ -19,6 +19,52 @@ other extension.
 Chromium and Firefox: built for Chrome, Edge, Brave, and Firefox (MV3). Safari
 is not supported.
 
+## Install for testing (not on any store yet)
+
+BugEye isn't published to the Chrome Web Store or Firefox Add-ons yet, so for
+now it's installed manually from a zip - no coding tools required. This is
+the "sideloading" step you'd use to share a build with a friend for feedback
+before submitting to the stores.
+
+**Get the zip:** either build it yourself (`npm install` then `npm run zip` /
+`npm run zip:firefox`, producing `.output/bugeye-<version>-chrome.zip` and
+`.output/bugeye-<version>-firefox.zip`), or receive the zip someone already
+built and sent you.
+
+### Chrome, Edge, Brave, Opera
+
+1. Unzip the chrome zip into its own folder.
+2. Open `chrome://extensions` (Edge: `edge://extensions`, Brave:
+   `brave://extensions`, Opera: `opera://extensions`).
+3. Turn on **Developer mode** (top-right toggle).
+4. Click **Load unpacked** and select the folder you unzipped.
+5. Pin BugEye from the puzzle-piece icon in the toolbar, then click it (or
+   press `Ctrl+Shift+K`) to open the side panel.
+
+This install persists across restarts. To get updates, unzip a newer build
+over the old folder and click the refresh icon on the extension's card in
+`chrome://extensions`.
+
+### Firefox
+
+1. Unzip the firefox zip into its own folder.
+2. Open `about:debugging#/runtime/this-firefox`.
+3. Click **Load Temporary Add-on** and select the `manifest.json` file
+   inside the folder you unzipped (not the folder itself).
+4. Open it via the toolbar button, `Ctrl+Shift+K`, or **View > Sidebar >
+   BugEye**.
+
+Firefox's "temporary" add-ons are removed when the browser fully restarts -
+you'll need to repeat step 2-3 each time. That's a Firefox limitation for
+unsigned extensions, not a BugEye bug; it goes away once BugEye is signed
+and published on addons.mozilla.org.
+
+### Giving feedback
+
+Recommendations and bugs are welcome as GitHub issues on this repo, or
+however you'd normally reach the maintainer - screenshots of anything that
+looks wrong are especially useful.
+
 ## Stack
 
 - WXT (MV3, side panel primary UI)
