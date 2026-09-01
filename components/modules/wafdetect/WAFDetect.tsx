@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { browser } from 'wxt/browser';
 import { sendToBackground } from '@/lib/messaging';
 import { useHostPermission } from '@/lib/useHostPermission';
+import { useActiveTab } from '@/lib/useActiveTab';
 import { normalizeUrl, originOf } from '@/lib/utils';
 import { cookiePermissionPatterns } from '@/lib/cookies';
 import {
@@ -23,6 +24,7 @@ import {
   type WafReport,
 } from '@/lib/waf';
 import { exportJson, exportMarkdown } from '@/lib/export';
+import { exportWafDocx } from '@/lib/wafdocx';
 import { formatTimestamp } from '@/lib/utils';
 import type { ModuleComponentProps } from '@/types';
 
@@ -38,6 +40,7 @@ export function WAFDetect({ onBack }: ModuleComponentProps) {
   const [report, setReport] = useState<WafReport | null>(null);
   const [note, setNote] = useState('');
   const { ensureMany, pending } = useHostPermission();
+  const { tabId: activeTabId, url: activeUrl, origin: activeOrigin } = useActiveTab();
 
   async function buildReport(target: string, headers: Record<string, string>, cookies: { name: string; value: string }[], body: string | null) {
     const evidence = [...analyzeHeaders(headers), ...analyzeCookies(cookies), ...(body ? analyzeBody(body) : [])];
@@ -54,33 +57,32 @@ export function WAFDetect({ onBack }: ModuleComponentProps) {
   }
 
   async function runCurrentTab() {
+    if (!activeTabId || !activeUrl) {
+      setNote('No active tab URL available.');
+      return;
+    }
+    if (!activeOrigin) {
+      setNote('Active tab is not an http(s) page.');
+      return;
+    }
     setLoading(true);
     setNote('');
     setReport(null);
     try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id || !tab.url) {
-        setNote('No active tab URL available.');
-        return;
-      }
-      const origin = originOf(tab.url);
-      if (!origin) {
-        setNote('Active tab is not an http(s) page.');
-        return;
-      }
-      const hostname = new URL(tab.url).hostname;
-      const granted = await ensureMany([origin, ...cookiePermissionPatterns(hostname)]);
+      const hostname = new URL(activeUrl).hostname;
+      // ensureMany() must be the first await here, see useActiveTab's comment.
+      const granted = await ensureMany([activeOrigin, ...cookiePermissionPatterns(hostname)]);
       if (!granted) {
         setNote('Host permission was not granted.');
         return;
       }
 
-      const headersRes = await sendToBackground({ type: 'GET_TAB_HEADERS', tabId: tab.id, url: tab.url });
+      const headersRes = await sendToBackground({ type: 'GET_TAB_HEADERS', tabId: activeTabId, url: activeUrl });
       const cookies = await browser.cookies.getAll({ domain: hostname });
 
       let body: string | null = null;
       try {
-        const [injection] = await browser.scripting.executeScript({ target: { tabId: tab.id }, func: grabPageHtml });
+        const [injection] = await browser.scripting.executeScript({ target: { tabId: activeTabId }, func: grabPageHtml });
         body = (injection?.result as string | undefined) ?? null;
       } catch {
         // best-effort - page may block scripting (e.g. a restricted page)
@@ -237,6 +239,9 @@ export function WAFDetect({ onBack }: ModuleComponentProps) {
               <CopyButton text={md} label="Copy report" />
               <Button size="sm" variant="outline" onClick={() => exportMarkdown('wafdetect', md)}>
                 Export Markdown
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => exportWafDocx(report)}>
+                Export Word
               </Button>
               <Button size="sm" variant="outline" onClick={() => exportJson('wafdetect', report)}>
                 Export JSON

@@ -7,12 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { browser } from 'wxt/browser';
 import { useTarget } from '@/components/shell/TargetProvider';
 import { useHostPermission } from '@/lib/useHostPermission';
+import { useActiveTab } from '@/lib/useActiveTab';
 import { sendToBackground } from '@/lib/messaging';
-import { originOf } from '@/lib/utils';
 import { fingerprintFromHeaders, matchCookieSignatures, type TechHit } from '@/lib/techstack';
 import { cookiePermissionPatterns } from '@/lib/cookies';
 import { RETIRE_LIBRARIES } from '@/lib/retirejs';
 import { exportJson } from '@/lib/export';
+import { exportTechStackDocx } from '@/lib/techstackdocx';
 import { cveQueryStore } from '@/lib/storage';
 import type { ModuleComponentProps } from '@/types';
 
@@ -139,6 +140,7 @@ export function TechStack({ onBack, onNavigate }: ModuleComponentProps) {
   const [hits, setHits] = useState<TechHit[]>([]);
   const [note, setNote] = useState('');
   const { ensure, ensureMany, pending } = useHostPermission();
+  const { tabId: activeTabId, url: activeUrl, origin: activeOrigin } = useActiveTab();
 
   async function scan() {
     if (!target) return;
@@ -146,7 +148,14 @@ export function TechStack({ onBack, onNavigate }: ModuleComponentProps) {
     setNote('');
     setHits([]);
     try {
-      const patterns = Array.from(new Set([`https://${target}/*`, ...cookiePermissionPatterns(target)]));
+      // Merge in the active tab's origin (already known from useActiveTab's
+      // cached state, not a fresh query) so this single call covers
+      // everything up front, as the very first await with nothing ahead of
+      // it. A second ensure() call later, after other awaits, would not be
+      // tied to this click anymore (see useActiveTab's comment).
+      const patterns = Array.from(
+        new Set([`https://${target}/*`, ...cookiePermissionPatterns(target), ...(activeOrigin ? [activeOrigin] : [])]),
+      );
       const granted = await ensureMany(patterns);
       if (!granted) {
         setNote('Host permission was not granted.');
@@ -160,8 +169,9 @@ export function TechStack({ onBack, onNavigate }: ModuleComponentProps) {
       ]);
       const cookieNames = cookieList.map((c) => c.name);
 
-      // Best-effort DOM read: header/cookie-based fingerprints below still
-      // work even if this permission is denied or the tab is not the target.
+      // Best-effort DOM read: header/cookie-based fingerprints above still
+      // work even if the active tab isn't the target, or its origin wasn't
+      // part of the granted set.
       let pageData: PageSignals = {
         generator: null,
         scriptSrcs: [],
@@ -170,12 +180,11 @@ export function TechStack({ onBack, onNavigate }: ModuleComponentProps) {
         classHeuristics: [],
         globalVersions: {},
       };
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      if (tab?.id && tab.url) {
-        const tabOrigin = originOf(tab.url);
-        if (tabOrigin && (await ensure(tabOrigin))) {
+      if (activeTabId && activeUrl) {
+        const injectionGranted = activeOrigin ? await ensure(activeOrigin) : false;
+        if (injectionGranted) {
           const [injection] = await browser.scripting.executeScript({
-            target: { tabId: tab.id },
+            target: { tabId: activeTabId },
             func: scanPageSignals,
             args: [allJsGlobals()],
           });
@@ -293,9 +302,14 @@ export function TechStack({ onBack, onNavigate }: ModuleComponentProps) {
                 </Card>
               </div>
             ))}
-            <Button size="sm" variant="outline" className="w-fit" onClick={() => exportJson('techstack', hits)}>
-              Export JSON
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => exportTechStackDocx(target || 'target', hits)}>
+                Export Word
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => exportJson('techstack', hits)}>
+                Export JSON
+              </Button>
+            </div>
           </>
         )}
       </div>

@@ -2,6 +2,7 @@ import { browser } from 'wxt/browser';
 import type { Browser } from 'wxt/browser';
 import type { BgRequest, BgResponseMap, RequestLogEntry } from '@/lib/messaging';
 import type { AliveCheckResult, UrlHeadersResult, TabHeadersResult } from '@/types';
+import { isSharedCacheable, varyIncludes } from '@/lib/cachepoison';
 
 function toOriginPattern(origin: string): string {
   return origin.endsWith('/*') ? origin : `${origin}/*`;
@@ -26,30 +27,6 @@ function describeFetchError(err: unknown): string {
 async function hasHostPermission(origin: string): Promise<boolean> {
   try {
     return await browser.permissions.contains({ origins: [toOriginPattern(origin)] });
-  } catch {
-    return false;
-  }
-}
-
-async function requestHostPermission(origin: string): Promise<boolean> {
-  try {
-    return await browser.permissions.request({ origins: [toOriginPattern(origin)] });
-  } catch {
-    return false;
-  }
-}
-
-async function hasHostPermissions(origins: string[]): Promise<boolean> {
-  try {
-    return await browser.permissions.contains({ origins: origins.map(toOriginPattern) });
-  } catch {
-    return false;
-  }
-}
-
-async function requestHostPermissions(origins: string[]): Promise<boolean> {
-  try {
-    return await browser.permissions.request({ origins: origins.map(toOriginPattern) });
   } catch {
     return false;
   }
@@ -317,13 +294,18 @@ async function handleFetchCertSpotter(rawDomain: string): Promise<BgResponseMap[
 // send permissive CORS headers, so this needs no host permission, same as
 // HackerTarget/CertSpotter above. A 404 here is a normal, meaningful result
 // (the domain is not currently registered), not a failure.
+function isIpLike(value: string): boolean {
+  return /^(\d{1,3}\.){3}\d{1,3}$/.test(value) || (value.includes(':') && /[0-9a-f]/i.test(value));
+}
+
 async function handleFetchRdap(rawDomain: string): Promise<BgResponseMap['FETCH_RDAP']> {
-  const domain = rawDomain.trim().toLowerCase().replace(/^www\./, '');
+  const domain = rawDomain.trim().toLowerCase().replace(/^www\./, '').replace(/^\[/, '').replace(/\]$/, '');
   if (!domain) return { ok: false, status: null, error: 'Empty domain' };
 
   try {
+    const kind = isIpLike(domain) ? 'ip' : 'domain';
     const res = await fetchWithTimeout(
-      `https://rdap.org/domain/${encodeURIComponent(domain)}`,
+      `https://rdap.org/${kind}/${encodeURIComponent(domain)}`,
       { headers: { Accept: 'application/rdap+json' } },
       12000,
     );
@@ -343,6 +325,104 @@ async function handleFetchRdap(rawDomain: string): Promise<BgResponseMap['FETCH_
     return { ok: true, status: res.status, raw };
   } catch (err) {
     return { ok: false, status: null, error: describeFetchError(err) };
+  }
+}
+
+// HackerTarget's free WHOIS endpoint speaks HTTP (not port 43) and sends
+// permissive CORS, same as their hostsearch API already used by SubFinder.
+async function handleFetchHackerTargetWhois(
+  rawDomain: string,
+): Promise<BgResponseMap['FETCH_HACKERTARGET_WHOIS']> {
+  const domain = rawDomain.trim().toLowerCase().replace(/^www\./, '');
+  if (!domain) return { ok: false, status: null, error: 'Empty domain' };
+
+  try {
+    const res = await fetchWithTimeout(
+      `https://api.hackertarget.com/whois/?q=${encodeURIComponent(domain)}`,
+      {},
+      15000,
+    );
+    const text = await res.text();
+    if (!res.ok) {
+      return { ok: false, status: res.status, error: httpStatusMessage(res.status) };
+    }
+    if (/^error/i.test(text.trim()) || /api count exceeded/i.test(text)) {
+      return { ok: false, status: res.status, error: text.trim().slice(0, 200) };
+    }
+    return { ok: true, text, status: res.status };
+  } catch (err) {
+    return { ok: false, status: null, error: describeFetchError(err) };
+  }
+}
+
+async function handleHttpProbe(url: string): Promise<BgResponseMap['HTTP_PROBE']> {
+  try {
+    const res = await fetchWithTimeout(url, { method: 'GET', redirect: 'follow' }, 8000);
+    const raw = await res.text();
+    return {
+      ok: res.ok,
+      status: res.status,
+      finalUrl: res.url,
+      body: raw.slice(0, 8000),
+    };
+  } catch (err) {
+    return { ok: false, status: null, error: describeFetchError(err) };
+  }
+}
+
+async function handleHttpPostProbe(
+  url: string,
+  body: string,
+  contentType = 'application/json',
+): Promise<BgResponseMap['HTTP_POST_PROBE']> {
+  try {
+    const res = await fetchWithTimeout(
+      url,
+      { method: 'POST', headers: { 'Content-Type': contentType, Accept: 'application/json' }, body },
+      8000,
+    );
+    const raw = await res.text();
+    return { ok: res.ok, status: res.status, body: raw.slice(0, 8000) };
+  } catch (err) {
+    return { ok: false, status: null, error: describeFetchError(err) };
+  }
+}
+
+async function handleGithubEmailSearch(email: string): Promise<BgResponseMap['FETCH_GITHUB_EMAIL']> {
+  const trimmed = email.trim();
+  if (!trimmed) return { ok: false, error: 'Empty email' };
+  const headers = {
+    Accept: 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28',
+  };
+
+  try {
+    const [usersRes, commitsRes] = await Promise.all([
+      fetchWithTimeout(
+        `https://api.github.com/search/users?q=${encodeURIComponent(`${trimmed} in:email`)}&per_page=5`,
+        { headers },
+        10000,
+      ),
+      fetchWithTimeout(
+        `https://api.github.com/search/commits?q=${encodeURIComponent(`author-email:${trimmed}`)}&per_page=5`,
+        { headers },
+        10000,
+      ),
+    ]);
+
+    const usersJson = await usersRes.json().catch(() => undefined);
+    const commitsJson = await commitsRes.json().catch(() => undefined);
+
+    return {
+      ok: usersRes.ok || commitsRes.ok,
+      users: usersRes.ok ? usersJson : undefined,
+      commits: commitsRes.ok ? commitsJson : undefined,
+      usersError: usersRes.ok ? undefined : httpStatusMessage(usersRes.status),
+      commitsError: commitsRes.ok ? undefined : httpStatusMessage(commitsRes.status),
+      error: usersRes.ok || commitsRes.ok ? undefined : 'GitHub search failed (unauthenticated rate limit is low).',
+    };
+  } catch (err) {
+    return { ok: false, error: describeFetchError(err) };
   }
 }
 
@@ -433,7 +513,7 @@ async function handleGetTabHeaders(tabId: number, url: string): Promise<TabHeade
     browser.webRequest.onHeadersReceived.addListener(
       listener,
       { urls: ['<all_urls>'], types: ['main_frame'] },
-      ['responseHeaders', 'extraHeaders'],
+      import.meta.env.FIREFOX ? ['responseHeaders'] : ['responseHeaders', 'extraHeaders'],
     );
 
     browser.tabs.reload(tabId).catch(async () => {
@@ -751,6 +831,63 @@ async function handleCorsCheck(url: string): Promise<BgResponseMap['CORS_CHECK']
   }
 }
 
+async function handleCachePoisonProbe(url: string): Promise<BgResponseMap['CACHE_POISON_PROBE']> {
+  const id = crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+  const injected: Record<string, string> = {
+    'X-Forwarded-Host': `xfh-${id}.invalid`,
+    'X-Forwarded-Scheme': `xfs-${id}`,
+    'X-Original-URL': `/xorig-${id}`,
+    'X-Rewrite-URL': `/xrewr-${id}`,
+    'X-Host': `xhost-${id}.invalid`,
+    'X-Forwarded-Port': '58413',
+    'X-Forwarded-Prefix': `/xpref-${id}`,
+  };
+  try {
+    const res = await fetchWithTimeout(url, { headers: injected, redirect: 'manual' }, 10000);
+    let status: number | null = res.status;
+    let location = res.headers.get('location') ?? undefined;
+    let cacheControl = res.headers.get('cache-control') ?? undefined;
+    let vary = res.headers.get('vary') ?? undefined;
+    let haystack = `${Object.values(headersToRecord(res.headers)).join('\n')}\n${location ?? ''}\n${res.url}`;
+    if (status === 0) {
+      const followed = await fetchWithTimeout(url, { headers: injected, redirect: 'follow' }, 10000);
+      status = followed.status;
+      cacheControl = cacheControl ?? followed.headers.get('cache-control') ?? undefined;
+      vary = vary ?? followed.headers.get('vary') ?? undefined;
+      const body = (await followed.text()).slice(0, 24000);
+      haystack += `\n${body}\n${followed.url}`;
+    } else {
+      haystack += `\n${(await res.text()).slice(0, 24000)}`;
+    }
+    const reflected = Object.entries(injected)
+      .filter(([, value]) => haystack.includes(value))
+      .map(([name]) => name);
+    const cacheable = isSharedCacheable(cacheControl, status);
+    const unkeyedNotInVary = reflected.filter((h) => !varyIncludes(vary, h));
+    return {
+      ok: true,
+      canary: id,
+      status,
+      cacheControl,
+      vary,
+      location,
+      cacheable,
+      reflected,
+      unkeyedNotInVary,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      canary: id,
+      status: null,
+      cacheable: false,
+      reflected: [],
+      unkeyedNotInVary: [],
+      error: describeFetchError(err),
+    };
+  }
+}
+
 async function handleHttpMethodsCheck(url: string): Promise<BgResponseMap['HTTP_METHODS_CHECK']> {
   try {
     const res = await fetchWithTimeout(url, { method: 'OPTIONS' }, 8000);
@@ -994,6 +1131,13 @@ export default defineBackground(() => {
 
   if (browser.sidePanel) {
     browser.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
+  } else {
+    // Firefox: WXT maps the sidepanel entrypoint to sidebar_action. Toolbar
+    // click toggles the sidebar (Chrome uses sidePanel.setPanelBehavior).
+    browser.action.onClicked.addListener(() => {
+      const sidebar = (browser as { sidebarAction?: { toggle: () => Promise<void> } }).sidebarAction;
+      void sidebar?.toggle();
+    });
   }
 
   browser.runtime.onMessage.addListener((message: BgRequest, _sender, sendResponse) => {
@@ -1076,6 +1220,15 @@ export default defineBackground(() => {
         case 'FETCH_RDAP':
           sendResponse(await handleFetchRdap(message.domain));
           break;
+        case 'FETCH_HACKERTARGET_WHOIS':
+          sendResponse(await handleFetchHackerTargetWhois(message.domain));
+          break;
+        case 'HTTP_PROBE':
+          sendResponse(await handleHttpProbe(message.url));
+          break;
+        case 'FETCH_GITHUB_EMAIL':
+          sendResponse(await handleGithubEmailSearch(message.email));
+          break;
         case 'REVERSE_WHOIS':
           sendResponse(await handleReverseWhois(message.mode, message.query, message.apiKey));
           break;
@@ -1084,18 +1237,6 @@ export default defineBackground(() => {
           break;
         case 'GET_TAB_HEADERS':
           sendResponse(await handleGetTabHeaders(message.tabId, message.url));
-          break;
-        case 'REQUEST_HOST_PERMISSION':
-          sendResponse({ granted: await requestHostPermission(message.origin) });
-          break;
-        case 'HAS_HOST_PERMISSION':
-          sendResponse({ granted: await hasHostPermission(message.origin) });
-          break;
-        case 'REQUEST_HOST_PERMISSIONS':
-          sendResponse({ granted: await requestHostPermissions(message.origins) });
-          break;
-        case 'HAS_HOST_PERMISSIONS':
-          sendResponse({ granted: await hasHostPermissions(message.origins) });
           break;
         case 'OPEN_TABS':
           sendResponse(
@@ -1144,6 +1285,9 @@ export default defineBackground(() => {
         case 'CORS_CHECK':
           sendResponse(await handleCorsCheck(message.url));
           break;
+        case 'CACHE_POISON_PROBE':
+          sendResponse(await handleCachePoisonProbe(message.url));
+          break;
         case 'HTTP_METHODS_CHECK':
           sendResponse(await handleHttpMethodsCheck(message.url));
           break;
@@ -1155,6 +1299,9 @@ export default defineBackground(() => {
           break;
         case 'BREACH_CHECK':
           sendResponse(await handleBreachCheck(message.email, message.hibpApiKey));
+          break;
+        case 'HTTP_POST_PROBE':
+          sendResponse(await handleHttpPostProbe(message.url, message.body, message.contentType));
           break;
         default:
           sendResponse({ ok: false, error: 'Unknown message type' });

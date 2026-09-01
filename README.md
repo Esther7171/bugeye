@@ -11,11 +11,13 @@ pentest triage. Built with [WXT](https://wxt.dev), React, TypeScript, Tailwind
 CSS and shadcn-style components. Original codebase - no code reused from any
 other extension.
 
-> **Authorized targets / your own assets only.** No active exploitation, no
-> DoS, no brute-force runners, no auto-attacking.
+> For contracted VAPT, bug bounty, and assets you own or are explicitly
+> authorized to test. BugEye is recon and OSINT triage: public records,
+> fingerprints, and copy-paste CLI. It does not auto-send exploit payloads,
+> run DoS, or brute-force logins.
 
-Chromium-first: built and tested for Chrome, Edge and Brave. Firefox and
-Safari are not supported yet.
+Chromium and Firefox: built for Chrome, Edge, Brave, and Firefox (MV3). Safari
+is not supported.
 
 ## Stack
 
@@ -49,21 +51,21 @@ CLI Bridge · OSINT · Utility
 ## Modules (all live)
 
 - **Tab Inspector**: HeaderGrade, CookieJar, ClickjackCheck, CSPAudit,
-  CORSCheck, RetireJS, RedirectTrace, CVELookup, HTTPMethods, StorageDump,
-  TechStack, WAFDetect
-- **Page Recon**: LinkGrab, JSList, SecretScan, FormAudit, HiddenFind,
+  CORSCheck, CachePoison, HstsPreload, RetireJS, RedirectTrace, CVELookup,
+  HTTPMethods, StorageDump, TechStack, WAFDetect
+- **Page Recon**: LinkGrab, JSList, SriCheck, SecretScan, FormAudit, HiddenFind,
   LinkedContent, TrackerScan
 - **List Triage**: BulkOpen
 - **Traffic**: HeaderInject, UASwitch, RefControl, ReqLogger
-- **Encode/Payload**: EncoderKit (Base64/URL/HTML/Hex/JWT/Hash/Chain), ShellGen,
-  PayloadLib, BlindXSS, BlindSQLi
-- **CLI Bridge**: ReconBuild, LinuxCmds, PEASGet, FuzzBuild, WordlistPick,
-  StegGen
+- **Encode/Payload**: EncoderKit (Base64/URL/HTML/Hex/JWT/Hash/Chain), JwtAudit,
+  ShellGen, PayloadLib, BlindXSS, BlindSQLi
+- **CLI Bridge**: ReconBuild, NetCmds, LinuxCmds, PEASGet, FuzzBuild,
+  WordlistPick, StegGen
 - **OSINT**: SubFinder, BucketSpot, ExifPeek, SSLInspect, FaviconHash, IPGeo,
-  ShodanPeek, RobotsPeek, SitemapFind, WellKnownScan, PanelHunt, GitFinder,
-  Wayback, ContactGrab, EmailHunter, EmailAnalyze, BreachCheck, PhoneAnalyze,
-  GoogleDork, GitDork, TakeoverCheck, DNSRecords, DNSSECCheck, HostCluster,
-  WhoisLookup
+  ShodanPeek, RobotsPeek, SitemapFind, WellKnownScan, ApiSpec, PanelHunt,
+  GitFinder, Wayback, ContactGrab, EmailHunter, EmailAnalyze, MailHunt,
+  UserHunt, BreachCheck, PhoneAnalyze, GoogleDork, GitDork, TakeoverCheck,
+  DNSRecords, DNSSECCheck, HostCluster, WhoisLookup
 - **Utility**: AutoFinder, GuideBook, UploadTest, TargetSave, ExportAll,
   CopyAsCurl, JSONView
 
@@ -73,20 +75,23 @@ See `components/modules/registry.ts` for the id -> component map.
 
 ```powershell
 npm install
-npm run dev        # WXT dev server; prints how to load the unpacked build
-npm run build       # production build -> .output/chrome-mv3
-npm run compile     # type-check only
+npm run dev          # Chromium WXT dev server
+npm run dev:firefox  # Firefox
+npm run build        # -> .output/chrome-mv3
+npm run build:firefox
+npm run compile      # type-check only
 ```
 
-To load manually: `npm run build`, then open `chrome://extensions`, enable
-**Developer mode**, click **Load unpacked**, and select `.output/chrome-mv3`.
-Open the side panel via the toolbar icon or `Ctrl+Shift+K`.
+**Chrome / Edge / Brave:** `npm run build`, then `chrome://extensions` → Developer mode → Load unpacked → `.output/chrome-mv3`. Open the side panel via the toolbar icon or `Ctrl+Shift+K`.
+
+**Firefox:** `npm run build:firefox`, then `about:debugging#/runtime/this-firefox` → Load Temporary Add-on → select `.output/firefox-mv3/manifest.json`. Open via the toolbar button, `Ctrl+Shift+K`, or View → Sidebar → BugEye.
 
 ## Permissions
 
-Declared upfront: `storage`, `cookies`, `tabs`, `sidePanel`, `activeTab`,
-`scripting`, `webRequest`, `declarativeNetRequest`. No `host_permissions` are
-declared statically - each module requests access to a specific origin only
+Declared upfront: `storage`, `cookies`, `tabs`, `activeTab`, `scripting`,
+`webRequest`, `declarativeNetRequest`. Chromium also uses `sidePanel`; Firefox
+uses `sidebar_action` instead. No `host_permissions` are declared statically -
+each module requests access to a specific origin only
 when you actually use it against that target (see the "why these
 permissions?" info button at the bottom of the sidebar).
 

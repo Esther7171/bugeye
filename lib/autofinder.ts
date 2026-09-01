@@ -36,7 +36,10 @@ export type AutoFinderTaskId =
   | 'wayback'
   | 'tech'
   | 'retirejs'
-  | 'buckets';
+  | 'buckets'
+  | 'links'
+  | 'jsfiles'
+  | 'secrets';
 
 export const AUTOFINDER_TASKS: { id: AutoFinderTaskId; label: string }[] = [
   { id: 'dns', label: 'DNS resolution' },
@@ -59,6 +62,9 @@ export const AUTOFINDER_TASKS: { id: AutoFinderTaskId; label: string }[] = [
   { id: 'tech', label: 'Tech fingerprint' },
   { id: 'retirejs', label: 'Outdated JS libraries' },
   { id: 'buckets', label: 'Cloud storage references' },
+  { id: 'links', label: 'Links, scripts and form actions' },
+  { id: 'jsfiles', label: 'JavaScript files' },
+  { id: 'secrets', label: 'Exposed keys/tokens (best-effort)' },
 ];
 
 export type TaskStatus = 'pending' | 'running' | 'done' | 'error';
@@ -106,6 +112,20 @@ export interface AutoFinderReport {
   techGuesses: string[];
   retireFindings: RetireFinding[];
   buckets: BucketRef[];
+  links: { internal: LinkHit[]; external: LinkHit[] };
+  jsFiles: string[];
+  secrets: SecretHit[];
+}
+
+export interface LinkHit {
+  url: string;
+  tag: string;
+}
+
+export interface SecretHit {
+  type: string;
+  match: string;
+  context: string;
 }
 
 const BUCKET_PATTERNS: Array<{ type: string; re: RegExp }> = [
@@ -155,6 +175,71 @@ function extractScriptSrcs(html: string, baseUrl: string): string[] {
     }
   });
   return srcs;
+}
+
+// Mirrors LinkGrab's scanPageForLinks, but reads the already-fetched static
+// HTML (via DOMParser) instead of chrome.scripting.executeScript against a
+// live tab. That means it only sees what the server actually sent, not
+// anything added by client-side JS after render - the tradeoff that lets
+// this run from just a domain string, no open tab required, consistent with
+// the rest of AutoFinder.
+function extractLinks(html: string, baseUrl: string, domain: string): { internal: LinkHit[]; external: LinkHit[] } {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const found = new Map<string, LinkHit>();
+  const add = (raw: string | null, tag: string) => {
+    if (!raw) return;
+    try {
+      const resolved = new URL(raw, baseUrl).href;
+      if (!found.has(resolved)) found.set(resolved, { url: resolved, tag });
+    } catch {
+      // ignore unparsable URLs (mailto without value, javascript:, etc.)
+    }
+  };
+  doc.querySelectorAll('a[href]').forEach((el) => add(el.getAttribute('href'), 'a'));
+  doc.querySelectorAll('img[src]').forEach((el) => add(el.getAttribute('src'), 'img'));
+  doc.querySelectorAll('script[src]').forEach((el) => add(el.getAttribute('src'), 'script'));
+  doc.querySelectorAll('link[href]').forEach((el) => add(el.getAttribute('href'), 'link'));
+  doc.querySelectorAll('form[action]').forEach((el) => add(el.getAttribute('action'), 'form'));
+
+  const all = Array.from(found.values());
+  const internal: LinkHit[] = [];
+  const external: LinkHit[] = [];
+  for (const hit of all) {
+    try {
+      (new URL(hit.url).hostname === domain ? internal : external).push(hit);
+    } catch {
+      external.push(hit);
+    }
+  }
+  return { internal, external };
+}
+
+// Mirrors SecretScan's scanPageForSecrets, same static-HTML tradeoff as
+// extractLinks above - inline <script> content is still part of the raw
+// HTML, so this catches the same inline-secret cases, just not anything
+// injected only by client-side JS after load.
+const SECRET_PATTERNS: Array<{ type: string; re: RegExp }> = [
+  { type: 'AWS Access Key', re: /AKIA[0-9A-Z]{16}/g },
+  { type: 'Google API Key', re: /AIza[0-9A-Za-z\-_]{35}/g },
+  { type: 'Slack Token', re: /xox[baprs]-[0-9a-zA-Z-]{10,}/g },
+  { type: 'JWT', re: /eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}/g },
+  { type: 'Bearer token', re: /Bearer\s+[A-Za-z0-9\-_.=]{10,}/g },
+  { type: 'Generic api_key', re: /api[_-]?key["'\s]*[:=]\s*["'][a-zA-Z0-9_\-]{12,}["']/gi },
+  { type: 'Generic secret', re: /secret["'\s]*[:=]\s*["'][^"'\s]{8,}["']/gi },
+];
+
+function extractSecrets(html: string): SecretHit[] {
+  const found = new Map<string, SecretHit>();
+  for (const { type, re } of SECRET_PATTERNS) {
+    for (const m of html.matchAll(re)) {
+      const match = m[0];
+      const index = m.index ?? 0;
+      const context = html.slice(Math.max(0, index - 30), index + match.length + 30).replace(/\s+/g, ' ');
+      const key = `${type}:${match}`;
+      if (!found.has(key)) found.set(key, { type, match, context });
+    }
+  }
+  return Array.from(found.values());
 }
 
 export async function runAutoFinder(
@@ -315,11 +400,13 @@ export async function runAutoFinder(
   const techHits = await run('tech', async () => fingerprintFromHeaders(headers), (r) => `${r.length} signals`);
   const techGuesses = guessTechFromHtml(html);
 
+  const allJsFiles = html ? extractScriptSrcs(html, homeUrl) : [];
+
   const retireFindings = await run(
     'retirejs',
     async () => {
       if (!html) return [];
-      const srcs = extractScriptSrcs(html, homeUrl).slice(0, 20);
+      const srcs = allJsFiles.slice(0, 20);
       const results = await mapLimit(srcs, 5, async (url) => {
         try {
           const res = await sendToBackground({ type: 'FETCH_TEXT', url });
@@ -334,6 +421,16 @@ export async function runAutoFinder(
   );
 
   const buckets = await run('buckets', async () => findBucketRefs(html), (r) => `${r.length} found`);
+
+  const links = await run(
+    'links',
+    async () => extractLinks(html, homeUrl, domain),
+    (r) => `${r.internal.length} internal, ${r.external.length} external`,
+  );
+
+  const jsFiles = await run('jsfiles', async () => allJsFiles, (r) => `${r.length} files`);
+
+  const secrets = await run('secrets', async () => extractSecrets(html), (r) => `${r.length} possible hit(s)`);
 
   return {
     domain,
@@ -364,6 +461,9 @@ export async function runAutoFinder(
     techGuesses,
     retireFindings: retireFindings ?? [],
     buckets: buckets ?? [],
+    links: links ?? { internal: [], external: [] },
+    jsFiles: jsFiles ?? [],
+    secrets: secrets ?? [],
   };
 }
 
@@ -435,6 +535,23 @@ export function autoFinderToMarkdown(r: AutoFinderReport): string {
     '',
     '## Cloud storage references',
     r.buckets.length ? r.buckets.map((b) => `- [${b.type}] ${b.url}`).join('\n') : '_None found on homepage._',
+    '',
+    `## Links (${r.links.internal.length} internal, ${r.links.external.length} external)`,
+    '_From the static homepage HTML only, not a live-rendered page - see LinkGrab on an open tab for the fuller, post-JS picture._',
+    '',
+    '### Internal',
+    r.links.internal.slice(0, 100).map((l) => `- [${l.tag}] ${l.url}`).join('\n') || '_None found._',
+    '',
+    '### External',
+    r.links.external.slice(0, 100).map((l) => `- [${l.tag}] ${l.url}`).join('\n') || '_None found._',
+    '',
+    `## JavaScript files (${r.jsFiles.length})`,
+    r.jsFiles.slice(0, 100).map((u) => `- ${u}`).join('\n') || '_None found._',
+    '',
+    `## Exposed keys/tokens, best-effort (${r.secrets.length})`,
+    '_Pattern matching only - expect false positives (test fixtures, docs, minified noise). Verify every hit manually._',
+    '',
+    r.secrets.length ? r.secrets.map((s) => `- **${s.type}**: \`${s.match}\``).join('\n') : '_None found._',
   ];
   return lines.join('\n');
 }

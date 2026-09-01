@@ -18,6 +18,7 @@ const KEYS = {
   targetNotes: 'bugeye:targetNotes',
   lastSubdomains: 'bugeye:lastSubdomains',
   autoFinderReport: 'bugeye:autoFinderReport',
+  autoFinderHistory: 'bugeye:autoFinderHistory',
 } as const;
 
 export type Theme = 'dark' | 'light';
@@ -142,6 +143,16 @@ export interface StoredAutoFinderReport {
 export const autoFinderReportStore = {
   get: () => get<StoredAutoFinderReport | null>(KEYS.autoFinderReport, null),
   set: (value: StoredAutoFinderReport) => set(KEYS.autoFinderReport, value),
+};
+
+export interface AutoFinderHistorySlot {
+  current: StoredAutoFinderReport;
+  previous?: StoredAutoFinderReport;
+}
+
+export const autoFinderHistoryStore = {
+  get: () => get<Record<string, AutoFinderHistorySlot>>(KEYS.autoFinderHistory, {}),
+  set: (value: Record<string, AutoFinderHistorySlot>) => set(KEYS.autoFinderHistory, value),
 };
 
 export function onStorageChange(

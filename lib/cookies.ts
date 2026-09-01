@@ -100,3 +100,81 @@ export function cookieRemoveUrl(cookie: CookieRecord): string {
   const scheme = cookie.secure ? 'https' : 'http';
   return `${scheme}://${domain}${cookie.path}`;
 }
+
+export type CookieFindingSeverity = 'fail' | 'warn' | 'pass';
+
+export interface CookieFinding {
+  id: string;
+  severity: CookieFindingSeverity;
+  detail: string;
+}
+
+export function auditCookie(cookie: CookieRecord): CookieFinding[] {
+  const findings: CookieFinding[] = [];
+  const hostOnly = !cookie.domain.startsWith('.');
+  const sameSite = cookie.sameSite ?? 'unspecified';
+
+  if (cookie.name.startsWith('__Host-')) {
+    const ok = cookie.secure && cookie.path === '/' && hostOnly;
+    findings.push({
+      id: 'host-prefix',
+      severity: ok ? 'pass' : 'fail',
+      detail: ok
+        ? '__Host- prefix rules met (Secure, Path=/, host-only).'
+        : `__Host- requires Secure, Path=/, and no Domain attribute. Got secure=${cookie.secure}, path=${cookie.path}, domain=${cookie.domain}.`,
+    });
+  } else if (cookie.name.startsWith('__Secure-')) {
+    findings.push({
+      id: 'secure-prefix',
+      severity: cookie.secure ? 'pass' : 'fail',
+      detail: cookie.secure
+        ? '__Secure- prefix requires Secure: ok.'
+        : '__Secure- cookies must be marked Secure.',
+    });
+  }
+
+  if (sameSite === 'no_restriction') {
+    findings.push({
+      id: 'samesite-none',
+      severity: cookie.secure ? 'warn' : 'fail',
+      detail: cookie.secure
+        ? 'SameSite=None (Chrome: no_restriction). Cross-site cookies; confirm this is intentional.'
+        : 'SameSite=None without Secure is rejected by modern browsers.',
+    });
+  } else if (sameSite === 'unspecified') {
+    findings.push({
+      id: 'samesite-missing',
+      severity: 'warn',
+      detail: 'SameSite not set. Chrome defaults to Lax; older clients may treat this as None.',
+    });
+  } else {
+    findings.push({
+      id: 'samesite',
+      severity: 'pass',
+      detail: `SameSite=${sameSite}.`,
+    });
+  }
+
+  if (!cookie.secure) {
+    findings.push({
+      id: 'secure',
+      severity: 'fail',
+      detail: 'Missing Secure - cookie may be sent over HTTP.',
+    });
+  }
+  if (!cookie.httpOnly) {
+    findings.push({
+      id: 'httponly',
+      severity: 'warn',
+      detail: 'Missing HttpOnly - page JavaScript can read this cookie.',
+    });
+  }
+
+  return findings;
+}
+
+export function cookieWorstSeverity(findings: CookieFinding[]): CookieFindingSeverity {
+  if (findings.some((f) => f.severity === 'fail')) return 'fail';
+  if (findings.some((f) => f.severity === 'warn')) return 'warn';
+  return 'pass';
+}

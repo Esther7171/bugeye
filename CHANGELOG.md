@@ -155,3 +155,63 @@ Initial public build.
   instead of the intended name: the code revoked the blob URL after a fixed
   2-second timer, which could race a "Save As" dialog if the user has "Ask
   where to save each file" on. Delay increased to 60 seconds.
+- Fixed SSLInspect: it fetched crt.sh without ever requesting host
+  permission for it first, unlike every other crt.sh-consuming module
+  (SubFinder, AutoFinder). Found during a full domain recheck against
+  broomees.com: SSLInspect silently failed for any user who had not
+  already granted crt.sh permission via one of those other modules. Now
+  requests it the same way they do before fetching.
+- AutoFinder now also covers links/scripts/form actions (LinkGrab-style,
+  internal vs external), every JavaScript file referenced, and a
+  best-effort exposed-keys/tokens scan (SecretScan-style patterns), all
+  three flowing into the Markdown/JSON/Word export like everything else in
+  the report. These read the already-fetched static homepage HTML (the
+  same way the existing outdated-JS-library and cloud-storage checks
+  already do), not a live-rendered tab, so no new permission and no
+  requirement to have the site open - the tradeoff is they only see what
+  the server actually sent, not anything client-side JS adds after load;
+  the standalone LinkGrab/SecretScan modules on an open tab still give the
+  fuller, post-render picture, and the report says so.
+- Added NetCmds (CLI Bridge): copy-paste ping, traceroute, whois, nmap and
+  naabu for the current target, with Windows vs Linux/macOS variants. The
+  module exists because those four genuinely cannot run inside an MV3
+  extension (no raw sockets, no ICMP, no TCP/43). Cross-links to WhoisLookup
+  (RDAP) and ShodanPeek (passive InternetDB ports) as the in-browser
+  substitutes. Nothing is executed by the extension.
+- WhoisLookup now collects from three HTTP sources in one pass: RDAP
+  (rdap.org, including IP RDAP), HackerTarget's free WHOIS API, and the
+  who.is web page (host permission on demand). Parses published emails out
+  of the raw records. Still no port 43.
+- Added MailHunt (OSINT): Gravatar JSON profile plus unauthenticated GitHub
+  user/commit search, with Google/Bing/DuckDuckGo/Hunter/Epieos/IntelX
+  links. Added UserHunt (OSINT): GET-probes public profile URLs for a
+  username (GitHub, GitLab, Reddit, npm, PyPI, and others). Neither module
+  hits login or password-reset endpoints.
+- Added SriCheck (cross-origin script/link without integrity), ApiSpec
+  (exposed swagger/openapi/Postman bodies), JwtAudit (alg:none, missing exp,
+  weak kid; decode-only, also wired into EncoderKit's JWT tab), CachePoison
+  (one canary request in unkeyed headers; flags reflection into a
+  shared-cacheable response, detection, not poisoning other users),
+  HstsPreload (public hstspreload.org membership). CookieJar now audits
+  SameSite and __Host-/__Secure- prefix rules. AutoFinder keeps the previous
+  scan per target and diffs subdomains, grades, CORS, paths, ports, tech,
+  JS and secrets.
+- Rebuilt Export Word (AutoFinder) as an actual .docx file: a hand-written,
+  zero-dependency ZIP writer (`lib/zip.ts`) plus a small markdown-to-
+  WordprocessingML converter (`lib/docx.ts`) producing real OOXML parts
+  ([Content_Types].xml, _rels/.rels, word/document.xml,
+  word/_rels/document.xml.rels). Previously this was an HTML file wearing
+  a .doc extension and MIME type, a trick Word happens to open but which
+  isn't an actual Word-format file and can get misread or flagged by
+  stricter parsers. Verified by extracting the real output with .NET's
+  ZipFile class and confirming every XML part is well-formed and the text
+  content (458 runs on a real AutoFinder report) is intact.
+- Removed AutoFinder Export Word and the in-extension ZIP/OOXML writer
+  (`lib/zip.ts`, `lib/docx.ts`). Reports stay Markdown and JSON.
+- Firefox MV3: WXT maps the side panel to `sidebar_action`, gecko id
+  `bugeye@esther7171.github.io` (min 128), no Chromium-only `sidePanel`
+  permission, toolbar click toggles the sidebar, and webRequest header
+  capture omits Chrome's `extraHeaders` flag which Firefox rejects. Host
+  permission prompts run in the sidebar (not the background) so Firefox
+  still sees the click as a user gesture. `npm run package` now also emits
+  `bugeye-v1-firefox/` and `bugeye-v1-firefox.zip`.

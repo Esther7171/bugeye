@@ -134,3 +134,148 @@ export function registrarSearchLinks(domain: string): RegistrarLink[] {
     { label: 'GoDaddy', url: `https://www.godaddy.com/domainsearch/find?domainToCheck=${encoded}` },
   ];
 }
+
+export type WhoisSourceId = 'rdap' | 'hackertarget' | 'whois_web';
+
+export interface WhoisSourceRecord {
+  id: WhoisSourceId;
+  label: string;
+  ok: boolean;
+  error?: string;
+  raw?: string;
+  parsed?: WhoisResult;
+}
+
+const WHOIS_EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+
+function whoisField(text: string, names: string[]): string | undefined {
+  for (const name of names) {
+    const re = new RegExp(`^[\\t ]*${name}[\\t ]*:[\\t ]*(.+)$`, 'im');
+    const m = text.match(re);
+    const value = m?.[1]?.trim();
+    if (!value) continue;
+    if (/^(redacted for privacy|redacted|not disclosed|privacy protected|please query|data protected|withheld)/i.test(value)) {
+      continue;
+    }
+    return value;
+  }
+  return undefined;
+}
+
+function decodeHtmlEntities(input: string): string {
+  return input
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '');
+}
+
+export function extractWhoisFromHtml(html: string): string {
+  if (typeof DOMParser !== 'undefined') {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const nodes = Array.from(
+      doc.querySelectorAll('pre, .queryResponseBodyTxt, #registrarData, .whois-data, .df-raw'),
+    );
+    const best = nodes
+      .map((el) => (el.textContent ?? '').trim())
+      .sort((a, b) => b.length - a.length)[0];
+    if (best && best.length > 40) return best;
+  }
+  const blocks = [...html.matchAll(/<pre[^>]*>([\s\S]*?)<\/pre>/gi)].map((m) =>
+    decodeHtmlEntities(m[1] ?? '').trim(),
+  );
+  return blocks.sort((a, b) => b.length - a.length)[0] ?? '';
+}
+
+export function parseWhoisText(domain: string, raw: string): WhoisResult {
+  const text = raw.replace(/\r\n/g, '\n').trim();
+  const head = text.slice(0, 800);
+  const missing =
+    /no match|not found|no entries found|no data found|no object found|error check your search/i.test(
+      head,
+    );
+  const looksLikeRecord = /domain name\s*:/i.test(text) || /nserver\s*:/i.test(text);
+  if (!text || missing || !looksLikeRecord) {
+    return domainNotFoundResult(domain);
+  }
+
+  const nameservers = [
+    ...text.matchAll(/^[ \t]*(?:Name Server|nserver|Name servers)[ \t]*:[ \t]*(\S+)/gim),
+  ]
+    .map((m) => (m[1] ?? '').replace(/\.$/, '').toLowerCase())
+    .filter(Boolean);
+  const uniqueNs = [...new Set(nameservers)];
+
+  const emails = [...new Set((text.match(WHOIS_EMAIL_RE) ?? []).map((e) => e.toLowerCase()))];
+  const contacts: WhoisContact[] = [];
+  const registrant = whoisField(text, ['Registrant Name', 'Registrant']);
+  const registrantOrg = whoisField(text, ['Registrant Organization', 'Registrant Org']);
+  const registrantEmail = whoisField(text, ['Registrant Email', 'Registrant E-mail']);
+  const registrantPhone = whoisField(text, ['Registrant Phone', 'Registrant Phone Number']);
+  if (registrant || registrantOrg || registrantEmail) {
+    contacts.push({
+      role: 'registrant',
+      name: registrant,
+      org: registrantOrg,
+      email: registrantEmail,
+      phone: registrantPhone,
+    });
+  }
+  for (const email of emails) {
+    if (contacts.some((c) => c.email === email)) continue;
+    contacts.push({ role: 'published', email });
+  }
+
+  const expiresAt = whoisField(text, [
+    'Registry Expiry Date',
+    'Registrar Registration Expiration Date',
+    'Expiration Date',
+    'Expiry Date',
+    'paid-till',
+  ]);
+  let daysUntilExpiry: number | undefined;
+  if (expiresAt) {
+    const ts = Date.parse(expiresAt);
+    if (!Number.isNaN(ts)) daysUntilExpiry = Math.floor((ts - Date.now()) / 86400000);
+  }
+
+  const statusLine = whoisField(text, ['Domain Status', 'Status']);
+  const status = statusLine
+    ? statusLine.split(/\s+/).filter((s) => s.length > 2 && !/^https?:/i.test(s))
+    : [];
+
+  return {
+    domain,
+    found: true,
+    registrar: whoisField(text, ['Registrar', 'Registrar Name', 'registrar']),
+    registrarAbuseEmail: whoisField(text, ['Registrar Abuse Contact Email', 'Abuse Email']),
+    createdAt: whoisField(text, ['Creation Date', 'Created Date', 'created', 'Created On']),
+    expiresAt,
+    lastChangedAt: whoisField(text, ['Updated Date', 'Last Updated', 'last-modified', 'Changed']),
+    daysUntilExpiry,
+    status,
+    nameservers: uniqueNs,
+    dnssecSigned: /dnssec\s*:\s*(signed|yes|true)/i.test(text)
+      ? true
+      : /dnssec\s*:\s*(unsigned|no|false|unsigned)/i.test(text)
+        ? false
+        : undefined,
+    contacts,
+  };
+}
+
+export function emailsFromWhoisSources(sources: WhoisSourceRecord[]): string[] {
+  const set = new Set<string>();
+  for (const src of sources) {
+    if (src.raw) {
+      for (const e of src.raw.match(WHOIS_EMAIL_RE) ?? []) set.add(e.toLowerCase());
+    }
+    for (const c of src.parsed?.contacts ?? []) {
+      if (c.email) set.add(c.email.toLowerCase());
+    }
+  }
+  return [...set].sort();
+}

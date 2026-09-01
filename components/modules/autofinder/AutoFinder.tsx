@@ -17,9 +17,11 @@ import {
   type ProgressMap,
   type TaskStatus,
 } from '@/lib/autofinder';
-import { exportMarkdown, exportJson, exportWord } from '@/lib/export';
-import { bulkListStore, autoFinderReportStore } from '@/lib/storage';
+import { exportMarkdown, exportJson } from '@/lib/export';
+import { exportAutoFinderDocx } from '@/lib/autofinderdocx';
+import { bulkListStore, autoFinderReportStore, autoFinderHistoryStore } from '@/lib/storage';
 import { formatTimestamp } from '@/lib/utils';
+import { diffAutoFinder, type DiffItem } from '@/lib/autofinderdiff';
 import type { ModuleComponentProps } from '@/types';
 
 function emptyProgress(): ProgressMap {
@@ -51,6 +53,8 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
   const [progress, setProgress] = useState<ProgressMap>(emptyProgress());
   const [report, setReport] = useState<AutoFinderReport | null>(null);
   const [cachedAt, setCachedAt] = useState('');
+  const [previousAt, setPreviousAt] = useState('');
+  const [diff, setDiff] = useState<DiffItem[]>([]);
   const [note, setNote] = useState('');
   const { ensureMany, pending } = useHostPermission();
 
@@ -75,9 +79,21 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
         setReport(stored.report);
         setProgress(stored.progress);
         setCachedAt(stored.generatedAt);
+        autoFinderHistoryStore.get().then((history) => {
+          const prev = history[target]?.previous;
+          if (prev?.report) {
+            setPreviousAt(prev.generatedAt);
+            setDiff(diffAutoFinder(prev.report, stored.report));
+          } else {
+            setPreviousAt('');
+            setDiff([]);
+          }
+        });
       } else {
         setReport((prev) => (prev && prev.domain !== target ? null : prev));
         setCachedAt((prev) => (prev ? '' : prev));
+        setPreviousAt('');
+        setDiff([]);
       }
     });
   }, [target, running]);
@@ -87,6 +103,8 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
     setNote('');
     setReport(null);
     setCachedAt('');
+    setPreviousAt('');
+    setDiff([]);
     setProgress(emptyProgress());
     const granted = await ensureMany([`https://${target}/*`, 'https://crt.sh/*', 'https://crt.name/*', 'https://web.archive.org/*']);
     if (!granted) {
@@ -101,7 +119,21 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
         setProgress(finalProgress);
       });
       setReport(result);
-      autoFinderReportStore.set({ domain: target, report: result, progress: finalProgress, generatedAt: formatTimestamp() });
+      const stored = { domain: target, report: result, progress: finalProgress, generatedAt: formatTimestamp() };
+      const history = await autoFinderHistoryStore.get();
+      const previous = history[target]?.current;
+      await autoFinderHistoryStore.set({
+        ...history,
+        [target]: { current: stored, previous },
+      });
+      autoFinderReportStore.set(stored);
+      if (previous?.report && previous.domain === target) {
+        setPreviousAt(previous.generatedAt);
+        setDiff(diffAutoFinder(previous.report, result));
+      } else {
+        setPreviousAt('');
+        setDiff([]);
+      }
     } finally {
       setRunning(false);
     }
@@ -121,11 +153,25 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
     onNavigate('list-triage', 'bulkopen');
   }
 
+  function sendLinksToBulkOpen() {
+    if (!report) return;
+    const urls = [...report.links.internal, ...report.links.external].map((l) => l.url);
+    if (urls.length === 0) return;
+    bulkListStore.set(urls.join('\n'));
+    onNavigate('list-triage', 'bulkopen');
+  }
+
+  function sendJsFilesToBulkOpen() {
+    if (!report?.jsFiles.length) return;
+    bulkListStore.set(report.jsFiles.join('\n'));
+    onNavigate('list-triage', 'bulkopen');
+  }
+
   return (
     <div className="flex flex-col">
       <ModuleHeader
         title="AutoFinder"
-        description="Runs every domain-based check in one pass and compiles a single exportable report."
+        description="Runs every domain-based check in one pass and diffs the result against the last scan of this target."
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">
@@ -160,16 +206,36 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
                 scan.
               </p>
             )}
+            {previousAt && (
+              <Section title="Changes since last scan" stat={`${diff.length} delta${diff.length === 1 ? '' : 's'}`}>
+                <p className="mb-1 italic">Compared to the scan from {previousAt}.</p>
+                {diff.length === 0 ? (
+                  <p>No listed fields changed (subdomains, headers grade, CORS, paths, ports, tech, JS, secrets).</p>
+                ) : (
+                  <div className="flex max-h-48 flex-col gap-1 overflow-y-auto">
+                    {diff.map((d, i) => (
+                      <p key={`${d.section}-${d.change}-${d.detail}-${i}`}>
+                        <span className="font-medium text-foreground">{d.section}</span>{' '}
+                        <Badge variant={d.change === 'added' ? 'success' : d.change === 'removed' ? 'destructive' : 'warning'} className="normal-case">
+                          {d.change}
+                        </Badge>{' '}
+                        {d.detail}
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </Section>
+            )}
             <div className="flex flex-wrap gap-2">
               <CopyButton text={autoFinderToMarkdown(report)} label="Copy Markdown" />
               <Button size="sm" variant="outline" onClick={() => exportMarkdown(`autofinder-${report.domain}`, autoFinderToMarkdown(report))}>
                 Export Markdown
               </Button>
+              <Button size="sm" variant="outline" onClick={() => exportAutoFinderDocx(report)}>
+                Export Word
+              </Button>
               <Button size="sm" variant="outline" onClick={() => exportJson(`autofinder-${report.domain}`, report)}>
                 Export JSON
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => exportWord(`autofinder-${report.domain}`, autoFinderToMarkdown(report))}>
-                Export Word
               </Button>
             </div>
 
@@ -310,6 +376,50 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
 
               <Section title="Cloud storage references" stat={`${report.buckets.length}`}>
                 {report.buckets.map((b) => `[${b.type}] ${b.url}`).join(', ') || 'None found on homepage.'}
+              </Section>
+
+              <Section
+                title="Links, scripts and form actions"
+                stat={`${report.links.internal.length} internal, ${report.links.external.length} external`}
+              >
+                <div className="flex flex-col gap-1">
+                  <p className="italic">
+                    From the static homepage HTML only, not a live-rendered page - open LinkGrab on the actual
+                    tab for the fuller, post-JS picture.
+                  </p>
+                  <p className="mt-1 max-h-32 overflow-y-auto">
+                    {[...report.links.internal, ...report.links.external]
+                      .slice(0, 50)
+                      .map((l) => `[${l.tag}] ${l.url}`)
+                      .join(', ') || 'None found.'}
+                  </p>
+                  {(report.links.internal.length > 0 || report.links.external.length > 0) && (
+                    <Button size="sm" variant="outline" className="mt-1 w-fit" onClick={sendLinksToBulkOpen}>
+                      <Send className="size-3" /> Send to BulkOpen
+                    </Button>
+                  )}
+                </div>
+              </Section>
+
+              <Section title="JavaScript files" stat={`${report.jsFiles.length}`}>
+                <div className="flex flex-col gap-1">
+                  <p className="max-h-32 overflow-y-auto">{report.jsFiles.slice(0, 50).join(', ') || 'None found.'}</p>
+                  {report.jsFiles.length > 0 && (
+                    <Button size="sm" variant="outline" className="mt-1 w-fit" onClick={sendJsFilesToBulkOpen}>
+                      <Send className="size-3" /> Send to BulkOpen
+                    </Button>
+                  )}
+                </div>
+              </Section>
+
+              <Section title="Exposed keys/tokens (best-effort)" stat={`${report.secrets.length}`}>
+                <p className="italic">
+                  Pattern matching only, expect false positives (test fixtures, docs, minified noise). Verify
+                  every hit manually.
+                </p>
+                <p className="mt-1">
+                  {report.secrets.map((s) => `${s.type}: ${s.match}`).join(', ') || 'None found.'}
+                </p>
               </Section>
             </div>
           </>

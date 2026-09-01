@@ -4,8 +4,9 @@ Last updated: 2026
 
 ## Summary
 
-BugEye is a browser extension for authorized web security testing. It is
-privacy-respecting and local-first.
+BugEye is a browser extension for authorized VAPT, bug bounty and your own
+assets. It is privacy-respecting and local-first. Recon and OSINT only: it
+does not auto-send exploit payloads.
 
 ## What BugEye collects
 
@@ -28,21 +29,23 @@ Remove the extension or clear its storage to erase all of this.
 
 When you use a feature, BugEye sends requests directly from your browser to
 the relevant public service (for example: crt.sh, crt.name, CertSpotter,
-HackerTarget, AlienVault OTX, Shodan InternetDB, ipwho.is / ip-api.com,
-DNS-over-HTTPS resolvers, XposedOrNot, Wayback Machine) to provide the result
+HackerTarget (including its free WHOIS API), AlienVault OTX, Shodan
+InternetDB, ipwho.is / ip-api.com, DNS-over-HTTPS resolvers, XposedOrNot,
+Wayback Machine, rdap.org, who.is, Gravatar, GitHub, hstspreload.org) to provide the result
 you asked for. There is no BugEye server; nothing is proxied through us. Each
 service has its own privacy policy.
 
 ## Permissions
 
-BugEye requests the minimum needed (storage, cookies, tabs, sidePanel,
-activeTab, scripting, webRequest, declarativeNetRequest). Site access is
+BugEye requests the minimum needed (storage, cookies, tabs, activeTab,
+scripting, webRequest, declarativeNetRequest, plus Chromium sidePanel or
+Firefox sidebar). Site access is
 requested per-origin, on demand, only when you run a feature against a site.
 
 ## Authorized use only
 
-BugEye is intended solely for testing assets you own or are explicitly
-authorized to test. You are responsible for how you use it.
+BugEye is intended for contracted VAPT, bug bounty, and assets you own or
+are explicitly authorized to test. You are responsible for how you use it.
 
 ## Changes
 

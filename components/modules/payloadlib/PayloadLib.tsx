@@ -1,18 +1,58 @@
 import { useMemo, useState } from 'react';
-import { Search, ArrowRight } from 'lucide-react';
+import { Search, ArrowRight, Download } from 'lucide-react';
 import { ModuleHeader } from '@/components/shell/ModuleHeader';
 import { CopyButton } from '@/components/shell/CopyButton';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { PAYLOAD_CATEGORIES } from '@/lib/payloads';
+import { useTarget } from '@/components/shell/TargetProvider';
+import { PAYLOAD_CATEGORIES, type Payload } from '@/lib/payloads';
+import { buildNucleiTemplate } from '@/lib/nuclei';
+import { downloadText } from '@/lib/utils';
 import type { ModuleComponentProps } from '@/types';
+
+function NucleiSection({ payload, target }: { payload: Payload; target: string }) {
+  const template = useMemo(
+    () => buildNucleiTemplate(payload, { target: target ? `https://${target}` : undefined }),
+    [payload, target],
+  );
+  if (!template) return null;
+
+  return (
+    <div className="flex flex-col gap-1.5 rounded border border-dashed p-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-medium text-muted-foreground">Nuclei template</p>
+        <div className="flex gap-1.5">
+          <CopyButton text={template.yaml} label="Copy template" />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => downloadText(template.filename, template.yaml, 'text/yaml')}
+          >
+            <Download className="size-3" />
+            .yaml
+          </Button>
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-2">
+        <code className="block flex-1 break-all rounded bg-muted p-2 text-[11px]">{template.command}</code>
+        <CopyButton text={template.command} label="Copy" />
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Save the template as {template.filename}, then run the command with your own nuclei binary. BugEye
+        does not run nuclei or send this payload.
+      </p>
+    </div>
+  );
+}
 
 export function PayloadLib({ onBack, onNavigate }: ModuleComponentProps) {
   const [query, setQuery] = useState('');
   const [urlEncode, setUrlEncode] = useState(false);
+  const { target } = useTarget();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -95,6 +135,7 @@ export function PayloadLib({ onBack, onNavigate }: ModuleComponentProps) {
                         {p.note}
                       </p>
                     )}
+                    {p.nucleiMatcher && <NucleiSection payload={p} target={target} />}
                   </CardContent>
                 </Card>
               );

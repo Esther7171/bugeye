@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { browser } from 'wxt/browser';
 import { useHostPermission } from '@/lib/useHostPermission';
-import { originOf } from '@/lib/utils';
+import { useActiveTab } from '@/lib/useActiveTab';
 import { exportJson, exportText } from '@/lib/export';
 import { bulkListStore } from '@/lib/storage';
 import type { ModuleComponentProps } from '@/types';
@@ -47,34 +47,34 @@ export function LinkGrab({ onBack, onNavigate }: ModuleComponentProps) {
   const [scanning, setScanning] = useState(false);
   const [note, setNote] = useState('');
   const { ensure, pending } = useHostPermission();
+  const { tabId, url: activeUrl, origin: activeOrigin } = useActiveTab();
 
   async function scan() {
+    if (!tabId || !activeUrl) {
+      setNote('No active tab available.');
+      return;
+    }
+    if (!activeOrigin) {
+      setNote('Active tab is not an http(s) page.');
+      return;
+    }
     setNote('');
     setHits([]);
     setScanning(true);
     try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id || !tab.url) {
-        setNote('No active tab available.');
-        return;
-      }
-      const origin = originOf(tab.url);
-      if (!origin) {
-        setNote('Active tab is not an http(s) page.');
-        return;
-      }
-      const granted = await ensure(origin);
+      // ensure() must be the first await here, see useActiveTab's comment.
+      const granted = await ensure(activeOrigin);
       if (!granted) {
         setNote('Host permission was not granted.');
         return;
       }
       const [injection] = await browser.scripting.executeScript({
-        target: { tabId: tab.id },
+        target: { tabId },
         func: scanPageForLinks,
       });
       const result = (injection?.result as LinkHit[] | undefined) ?? [];
       setHits(result);
-      setPageHost(new URL(tab.url).hostname);
+      setPageHost(new URL(activeUrl).hostname);
       if (result.length === 0) setNote('No links, scripts or form actions found on this page.');
     } finally {
       setScanning(false);

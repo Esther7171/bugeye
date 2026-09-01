@@ -16,8 +16,11 @@ export function AuthBanner() {
     <div className="flex items-center gap-2 border-b border-warning/30 bg-warning/10 px-3 py-2 text-[11px] text-warning">
       <ShieldAlert className="size-3.5 shrink-0" />
       <p className="flex-1 leading-tight">
-        Use only on assets you own or are explicitly authorized to test. No exploitation, no
-        DoS, no auto-attacking.
+        Authorized VAPT / bug bounty / your own assets only. Recon and OSINT
+        triage, no auto-sent exploits, no DoS, no login brute-force. The first
+        time any tool needs to read a page, your browser will ask for
+        permission once - grant it and every tool works from then on with no
+        further prompts.
       </p>
       <Button
         variant="ghost"

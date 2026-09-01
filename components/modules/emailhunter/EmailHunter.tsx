@@ -10,8 +10,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { browser } from 'wxt/browser';
 import { useTarget } from '@/components/shell/TargetProvider';
 import { useHostPermission } from '@/lib/useHostPermission';
+import { useActiveTab } from '@/lib/useActiveTab';
 import { sendToBackground } from '@/lib/messaging';
-import { originOf } from '@/lib/utils';
 import { mapLimit } from '@/lib/concurrency';
 import { guessEmailPatterns } from '@/lib/emailpatterns';
 import { exportJson } from '@/lib/export';
@@ -54,32 +54,32 @@ export function EmailHunter({ onBack }: ModuleComponentProps) {
   const [pagesScanned, setPagesScanned] = useState(0);
   const [note, setNote] = useState('');
   const { ensure, pending } = useHostPermission();
+  const { tabId, origin: activeOrigin } = useActiveTab();
 
   const [guessName, setGuessName] = useState('');
   const guesses = guessName.trim() && target ? guessEmailPatterns(guessName, target) : [];
 
   async function scan() {
+    if (!tabId) {
+      setNote('No active tab available.');
+      return;
+    }
+    if (!activeOrigin) {
+      setNote('Active tab is not an http(s) page.');
+      return;
+    }
     setNote('');
     setEmails([]);
     setPagesScanned(0);
     setScanning(true);
     try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id || !tab.url) {
-        setNote('No active tab available.');
-        return;
-      }
-      const origin = originOf(tab.url);
-      if (!origin) {
-        setNote('Active tab is not an http(s) page.');
-        return;
-      }
-      const granted = await ensure(origin);
+      // ensure() must be the first await here, see useActiveTab's comment.
+      const granted = await ensure(activeOrigin);
       if (!granted) {
         setNote('Host permission was not granted.');
         return;
       }
-      const [injection] = await browser.scripting.executeScript({ target: { tabId: tab.id }, func: scanPageForEmailsAndLinks });
+      const [injection] = await browser.scripting.executeScript({ target: { tabId }, func: scanPageForEmailsAndLinks });
       const result = injection?.result as { emails: string[]; internalLinks: string[] } | undefined;
       const found = new Set(result?.emails ?? []);
       setPagesScanned(1);

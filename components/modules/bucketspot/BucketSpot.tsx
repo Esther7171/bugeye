@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { browser } from 'wxt/browser';
 import { sendToBackground } from '@/lib/messaging';
 import { useHostPermission } from '@/lib/useHostPermission';
+import { useActiveTab } from '@/lib/useActiveTab';
 import { originOf } from '@/lib/utils';
 import { exportJson } from '@/lib/export';
 import type { ModuleComponentProps } from '@/types';
@@ -59,30 +60,30 @@ export function BucketSpot({ onBack }: ModuleComponentProps) {
   const [results, setResults] = useState<BucketResult[]>([]);
   const [note, setNote] = useState('');
   const { ensure, ensureMany, pending } = useHostPermission();
+  const { tabId, origin: activeOrigin } = useActiveTab();
 
   async function scan() {
+    if (!tabId) {
+      setNote('No active tab available.');
+      return;
+    }
+    if (!activeOrigin) {
+      setNote('Active tab is not an http(s) page.');
+      return;
+    }
     setNote('');
     setResults([]);
     setScanning(true);
     try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id || !tab.url) {
-        setNote('No active tab available.');
-        return;
-      }
-      const origin = originOf(tab.url);
-      if (!origin) {
-        setNote('Active tab is not an http(s) page.');
-        return;
-      }
-      const granted = await ensure(origin);
+      // ensure() must be the first await here, see useActiveTab's comment.
+      const granted = await ensure(activeOrigin);
       if (!granted) {
         setNote('Host permission was not granted.');
         return;
       }
 
       const [injection] = await browser.scripting.executeScript({
-        target: { tabId: tab.id },
+        target: { tabId },
         func: scanPageForBuckets,
       });
       const hits = (injection?.result as BucketHit[] | undefined) ?? [];

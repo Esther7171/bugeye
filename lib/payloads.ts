@@ -6,11 +6,27 @@ export interface PayloadCrossLink {
   label: string;
 }
 
+export type NucleiMatcherKind = 'sqli-time' | 'xss-reflected';
+
+export interface NucleiMatcher {
+  kind: NucleiMatcherKind;
+  severity: 'info' | 'low' | 'medium' | 'high' | 'critical';
+  description: string;
+  /** sqli-time only: seconds the payload is expected to delay the response by. */
+  delaySeconds?: number;
+}
+
 export interface Payload {
   id: string;
   label: string;
   value: string;
   note?: string;
+  /**
+   * Present only where a Nuclei matcher is honestly meaningful for this payload,
+   * time-based SQLi (duration matcher) and reflected XSS (verbatim-body matcher).
+   * Used by lib/nuclei.ts to generate a ready-to-run Nuclei YAML template.
+   */
+  nucleiMatcher?: NucleiMatcher;
 }
 
 export interface PayloadCategory {
@@ -26,7 +42,16 @@ export const PAYLOAD_CATEGORIES: PayloadCategory[] = [
     id: 'xss',
     name: 'XSS',
     payloads: [
-      { id: 'xss-basic', label: 'Basic script', value: `<script>alert(1)</script>` },
+      {
+        id: 'xss-basic',
+        label: 'Basic script',
+        value: `<script>alert(1)</script>`,
+        nucleiMatcher: {
+          kind: 'xss-reflected',
+          severity: 'medium',
+          description: 'Confirms reflected XSS by checking the raw payload marker is reflected verbatim (unencoded) in the response body.',
+        },
+      },
       { id: 'xss-img', label: 'img onerror', value: `<img src=x onerror=alert(1)>` },
       { id: 'xss-svg', label: 'svg onload', value: `<svg onload=alert(1)>` },
       {
@@ -103,8 +128,28 @@ export const PAYLOAD_CATEGORIES: PayloadCategory[] = [
       },
       { id: 'sqli-boolean-true', label: 'Boolean-based (true)', value: `' AND 1=1--` },
       { id: 'sqli-boolean-false', label: 'Boolean-based (false)', value: `' AND 1=2--` },
-      { id: 'sqli-time-mysql', label: 'Time-based (MySQL)', value: `' AND SLEEP(5)--` },
-      { id: 'sqli-time-mssql', label: 'Time-based (MSSQL)', value: `'; WAITFOR DELAY '0:0:5'--` },
+      {
+        id: 'sqli-time-mysql',
+        label: 'Time-based (MySQL)',
+        value: `' AND SLEEP(5)--`,
+        nucleiMatcher: {
+          kind: 'sqli-time',
+          severity: 'high',
+          description: 'Confirms time-based blind SQL injection by measuring response delay against a SLEEP() payload.',
+          delaySeconds: 5,
+        },
+      },
+      {
+        id: 'sqli-time-mssql',
+        label: 'Time-based (MSSQL)',
+        value: `'; WAITFOR DELAY '0:0:5'--`,
+        nucleiMatcher: {
+          kind: 'sqli-time',
+          severity: 'high',
+          description: 'Confirms time-based blind SQL injection by measuring response delay against a WAITFOR DELAY payload.',
+          delaySeconds: 5,
+        },
+      },
     ],
   },
   {

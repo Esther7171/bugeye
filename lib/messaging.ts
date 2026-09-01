@@ -13,13 +13,12 @@ export type BgRequest =
   | { type: 'FETCH_HACKERTARGET'; domain: string }
   | { type: 'FETCH_CERTSPOTTER'; domain: string }
   | { type: 'FETCH_RDAP'; domain: string }
+  | { type: 'FETCH_HACKERTARGET_WHOIS'; domain: string }
+  | { type: 'HTTP_PROBE'; url: string }
+  | { type: 'FETCH_GITHUB_EMAIL'; email: string }
   | { type: 'REVERSE_WHOIS'; mode: 'keyword' | 'company' | 'email' | 'name'; query: string; apiKey: string }
   | { type: 'GET_URL_HEADERS'; url: string }
   | { type: 'GET_TAB_HEADERS'; tabId: number; url: string }
-  | { type: 'REQUEST_HOST_PERMISSION'; origin: string }
-  | { type: 'HAS_HOST_PERMISSION'; origin: string }
-  | { type: 'REQUEST_HOST_PERMISSIONS'; origins: string[] }
-  | { type: 'HAS_HOST_PERMISSIONS'; origins: string[] }
   | { type: 'OPEN_TABS'; urls: string[]; delayMs: number; newWindow: boolean; groupTitle?: string }
   | {
       type: 'SET_HEADER_RULES';
@@ -44,7 +43,9 @@ export type BgRequest =
       hostname: string;
       recordType: 'A' | 'AAAA' | 'CNAME' | 'MX' | 'NS' | 'TXT' | 'SOA' | 'CAA' | 'PTR' | 'DNSKEY' | 'DS';
     }
-  | { type: 'BREACH_CHECK'; email: string; hibpApiKey?: string };
+  | { type: 'CACHE_POISON_PROBE'; url: string }
+  | { type: 'BREACH_CHECK'; email: string; hibpApiKey?: string }
+  | { type: 'HTTP_POST_PROBE'; url: string; body: string; contentType?: string };
 
 export interface RequestLogEntry {
   id: string;
@@ -89,6 +90,19 @@ export interface CorsCheckResult {
   reflected: boolean;
   wildcardWithCredentials: boolean;
   blockedByCors?: boolean;
+  error?: string;
+}
+
+export interface CachePoisonResult {
+  ok: boolean;
+  canary: string;
+  status: number | null;
+  cacheControl?: string;
+  vary?: string;
+  location?: string;
+  cacheable: boolean;
+  reflected: string[];
+  unkeyedNotInVary: string[];
   error?: string;
 }
 
@@ -163,13 +177,19 @@ export interface BgResponseMap {
   FETCH_HACKERTARGET: { ok: boolean; hostnames: string[]; status: number | null; error?: string };
   FETCH_CERTSPOTTER: { ok: boolean; hostnames: string[]; status: number | null; error?: string };
   FETCH_RDAP: { ok: boolean; status: number | null; raw?: unknown; tldUnsupported?: boolean; error?: string };
+  FETCH_HACKERTARGET_WHOIS: { ok: boolean; text?: string; status: number | null; error?: string };
+  HTTP_PROBE: { ok: boolean; status: number | null; finalUrl?: string; body?: string; error?: string };
+  FETCH_GITHUB_EMAIL: {
+    ok: boolean;
+    users?: unknown;
+    commits?: unknown;
+    usersError?: string;
+    commitsError?: string;
+    error?: string;
+  };
   REVERSE_WHOIS: { ok: boolean; raw?: unknown; error?: string };
   GET_URL_HEADERS: UrlHeadersResult;
   GET_TAB_HEADERS: TabHeadersResult;
-  REQUEST_HOST_PERMISSION: { granted: boolean };
-  HAS_HOST_PERMISSION: { granted: boolean };
-  REQUEST_HOST_PERMISSIONS: { granted: boolean };
-  HAS_HOST_PERMISSIONS: { granted: boolean };
   OPEN_TABS: { opened: number };
   SET_HEADER_RULES: { ok: boolean; error?: string };
   SET_UA_RULE: { ok: boolean; error?: string };
@@ -183,10 +203,12 @@ export interface BgResponseMap {
   FETCH_SHODAN_INTERNETDB: ShodanInternetDbResult;
   FETCH_SHODAN_HOST: { ok: boolean; data?: unknown; error?: string };
   CORS_CHECK: CorsCheckResult;
+  CACHE_POISON_PROBE: CachePoisonResult;
   HTTP_METHODS_CHECK: HttpMethodsResult;
   REDIRECT_TRACE: RedirectTraceResult;
   DOH_QUERY: DohQueryResult;
   BREACH_CHECK: BreachCheckResult;
+  HTTP_POST_PROBE: { ok: boolean; status: number | null; body?: string; error?: string };
 }
 
 export async function sendToBackground<T extends BgRequest>(

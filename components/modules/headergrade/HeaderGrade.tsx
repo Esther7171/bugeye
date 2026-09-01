@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { browser } from 'wxt/browser';
 import { sendToBackground } from '@/lib/messaging';
 import { useHostPermission } from '@/lib/useHostPermission';
+import { useActiveTab } from '@/lib/useActiveTab';
 import { normalizeUrl, originOf } from '@/lib/utils';
 import { gradeHeaders, headerReportToMarkdown, type HeaderGradeReport, type CheckState } from '@/lib/headergrade';
 import { exportMarkdown } from '@/lib/export';
+import { exportHeaderGradeDocx } from '@/lib/headergradedocx';
 import type { ModuleComponentProps } from '@/types';
 
 const gradeColor: Record<HeaderGradeReport['grade'], string> = {
@@ -37,27 +38,30 @@ export function HeaderGrade({ onBack, onNavigate }: ModuleComponentProps) {
   const [reportUrl, setReportUrl] = useState('');
   const [note, setNote] = useState('');
   const { ensure, pending } = useHostPermission();
+  const { tabId, url: activeUrl, origin: activeOrigin } = useActiveTab();
 
   async function runCurrentTab() {
+    if (!tabId || !activeUrl) {
+      setNote('No active tab URL available.');
+      return;
+    }
+    if (!activeOrigin) {
+      setNote('Active tab is not an http(s) page.');
+      return;
+    }
     setLoading(true);
     setNote('');
     try {
-      const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
-      if (!tab?.id || !tab.url) {
-        setNote('No active tab URL available.');
-        return;
-      }
-      const origin = originOf(tab.url);
-      if (!origin) {
-        setNote('Active tab is not an http(s) page.');
-        return;
-      }
-      const granted = await ensure(origin);
+      // ensure() must be the first await in this handler (nothing before it
+      // may await), or its user-gesture status is lost. Reading tabId/
+      // activeOrigin from useActiveTab's already-current state, instead of
+      // freshly querying tabs here, is what makes that possible.
+      const granted = await ensure(activeOrigin);
       if (!granted) {
         setNote('Host permission was not granted.');
         return;
       }
-      const result = await sendToBackground({ type: 'GET_TAB_HEADERS', tabId: tab.id, url: tab.url });
+      const result = await sendToBackground({ type: 'GET_TAB_HEADERS', tabId, url: activeUrl });
       setReport(gradeHeaders(result.headers));
       setReportUrl(result.url);
       if (result.error) setNote(result.error);
@@ -152,8 +156,14 @@ export function HeaderGrade({ onBack, onNavigate }: ModuleComponentProps) {
                   >
                     Export
                   </Button>
+                  <Button size="sm" variant="outline" onClick={() => exportHeaderGradeDocx(reportUrl, report)}>
+                    Export Word
+                  </Button>
                   <Button size="sm" variant="outline" onClick={() => onNavigate('tab-inspector', 'wafdetect')}>
                     Check for WAF
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => onNavigate('tab-inspector', 'hstspreload')}>
+                    HSTS preload list
                   </Button>
                 </div>
               </div>

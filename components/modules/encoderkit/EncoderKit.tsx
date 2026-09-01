@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Plus, ArrowDown } from 'lucide-react';
+import { X, Plus, ArrowDown, ExternalLink } from 'lucide-react';
 import { ModuleHeader } from '@/components/shell/ModuleHeader';
 import { CopyButton } from '@/components/shell/CopyButton';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -18,7 +18,16 @@ import {
   hexEncode,
   hexDecode,
 } from '@/lib/encode';
-import { decodeJwt } from '@/lib/jwt';
+
+// CyberChef reads its input from a `?input=` query param, standard (not
+// URL-safe) base64 of the raw text - no recipe is passed, so it opens with
+// this text pre-loaded in the input pane and lets the user pick their own
+// operations.
+function cyberChefUrl(input: string): string {
+  const b64 = input ? base64Encode(input) : '';
+  return `https://gchq.github.io/CyberChef/${b64 ? `?input=${encodeURIComponent(b64)}` : ''}`;
+}
+import { auditJwt, type JwtFinding } from '@/lib/jwt';
 import { hashAll } from '@/lib/hash';
 import type { ModuleComponentProps } from '@/types';
 
@@ -94,13 +103,13 @@ function CodecPanel({
 }
 
 function JwtPanel({ input, onInputChange }: SharedInputProps) {
-  const [result, setResult] = useState<{ header: unknown; payload: unknown } | null>(null);
+  const [result, setResult] = useState<{ header: unknown; payload: unknown; findings: JwtFinding[] } | null>(null);
   const [error, setError] = useState('');
 
   const decode = () => {
     try {
-      const decoded = decodeJwt(input);
-      setResult(decoded);
+      const audited = auditJwt(input);
+      setResult({ header: audited.decoded.header, payload: audited.decoded.payload, findings: audited.findings });
       setError('');
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -131,6 +140,19 @@ function JwtPanel({ input, onInputChange }: SharedInputProps) {
       {error && <p className="text-xs text-destructive">{error}</p>}
       {result && (
         <div className="flex flex-col gap-2">
+          {result.findings.length > 0 && (
+            <div className="flex flex-col gap-1">
+              {result.findings.map((f) => (
+                <Badge
+                  key={f.id}
+                  variant={f.severity === 'fail' ? 'destructive' : f.severity === 'warn' ? 'warning' : 'muted'}
+                  className="w-fit normal-case"
+                >
+                  {f.title}: {f.detail}
+                </Badge>
+              ))}
+            </div>
+          )}
           <Card>
             <CardContent className="p-3">
               <p className="mb-1 text-[10px] uppercase text-muted-foreground">Header</p>
@@ -189,8 +211,21 @@ function HashPanel({ input, onInputChange }: SharedInputProps) {
                 </Badge>
                 <code className="flex-1 truncate text-[11px]">{value}</code>
                 <CopyButton text={value} label="" className="size-6 shrink-0 p-0" />
+                <a
+                  href="https://crackstation.net/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex shrink-0 items-center gap-1 text-[10px] text-primary hover:underline"
+                  title="Copy the hash above, then paste it into CrackStation's lookup form"
+                >
+                  <ExternalLink className="size-2.5" /> CrackStation
+                </a>
               </div>
             ))}
+            <p className="text-[10px] text-muted-foreground">
+              CrackStation looks up a hash against known plaintexts, it does not accept the hash via URL, so copy it
+              and paste it into their form.
+            </p>
           </CardContent>
         </Card>
       )}
@@ -364,6 +399,14 @@ export function EncoderKit({ onBack }: ModuleComponentProps) {
         onBack={onBack}
       />
       <div className="p-3">
+        <a
+          href={cyberChefUrl(input)}
+          target="_blank"
+          rel="noreferrer"
+          className="mb-2 flex w-fit items-center gap-1 text-[11px] text-primary hover:underline"
+        >
+          <ExternalLink className="size-3" /> Open current input in CyberChef
+        </a>
         <Tabs defaultValue="base64">
           <TabsList className="flex-wrap">
             <TabsTrigger value="base64">Base64</TabsTrigger>

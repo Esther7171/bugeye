@@ -28,14 +28,24 @@ export function ShellGen({ onBack }: ModuleComponentProps) {
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">
-        <a
-          href="https://www.revshells.com/"
-          target="_blank"
-          rel="noreferrer"
-          className="flex w-fit items-center gap-1 text-[11px] text-primary hover:underline"
-        >
-          <ExternalLink className="size-3" /> Interactive generator (more shells)
-        </a>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="https://www.revshells.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex w-fit items-center gap-1 text-[11px] text-primary hover:underline"
+          >
+            <ExternalLink className="size-3" /> Interactive generator (more shells)
+          </a>
+          <a
+            href="https://github.com/samratashok/nishang"
+            target="_blank"
+            rel="noreferrer"
+            className="flex w-fit items-center gap-1 text-[11px] text-primary hover:underline"
+          >
+            <ExternalLink className="size-3" /> Nishang (PowerShell offensive scripts)
+          </a>
+        </div>
 
         <div className="flex flex-wrap items-end gap-2">
           <div className="flex flex-col gap-1">

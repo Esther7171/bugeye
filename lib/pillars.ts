@@ -33,7 +33,7 @@ export const MODULES: ModuleMeta[] = [
     id: 'autofinder',
     pillar: 'utility',
     name: 'AutoFinder',
-    description: 'Runs every domain-based check in one pass and compiles a single exportable report.',
+    description: 'Runs every domain-based check in one pass, compiles a report, and diffs against the last scan of that target.',
     status: 'live',
   },
   {
@@ -61,7 +61,7 @@ export const MODULES: ModuleMeta[] = [
     id: 'cookiejar',
     pillar: 'tab-inspector',
     name: 'CookieJar',
-    description: 'Inspect, export and import cookies for the current domain.',
+    description: 'Inspect cookies: SameSite, Secure/HttpOnly, and __Host-/__Secure- prefix correctness.',
     status: 'live',
   },
   {
@@ -86,10 +86,24 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'jwtaudit',
+    pillar: 'encode-payload',
+    name: 'JwtAudit',
+    description: 'JWT deep-check: alg:none, missing/expired exp, weak kid, jku/x5u/jwk. Decode-only.',
+    status: 'live',
+  },
+  {
     id: 'reconbuild',
     pillar: 'cli-bridge',
     name: 'ReconBuild',
     description: 'Build copy-paste CLI commands for bbot, httpx, katana & more.',
+    status: 'live',
+  },
+  {
+    id: 'netcmds',
+    pillar: 'cli-bridge',
+    name: 'NetCmds',
+    description: 'Ping, traceroute, WHOIS and nmap as copy-paste CLI. Browsers cannot open raw sockets, so nothing is executed here.',
     status: 'live',
   },
   {
@@ -139,6 +153,13 @@ export const MODULES: ModuleMeta[] = [
     pillar: 'page-recon',
     name: 'JSList',
     description: 'List every JavaScript file loaded by the current page.',
+    status: 'live',
+  },
+  {
+    id: 'sricheck',
+    pillar: 'page-recon',
+    name: 'SriCheck',
+    description: 'Cross-origin script/link tags missing Subresource Integrity (or integrity without crossorigin).',
     status: 'live',
   },
   {
@@ -240,6 +261,20 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'cachepoison',
+    pillar: 'tab-inspector',
+    name: 'CachePoison',
+    description: 'Canary in unkeyed headers; flags reflection into a cacheable response whose Vary omits that header.',
+    status: 'live',
+  },
+  {
+    id: 'hstspreload',
+    pillar: 'tab-inspector',
+    name: 'HstsPreload',
+    description: 'Checks whether the domain is on the public Chromium HSTS preload list (hstspreload.org).',
+    status: 'live',
+  },
+  {
     id: 'retirejs',
     pillar: 'tab-inspector',
     name: 'RetireJS',
@@ -303,10 +338,24 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'apispec',
+    pillar: 'osint',
+    name: 'ApiSpec',
+    description: 'Finds exposed swagger.json, openapi.json/yaml, Swagger UI, and Postman collections.',
+    status: 'live',
+  },
+  {
     id: 'panelhunt',
     pillar: 'osint',
     name: 'PanelHunt',
     description: 'Probes a curated list of common admin/login/sensitive paths. Light probing only.',
+    status: 'live',
+  },
+  {
+    id: 'graphqlcheck',
+    pillar: 'osint',
+    name: 'GraphQLCheck',
+    description: 'Checks common GraphQL paths for introspection left enabled. Single introspection query per path.',
     status: 'live',
   },
   {
@@ -342,6 +391,20 @@ export const MODULES: ModuleMeta[] = [
     pillar: 'osint',
     name: 'EmailAnalyze',
     description: 'Format validity, MX/SPF/DMARC lookup, disposable-provider check, Gravatar presence.',
+    status: 'live',
+  },
+  {
+    id: 'mailhunt',
+    pillar: 'osint',
+    name: 'MailHunt',
+    description: 'Public email OSINT: Gravatar profile, GitHub search, and search-engine links.',
+    status: 'live',
+  },
+  {
+    id: 'userhunt',
+    pillar: 'osint',
+    name: 'UserHunt',
+    description: 'Checks a username against public profiles (GitHub, GitLab, Reddit, npm and more).',
     status: 'live',
   },
   {
@@ -481,7 +544,7 @@ export const MODULES: ModuleMeta[] = [
     id: 'whoislookup',
     pillar: 'osint',
     name: 'WhoisLookup',
-    description: 'Registrar, registration/expiry dates and nameservers via RDAP, with a countdown and buy links if the domain is available.',
+    description: 'Registrar and contact data via RDAP, HackerTarget WHOIS API, and the who.is web page.',
     status: 'live',
   },
   {

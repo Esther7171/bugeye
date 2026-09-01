@@ -15,7 +15,7 @@ const PERMISSIONS: PermissionRow[] = [
     name: 'tabs',
     why: 'Reads the active tab\'s URL for target context, and opens tabs from BulkOpen, PanelHunt and ShodanPeek.',
   },
-  { name: 'sidePanel', why: 'Renders the extension as a persistent side panel instead of a popup.' },
+  { name: 'sidePanel / sidebar', why: 'Chrome/Edge: persistent side panel. Firefox: sidebar (View → Sidebar → BugEye, or the toolbar button / Ctrl+Shift+K).' },
   {
     name: 'activeTab / scripting',
     why: 'Lets page-scan tools (LinkGrab, SecretScan, BucketSpot, FormAudit and others) read the page you\'re viewing when you click "Scan".',
@@ -29,8 +29,8 @@ const PERMISSIONS: PermissionRow[] = [
     why: 'Lets the Traffic pillar (HeaderInject, UASwitch, RefControl) rewrite request headers for a site you have granted access to. Rules apply only to that tab and only while you have them enabled.',
   },
   {
-    name: 'Host access (requested per-site, on demand)',
-    why: 'Only requested the moment a tool needs to fetch a specific site - never granted for all sites upfront.',
+    name: 'Host access (all sites, requested once)',
+    why: 'The first time any tool needs to read a page, you get a single "all sites" prompt. Grant it once and every tool works on any site afterward with no further prompts.',
   },
 ];
 

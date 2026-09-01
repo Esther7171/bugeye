@@ -18,6 +18,8 @@ import {
   parseImportInput,
   cookieSetUrl,
   cookieRemoveUrl,
+  auditCookie,
+  cookieWorstSeverity,
   type CookieRecord,
 } from '@/lib/cookies';
 import { exportJson, exportText } from '@/lib/export';
@@ -110,7 +112,7 @@ export function CookieJar({ onBack }: ModuleComponentProps) {
     <div className="flex flex-col">
       <ModuleHeader
         title="CookieJar"
-        description="Inspect, export and import cookies for the current target domain. Flags cookies scoped to a different subdomain than the active tab."
+        description="Inspect cookies for this domain: SameSite, Secure/HttpOnly, and __Host-/__Secure- prefix rules. Export/import Netscape or JSON."
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">
@@ -143,11 +145,8 @@ export function CookieJar({ onBack }: ModuleComponentProps) {
             <Card>
               <CardContent className="flex max-h-64 flex-col divide-y divide-border overflow-y-auto p-0">
                 {cookies.map((c) => {
-                  const missing = [
-                    !c.secure && 'Secure',
-                    !c.httpOnly && 'HttpOnly',
-                    !c.sameSite || c.sameSite === 'no_restriction' ? 'SameSite' : null,
-                  ].filter(Boolean) as string[];
+                  const findings = auditCookie(c);
+                  const worst = cookieWorstSeverity(findings);
                   const bareDomain = c.domain.replace(/^\./, '');
                   const otherSubdomain = activeHostname && bareDomain !== activeHostname;
                   const key = `${c.domain}-${c.name}-${c.path}`;
@@ -157,13 +156,17 @@ export function CookieJar({ onBack }: ModuleComponentProps) {
                         <span className="truncate text-xs font-medium">{c.name}</span>
                         <div className="flex shrink-0 items-center gap-1">
                           {otherSubdomain && <Badge variant="outline">other subdomain</Badge>}
-                          {missing.length === 0 ? (
+                          {worst === 'pass' ? (
                             <Badge variant="success" className="gap-1">
-                              <CheckCircle2 className="size-2.5" /> secure
+                              <CheckCircle2 className="size-2.5" /> ok
+                            </Badge>
+                          ) : worst === 'fail' ? (
+                            <Badge variant="destructive" className="gap-1">
+                              <AlertTriangle className="size-2.5" /> fail
                             </Badge>
                           ) : (
                             <Badge variant="warning" className="gap-1">
-                              <AlertTriangle className="size-2.5" /> missing {missing.join(', ')}
+                              <AlertTriangle className="size-2.5" /> warn
                             </Badge>
                           )}
                           <Button
@@ -184,8 +187,17 @@ export function CookieJar({ onBack }: ModuleComponentProps) {
                       </div>
                       <span className="truncate text-[11px] text-muted-foreground">
                         {c.domain}
-                        {c.path}
+                        {c.path} · SameSite={c.sameSite ?? 'unset'}
+                        {c.secure ? ' · Secure' : ''}
+                        {c.httpOnly ? ' · HttpOnly' : ''}
                       </span>
+                      {findings
+                        .filter((f) => f.severity !== 'pass')
+                        .map((f) => (
+                          <p key={f.id} className="text-[11px] text-muted-foreground">
+                            {f.detail}
+                          </p>
+                        ))}
                     </div>
                   );
                 })}

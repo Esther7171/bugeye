@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTarget } from '@/components/shell/TargetProvider';
+import { useHostPermission } from '@/lib/useHostPermission';
 import { sendToBackground } from '@/lib/messaging';
 import { summarizeCerts, sslReportToMarkdown, type SslSummary } from '@/lib/ssl';
 import { exportMarkdown } from '@/lib/export';
@@ -16,6 +17,7 @@ export function SSLInspect({ onBack, onNavigate }: ModuleComponentProps) {
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState<SslSummary | null>(null);
   const [note, setNote] = useState('');
+  const { ensure, pending } = useHostPermission();
 
   async function scan() {
     if (!target) return;
@@ -23,6 +25,11 @@ export function SSLInspect({ onBack, onNavigate }: ModuleComponentProps) {
     setNote('');
     setSummary(null);
     try {
+      const granted = await ensure('https://crt.sh/*');
+      if (!granted) {
+        setNote('Host permission was not granted.');
+        return;
+      }
       const result = await sendToBackground({ type: 'FETCH_CRTSH_CERTS', domain: target });
       if (!result.ok) {
         setNote(result.error ?? 'crt.sh lookup failed.');
@@ -49,8 +56,8 @@ export function SSLInspect({ onBack, onNavigate }: ModuleComponentProps) {
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">
-        <Button size="sm" onClick={scan} disabled={!target || loading} className="w-fit">
-          {loading ? <Loader2 className="size-3 animate-spin" /> : null}
+        <Button size="sm" onClick={scan} disabled={!target || loading || pending} className="w-fit">
+          {loading || pending ? <Loader2 className="size-3 animate-spin" /> : null}
           Inspect certificate for {target || '(set a target)'}
         </Button>
 
