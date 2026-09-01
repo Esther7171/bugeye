@@ -69,7 +69,17 @@ export function RefControl({ onBack }: ModuleComponentProps) {
 
         <div className="flex flex-col gap-1.5">
           <Label className="text-muted-foreground">Mode</Label>
-          <Select value={config.mode} onValueChange={(v) => apply({ ...config, mode: v as RefererMode })}>
+          <Select
+            value={config.mode}
+            onValueChange={(v) => {
+              const mode = v as RefererMode;
+              // Spoof needs a value first - applying immediately here would
+              // set an empty spoofValue, silently add no rule, and still
+              // show "reload to take effect" even though nothing changed.
+              if (mode === 'spoof') setConfig({ ...config, mode });
+              else apply({ ...config, mode });
+            }}
+          >
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -98,6 +108,14 @@ export function RefControl({ onBack }: ModuleComponentProps) {
         </Button>
 
         {note && <p className="text-xs text-muted-foreground">{note}</p>}
+
+        <p className="border-t border-border pt-3 text-[11px] text-muted-foreground">
+          To confirm a mode actually applied: set it, click "Apply", then navigate this tab to{' '}
+          <span className="font-mono">httpbin.org/headers</span> (or reload if already there). The response
+          echoes the Referer your request sent, or its absence if stripped. A page you reach by typing a URL
+          or opening a bookmark never sends a Referer in the first place, so testing there will look identical
+          whether stripping is on or not - click a link from another page instead.
+        </p>
       </div>
     </div>
   );

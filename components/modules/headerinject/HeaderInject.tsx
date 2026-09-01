@@ -10,7 +10,7 @@ import { sendToBackground } from '@/lib/messaging';
 import { useHostPermission } from '@/lib/useHostPermission';
 import { useActiveTab } from '@/lib/useActiveTab';
 import { headerRulesStore } from '@/lib/storage';
-import { newHeaderRule, type HeaderRuleDraft } from '@/lib/traffic';
+import { newHeaderRule, COMMON_REQUEST_HEADERS, type HeaderRuleDraft } from '@/lib/traffic';
 import type { ModuleComponentProps } from '@/types';
 
 export function HeaderInject({ onBack }: ModuleComponentProps) {
@@ -68,6 +68,12 @@ export function HeaderInject({ onBack }: ModuleComponentProps) {
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">
+        <datalist id="common-request-headers">
+          {COMMON_REQUEST_HEADERS.map((h) => (
+            <option key={h.name} value={h.name} />
+          ))}
+        </datalist>
+
         <div className="flex items-center justify-between gap-2">
           <p className="truncate text-[11px] text-muted-foreground">{url || 'No active tab'}</p>
           <Badge variant={activeCount > 0 ? 'success' : 'muted'}>{activeCount} active</Badge>
@@ -82,6 +88,7 @@ export function HeaderInject({ onBack }: ModuleComponentProps) {
                     value={rule.name}
                     onChange={(e) => updateRule(rule.id, { name: e.target.value })}
                     placeholder="Header name, e.g. X-Forwarded-For"
+                    list="common-request-headers"
                     className="flex-1"
                   />
                   <Switch
@@ -124,6 +131,20 @@ export function HeaderInject({ onBack }: ModuleComponentProps) {
           tab to <span className="font-mono">httpbin.org/headers</span> (or reload if you are already
           there). The response echoes every header your request sent, including the one you injected.
         </p>
+
+        <div>
+          <p className="mb-1.5 text-xs font-medium">Common headers</p>
+          <Card>
+            <CardContent className="flex max-h-64 flex-col divide-y divide-border overflow-y-auto p-0">
+              {COMMON_REQUEST_HEADERS.map((h) => (
+                <div key={h.name} className="flex flex-col gap-0.5 p-2">
+                  <code className="text-[11px] font-medium">{h.name}</code>
+                  <p className="text-[11px] text-muted-foreground">{h.description}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

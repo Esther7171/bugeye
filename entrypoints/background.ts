@@ -134,6 +134,12 @@ async function fetchCrtShJson(rawDomain: string): Promise<CrtShJsonResult> {
     return { status, json: null, error: lastError ?? 'No response from crt.sh' };
   }
 
+  // A non-2xx status (502/429/etc) means `text` is an error page, not JSON -
+  // report the real reason instead of masking it behind a JSON.parse failure.
+  if (status === null || status < 200 || status >= 300) {
+    return { status, json: null, error: lastError ?? `crt.sh: ${httpStatusMessage(status ?? 0)}` };
+  }
+
   let json: unknown;
   try {
     json = JSON.parse(text);
@@ -421,33 +427,6 @@ async function handleGithubEmailSearch(email: string): Promise<BgResponseMap['FE
       commitsError: commitsRes.ok ? undefined : httpStatusMessage(commitsRes.status),
       error: usersRes.ok || commitsRes.ok ? undefined : 'GitHub search failed (unauthenticated rate limit is low).',
     };
-  } catch (err) {
-    return { ok: false, error: describeFetchError(err) };
-  }
-}
-
-// Reverse WHOIS (find every domain registered under the same
-// name/company/email/keyword) has no free public data source: it requires
-// indexing every registry's records, which is why vendors charge for it.
-// Whoxy is the one BugEye supports, BYO API key (same optional-key pattern
-// as Shodan/HIBP), stored locally only. Its API sends permissive CORS, so
-// this still needs no host permission.
-async function handleReverseWhois(
-  mode: 'keyword' | 'company' | 'email' | 'name',
-  query: string,
-  apiKey: string,
-): Promise<BgResponseMap['REVERSE_WHOIS']> {
-  if (!apiKey.trim()) return { ok: false, error: 'A Whoxy API key is required for reverse WHOIS.' };
-  if (!query.trim()) return { ok: false, error: 'Empty query' };
-
-  try {
-    const url = `https://api.whoxy.com/?key=${encodeURIComponent(apiKey.trim())}&reverse=whois&${mode}=${encodeURIComponent(query.trim())}&mode=micro`;
-    const res = await fetchWithTimeout(url, { headers: { Accept: 'application/json' } }, 15000);
-    if (!res.ok) {
-      return { ok: false, error: httpStatusMessage(res.status) };
-    }
-    const raw = await res.json();
-    return { ok: true, raw };
   } catch (err) {
     return { ok: false, error: describeFetchError(err) };
   }
@@ -1228,9 +1207,6 @@ export default defineBackground(() => {
           break;
         case 'FETCH_GITHUB_EMAIL':
           sendResponse(await handleGithubEmailSearch(message.email));
-          break;
-        case 'REVERSE_WHOIS':
-          sendResponse(await handleReverseWhois(message.mode, message.query, message.apiKey));
           break;
         case 'GET_URL_HEADERS':
           sendResponse(await handleGetUrlHeaders(message.url));

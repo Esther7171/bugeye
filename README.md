@@ -64,7 +64,7 @@ CLI Bridge · OSINT · Utility
 - **OSINT**: SubFinder, BucketSpot, ExifPeek, SSLInspect, FaviconHash, IPGeo,
   ShodanPeek, RobotsPeek, SitemapFind, WellKnownScan, ApiSpec, PanelHunt,
   GitFinder, Wayback, ContactGrab, EmailHunter, EmailAnalyze, MailHunt,
-  UserHunt, BreachCheck, PhoneAnalyze, GoogleDork, GitDork, TakeoverCheck,
+  UserHunt, BreachCheck, GoogleDork, GitDork, TakeoverCheck,
   DNSRecords, DNSSECCheck, HostCluster, WhoisLookup
 - **Utility**: AutoFinder, GuideBook, UploadTest, TargetSave, ExportAll,
   CopyAsCurl, JSONView

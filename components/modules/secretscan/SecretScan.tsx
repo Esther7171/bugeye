@@ -8,45 +8,37 @@ import { Badge } from '@/components/ui/badge';
 import { browser } from 'wxt/browser';
 import { useHostPermission } from '@/lib/useHostPermission';
 import { useActiveTab } from '@/lib/useActiveTab';
+import { sendToBackground } from '@/lib/messaging';
+import { mapLimit } from '@/lib/concurrency';
+import { findSecrets, type SecretHit } from '@/lib/secrets';
 import { exportJson } from '@/lib/export';
 import type { ModuleComponentProps } from '@/types';
 
-interface SecretHit {
-  type: string;
-  match: string;
-  context: string;
-}
+const SCAN_CAP = 20;
 
 // Self-contained: executed in the page's isolated world via
 // chrome.scripting.executeScript, so it cannot reference outer closures.
-function scanPageForSecrets(): SecretHit[] {
-  const patterns: Array<{ type: string; re: RegExp }> = [
-    { type: 'AWS Access Key', re: /AKIA[0-9A-Z]{16}/g },
-    { type: 'Google API Key', re: /AIza[0-9A-Za-z\-_]{35}/g },
-    { type: 'Slack Token', re: /xox[baprs]-[0-9a-zA-Z-]{10,}/g },
-    { type: 'JWT', re: /eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}/g },
-    { type: 'Bearer token', re: /Bearer\s+[A-Za-z0-9\-_.=]{10,}/g },
-    { type: 'Generic api_key', re: /api[_-]?key["'\s]*[:=]\s*["'][a-zA-Z0-9_\-]{12,}["']/gi },
-    { type: 'Generic secret', re: /secret["'\s]*[:=]\s*["'][^"'\s]{8,}["']/gi },
-  ];
-
+// Only collects raw text - regex matching happens back in the component
+// (via the shared findSecrets helper) so it can also run over externally
+// fetched script content, which this sandboxed function has no access to.
+function collectPageSources(): { blob: string; scriptSrcs: string[] } {
   const sources: string[] = [document.documentElement.outerHTML];
   document.querySelectorAll('script:not([src])').forEach((el) => {
     if (el.textContent) sources.push(el.textContent);
   });
-  const blob = sources.join('\n');
 
-  const found = new Map<string, SecretHit>();
-  for (const { type, re } of patterns) {
-    for (const m of blob.matchAll(re)) {
-      const match = m[0];
-      const index = m.index ?? 0;
-      const context = blob.slice(Math.max(0, index - 30), index + match.length + 30).replace(/\s+/g, ' ');
-      const key = `${type}:${match}`;
-      if (!found.has(key)) found.set(key, { type, match, context });
+  const scriptSrcs = new Set<string>();
+  document.querySelectorAll('script[src]').forEach((el) => {
+    const src = el.getAttribute('src');
+    if (!src) return;
+    try {
+      scriptSrcs.add(new URL(src, document.baseURI).href);
+    } catch {
+      // ignore unparsable src
     }
-  }
-  return Array.from(found.values());
+  });
+
+  return { blob: sources.join('\n'), scriptSrcs: Array.from(scriptSrcs) };
 }
 
 export function SecretScan({ onBack }: ModuleComponentProps) {
@@ -77,9 +69,21 @@ export function SecretScan({ onBack }: ModuleComponentProps) {
       }
       const [injection] = await browser.scripting.executeScript({
         target: { tabId },
-        func: scanPageForSecrets,
+        func: collectPageSources,
       });
-      const result = (injection?.result as SecretHit[] | undefined) ?? [];
+      const { blob, scriptSrcs } = injection?.result ?? { blob: '', scriptSrcs: [] };
+
+      const found = findSecrets(blob);
+      await mapLimit(scriptSrcs.slice(0, SCAN_CAP), 5, async (url) => {
+        try {
+          const res = await sendToBackground({ type: 'FETCH_TEXT', url });
+          if (res.ok && res.data) findSecrets(res.data, found);
+        } catch {
+          // ignore unreachable scripts
+        }
+      });
+
+      const result = Array.from(found.values());
       setHits(result);
       if (result.length === 0) setNote('No likely secrets found on this page.');
     } finally {
@@ -91,7 +95,7 @@ export function SecretScan({ onBack }: ModuleComponentProps) {
     <div className="flex flex-col">
       <ModuleHeader
         title="SecretScan"
-        description="Best-effort regex scan of the page's HTML and inline JS for exposed keys and tokens."
+        description="Best-effort regex scan of the page's HTML, inline JS, and same-origin external scripts for exposed keys and tokens."
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">

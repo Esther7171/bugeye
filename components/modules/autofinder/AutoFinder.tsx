@@ -11,6 +11,7 @@ import { useHostPermission } from '@/lib/useHostPermission';
 import {
   runAutoFinder,
   autoFinderToMarkdown,
+  normalizeAutoFinderReport,
   AUTOFINDER_TASKS,
   type AutoFinderReport,
   type AutoFinderTaskId,
@@ -76,14 +77,15 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
     if (!target) return;
     autoFinderReportStore.get().then((stored) => {
       if (stored && stored.domain === target) {
-        setReport(stored.report);
+        const normalized = normalizeAutoFinderReport(stored.report);
+        setReport(normalized);
         setProgress(stored.progress);
         setCachedAt(stored.generatedAt);
         autoFinderHistoryStore.get().then((history) => {
           const prev = history[target]?.previous;
           if (prev?.report) {
             setPreviousAt(prev.generatedAt);
-            setDiff(diffAutoFinder(prev.report, stored.report));
+            setDiff(diffAutoFinder(normalizeAutoFinderReport(prev.report), normalized));
           } else {
             setPreviousAt('');
             setDiff([]);
@@ -106,7 +108,13 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
     setPreviousAt('');
     setDiff([]);
     setProgress(emptyProgress());
-    const granted = await ensureMany([`https://${target}/*`, 'https://crt.sh/*', 'https://crt.name/*', 'https://web.archive.org/*']);
+    const granted = await ensureMany([
+      `https://${target}/*`,
+      `https://*.${target}/*`,
+      'https://crt.sh/*',
+      'https://crt.name/*',
+      'https://web.archive.org/*',
+    ]);
     if (!granted) {
       setNote('Host permission was not granted.');
       return;
@@ -129,7 +137,7 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
       autoFinderReportStore.set(stored);
       if (previous?.report && previous.domain === target) {
         setPreviousAt(previous.generatedAt);
-        setDiff(diffAutoFinder(previous.report, result));
+        setDiff(diffAutoFinder(normalizeAutoFinderReport(previous.report), result));
       } else {
         setPreviousAt('');
         setDiff([]);
@@ -420,6 +428,91 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
                 <p className="mt-1">
                   {report.secrets.map((s) => `${s.type}: ${s.match}`).join(', ') || 'None found.'}
                 </p>
+              </Section>
+
+              <Section title="Exposed API specs" stat={`${report.apiSpecs.filter((s) => s.found).length}`}>
+                {report.apiSpecs.filter((s) => s.found).map((s) => `${s.path} (${s.kind})`).join(', ') || 'None found.'}
+              </Section>
+
+              <Section
+                title="GraphQL introspection"
+                stat={`${report.graphqlFindings.filter((g) => g.verdict === 'introspection-enabled').length} enabled`}
+              >
+                {report.graphqlFindings
+                  .filter((g) => g.verdict === 'introspection-enabled')
+                  .map((g) => `${g.url} (${g.summary?.typeCount ?? '?'} types)`)
+                  .join(', ') || 'None enabled.'}
+              </Section>
+
+              <Section
+                title="Subdomain takeover"
+                stat={`${report.takeoverFindings.filter((t) => t.verdict === 'high' || t.verdict === 'medium').length} flagged`}
+              >
+                <p className="italic">Checked against the first 40 discovered subdomains. Verify manually before reporting.</p>
+                <div className="mt-1 flex flex-col gap-1">
+                  {report.takeoverFindings
+                    .filter((t) => t.verdict === 'high' || t.verdict === 'medium')
+                    .map((t) => (
+                      <p key={t.subdomain}>
+                        <span className={t.verdict === 'high' ? 'text-destructive' : 'text-warning'}>[{t.verdict.toUpperCase()}]</span>{' '}
+                        {t.subdomain} - {t.detail}
+                      </p>
+                    ))}
+                  {report.takeoverFindings.every((t) => t.verdict !== 'high' && t.verdict !== 'medium') && 'None flagged.'}
+                </div>
+              </Section>
+
+              <Section title="DNSSEC" stat={report.dnssec?.verdict}>
+                {report.dnssec?.detail ?? 'Not evaluated.'}
+              </Section>
+
+              <Section title="Emails found + breach check" stat={`${report.emails.length}`}>
+                <div className="flex flex-col gap-1">
+                  {report.emails.map((e) => {
+                    const b = report.emailBreaches.find((x) => x.email === e);
+                    return (
+                      <p key={e}>
+                        {e}
+                        {b && (b.result.ok ? (b.result.breached ? ` - BREACHED (${b.result.breaches.length}, via ${b.result.source})` : ` - clean (via ${b.result.source})`) : ' - breach check failed')}
+                      </p>
+                    );
+                  })}
+                  {report.emails.length === 0 && 'None found.'}
+                  {report.emails.length > 5 && (
+                    <p className="italic">Breach check ran for the first 5 emails only.</p>
+                  )}
+                </div>
+              </Section>
+
+              <Section title="Dork links" stat={`${report.dorks.google.length + report.dorks.github.length}`}>
+                <p className="italic">Query builders, not automated checks - click through to investigate manually.</p>
+                <div className="mt-1 flex flex-col gap-1">
+                  {report.dorks.google.map((d) => (
+                    <a
+                      key={d.id}
+                      href={`https://www.google.com/search?q=${encodeURIComponent(d.query)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      [Google] {d.label}
+                    </a>
+                  ))}
+                  {report.dorks.github.map((d) => (
+                    <a
+                      key={d.id}
+                      href={`https://github.com/search?q=${encodeURIComponent(d.query)}&type=code`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      [GitHub] {d.label}
+                    </a>
+                  ))}
+                  <a href={report.dorks.gitlabUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                    [GitLab] Code search
+                  </a>
+                </div>
               </Section>
             </div>
           </>

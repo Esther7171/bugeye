@@ -408,7 +408,7 @@ export function EncoderKit({ onBack }: ModuleComponentProps) {
           <ExternalLink className="size-3" /> Open current input in CyberChef
         </a>
         <Tabs defaultValue="base64">
-          <TabsList className="flex-wrap">
+          <TabsList className="h-auto flex-wrap">
             <TabsTrigger value="base64">Base64</TabsTrigger>
             <TabsTrigger value="url">URL</TabsTrigger>
             <TabsTrigger value="html">HTML</TabsTrigger>

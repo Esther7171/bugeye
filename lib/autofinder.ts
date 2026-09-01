@@ -13,8 +13,15 @@ import { GITFINDER_CHECKS } from '@/lib/gitfinder';
 import { fetchWaybackUrls } from '@/lib/wayback';
 import { fingerprintFromHeaders, type TechHit } from '@/lib/techstack';
 import { detectLibrary, type RetireFinding } from '@/lib/retirejs';
+import { findSecrets, type SecretHit } from '@/lib/secrets';
+import { API_SPEC_PATHS, classifySpecBody, type SpecKind } from '@/lib/apispec';
+import { GRAPHQL_PATHS, INTROSPECTION_BODY, parseIntrospectionResponse, type GraphQLProbeResult } from '@/lib/graphql';
+import { matchProvider, type TakeoverResult } from '@/lib/takeover';
+import { checkDnssec, type DnssecResult } from '@/lib/dnssec';
+import { buildGoogleDorks, type DorkQuery } from '@/lib/googledork';
+import { buildGitHubDorks, gitlabSearchUrl } from '@/lib/gitdork';
 import { mapLimit } from '@/lib/concurrency';
-import type { CorsCheckResult, HttpMethodsResult } from '@/lib/messaging';
+import type { CorsCheckResult, HttpMethodsResult, BreachCheckResult } from '@/lib/messaging';
 
 export type AutoFinderTaskId =
   | 'dns'
@@ -39,7 +46,13 @@ export type AutoFinderTaskId =
   | 'buckets'
   | 'links'
   | 'jsfiles'
-  | 'secrets';
+  | 'secrets'
+  | 'apispec'
+  | 'graphql'
+  | 'takeover'
+  | 'dnssec'
+  | 'emails'
+  | 'dorks';
 
 export const AUTOFINDER_TASKS: { id: AutoFinderTaskId; label: string }[] = [
   { id: 'dns', label: 'DNS resolution' },
@@ -65,6 +78,12 @@ export const AUTOFINDER_TASKS: { id: AutoFinderTaskId; label: string }[] = [
   { id: 'links', label: 'Links, scripts and form actions' },
   { id: 'jsfiles', label: 'JavaScript files' },
   { id: 'secrets', label: 'Exposed keys/tokens (best-effort)' },
+  { id: 'apispec', label: 'Exposed API specs (Swagger/OpenAPI/Postman)' },
+  { id: 'graphql', label: 'GraphQL introspection' },
+  { id: 'takeover', label: 'Subdomain takeover' },
+  { id: 'dnssec', label: 'DNSSEC' },
+  { id: 'emails', label: 'Emails found + breach check' },
+  { id: 'dorks', label: 'Google/GitHub/GitLab dork links' },
 ];
 
 export type TaskStatus = 'pending' | 'running' | 'done' | 'error';
@@ -115,6 +134,13 @@ export interface AutoFinderReport {
   links: { internal: LinkHit[]; external: LinkHit[] };
   jsFiles: string[];
   secrets: SecretHit[];
+  apiSpecs: { path: string; label: string; url: string; status: number | null; kind: SpecKind | null; found: boolean }[];
+  graphqlFindings: GraphQLProbeResult[];
+  takeoverFindings: TakeoverResult[];
+  dnssec: DnssecResult | null;
+  emails: string[];
+  emailBreaches: { email: string; result: BreachCheckResult }[];
+  dorks: { google: DorkQuery[]; github: DorkQuery[]; gitlabUrl: string };
 }
 
 export interface LinkHit {
@@ -122,11 +148,7 @@ export interface LinkHit {
   tag: string;
 }
 
-export interface SecretHit {
-  type: string;
-  match: string;
-  context: string;
-}
+export type { SecretHit };
 
 const BUCKET_PATTERNS: Array<{ type: string; re: RegExp }> = [
   { type: 'S3', re: /[a-z0-9.-]*s3[.-][a-z0-9-]*\.amazonaws\.com\/[a-z0-9._/-]*/gi },
@@ -160,6 +182,16 @@ function guessTechFromHtml(html: string): string[] {
   const generatorMatch = lower.match(/<meta[^>]+name=["']generator["'][^>]+content=["']([^"']+)["']/);
   if (generatorMatch) guesses.add(generatorMatch[1]!);
   return Array.from(guesses);
+}
+
+const EMAIL_RE = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+
+function extractEmails(texts: string[]): string[] {
+  const found = new Set<string>();
+  for (const text of texts) {
+    for (const m of text.matchAll(EMAIL_RE)) found.add(m[0].toLowerCase());
+  }
+  return Array.from(found);
 }
 
 function extractScriptSrcs(html: string, baseUrl: string): string[] {
@@ -212,34 +244,6 @@ function extractLinks(html: string, baseUrl: string, domain: string): { internal
     }
   }
   return { internal, external };
-}
-
-// Mirrors SecretScan's scanPageForSecrets, same static-HTML tradeoff as
-// extractLinks above - inline <script> content is still part of the raw
-// HTML, so this catches the same inline-secret cases, just not anything
-// injected only by client-side JS after load.
-const SECRET_PATTERNS: Array<{ type: string; re: RegExp }> = [
-  { type: 'AWS Access Key', re: /AKIA[0-9A-Z]{16}/g },
-  { type: 'Google API Key', re: /AIza[0-9A-Za-z\-_]{35}/g },
-  { type: 'Slack Token', re: /xox[baprs]-[0-9a-zA-Z-]{10,}/g },
-  { type: 'JWT', re: /eyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}/g },
-  { type: 'Bearer token', re: /Bearer\s+[A-Za-z0-9\-_.=]{10,}/g },
-  { type: 'Generic api_key', re: /api[_-]?key["'\s]*[:=]\s*["'][a-zA-Z0-9_\-]{12,}["']/gi },
-  { type: 'Generic secret', re: /secret["'\s]*[:=]\s*["'][^"'\s]{8,}["']/gi },
-];
-
-function extractSecrets(html: string): SecretHit[] {
-  const found = new Map<string, SecretHit>();
-  for (const { type, re } of SECRET_PATTERNS) {
-    for (const m of html.matchAll(re)) {
-      const match = m[0];
-      const index = m.index ?? 0;
-      const context = html.slice(Math.max(0, index - 30), index + match.length + 30).replace(/\s+/g, ' ');
-      const key = `${type}:${match}`;
-      if (!found.has(key)) found.set(key, { type, match, context });
-    }
-  }
-  return Array.from(found.values());
 }
 
 export async function runAutoFinder(
@@ -295,6 +299,7 @@ export async function runAutoFinder(
   const html = homepageRes.ok && homepageRes.data ? homepageRes.data : '';
   const addresses = dohResult?.ok ? (dohResult.addresses ?? []) : [];
   const ip = addresses[0] ?? null;
+  const subdomainList = Array.from(new Set([...(crt?.hostnames ?? []), ...otx])).sort();
 
   const hasHeaders = Object.keys(headers).length > 0;
   const headerGrade = hasHeaders ? gradeHeaders(headers) : null;
@@ -402,21 +407,22 @@ export async function runAutoFinder(
 
   const allJsFiles = html ? extractScriptSrcs(html, homeUrl) : [];
 
-  const retireFindings = await run(
-    'retirejs',
-    async () => {
-      if (!html) return [];
-      const srcs = allJsFiles.slice(0, 20);
-      const results = await mapLimit(srcs, 5, async (url) => {
+  // Fetched once and shared by retirejs + secrets below, since both need the
+  // actual text content of the same external scripts.
+  const jsFetches = html
+    ? await mapLimit(allJsFiles.slice(0, 20), 5, async (url) => {
         try {
           const res = await sendToBackground({ type: 'FETCH_TEXT', url });
-          return detectLibrary(url, res.ok ? (res.data ?? null) : null);
+          return { url, text: res.ok ? (res.data ?? null) : null };
         } catch {
-          return null;
+          return { url, text: null };
         }
-      });
-      return results.filter((r): r is RetireFinding => r !== null);
-    },
+      })
+    : [];
+
+  const retireFindings = await run(
+    'retirejs',
+    async () => jsFetches.map(({ url, text }) => detectLibrary(url, text)).filter((r): r is RetireFinding => r !== null),
     (r) => `${r.length} vulnerable`,
   );
 
@@ -430,14 +436,109 @@ export async function runAutoFinder(
 
   const jsFiles = await run('jsfiles', async () => allJsFiles, (r) => `${r.length} files`);
 
-  const secrets = await run('secrets', async () => extractSecrets(html), (r) => `${r.length} possible hit(s)`);
+  // Scans the homepage HTML (catches inline <script> secrets) plus the text
+  // of every external same-origin JS file fetched above - that's where keys
+  // bundled into main.js/vendor.js etc actually live, and the HTML-only scan
+  // used to miss them entirely.
+  const secrets = await run(
+    'secrets',
+    async () => {
+      const found = findSecrets(html);
+      for (const { text } of jsFetches) {
+        if (text) findSecrets(text, found);
+      }
+      return Array.from(found.values());
+    },
+    (r) => `${r.length} possible hit(s)`,
+  );
+
+  const apiSpecs = await run(
+    'apispec',
+    () =>
+      mapLimit(API_SPEC_PATHS, 5, async (def) => {
+        const url = `https://${domain}${def.path}`;
+        const res = await sendToBackground({ type: 'HTTP_PROBE', url });
+        const kind = res.body ? classifySpecBody(res.body) : null;
+        return { path: def.path, label: def.label, url, status: res.status, kind, found: kind !== null };
+      }),
+    (r) => `${r.filter((x) => x.found).length} confirmed`,
+  );
+
+  const graphqlFindings = await run(
+    'graphql',
+    () =>
+      mapLimit(GRAPHQL_PATHS, 3, async (def) => {
+        const url = `https://${domain}${def.path}`;
+        const res = await sendToBackground({ type: 'HTTP_POST_PROBE', url, body: INTROSPECTION_BODY });
+        const parsed = res.body ? parseIntrospectionResponse(res.body) : null;
+        return {
+          path: def.path,
+          label: def.label,
+          url,
+          status: res.status,
+          verdict: parsed?.verdict ?? 'not-graphql',
+          summary: parsed?.summary ?? null,
+          errorMessage: parsed?.errorMessage ?? res.error ?? null,
+        } satisfies GraphQLProbeResult;
+      }),
+    (r) => `${r.filter((x) => x.verdict === 'introspection-enabled').length} with introspection on`,
+  );
+
+  // Capped: takeover checking every subdomain crt.sh ever saw could mean
+  // hundreds of DNS+fetch round trips for a large target.
+  const takeoverFindings = await run(
+    'takeover',
+    () =>
+      mapLimit(subdomainList.slice(0, 40), 5, async (subdomain): Promise<TakeoverResult> => {
+        const cnameRes = await sendToBackground({ type: 'DOH_QUERY', hostname: subdomain, recordType: 'CNAME' });
+        if (!cnameRes.ok) return { subdomain, cname: null, provider: null, verdict: 'error', detail: cnameRes.error ?? 'DNS query failed.' };
+        const cname = cnameRes.answers[0]?.data.replace(/\.$/, '') ?? null;
+        if (!cname) return { subdomain, cname: null, provider: null, verdict: 'none', detail: 'No CNAME record.' };
+        const provider = matchProvider(cname);
+        if (!provider) return { subdomain, cname, provider: null, verdict: 'none', detail: 'CNAME does not match a known takeover-prone provider.' };
+        const bodyRes = await sendToBackground({ type: 'FETCH_TEXT', url: `https://${subdomain}/` });
+        if (bodyRes.ok && bodyRes.data && provider.bodySignatures.some((sig) => bodyRes.data!.includes(sig))) {
+          return { subdomain, cname, provider: provider.name, verdict: 'high', detail: "CNAME and page body both match the provider's unclaimed signature." };
+        }
+        return { subdomain, cname, provider: provider.name, verdict: 'medium', detail: 'CNAME matches a known provider; page body did not confirm (or could not be fetched).' };
+      }),
+    (r) => `${r.filter((x) => x.verdict === 'high' || x.verdict === 'medium').length} flagged`,
+  );
+
+  const dnssec = await run('dnssec', () => checkDnssec(domain), (r) => r.verdict);
+
+  // "if it finds an email on the site, check it" - cross-feed straight into
+  // the same free breach source BreachCheck uses, capped so one domain with
+  // a hundred scraped addresses doesn't hammer XposedOrNot.
+  const emailsAndBreaches = await run(
+    'emails',
+    async () => {
+      const list = extractEmails([html, ...jsFetches.map((f) => f.text ?? '')]);
+      const breaches = await mapLimit(list.slice(0, 5), 3, async (email) => ({
+        email,
+        result: await sendToBackground({ type: 'BREACH_CHECK', email }),
+      }));
+      return { emails: list, breaches };
+    },
+    (r) => `${r.emails.length} email(s), ${r.breaches.filter((x) => x.result.ok && x.result.breached).length} breached`,
+  );
+  const emails = emailsAndBreaches?.emails ?? [];
+  const emailBreaches = emailsAndBreaches?.breaches ?? [];
+
+  // Pure link-builders, no network - GoogleDork/GitDork are query
+  // generators the user clicks through, not automated checks.
+  const dorks = await run(
+    'dorks',
+    async () => ({ google: buildGoogleDorks(domain), github: buildGitHubDorks(domain), gitlabUrl: gitlabSearchUrl(domain) }),
+    (r) => `${r.google.length + r.github.length} dork(s) built`,
+  );
 
   return {
     domain,
     generatedAt: new Date().toISOString(),
     dns: { addresses, error: dohResult?.error },
     subdomains: {
-      list: Array.from(new Set([...(crt?.hostnames ?? []), ...otx])).sort(),
+      list: subdomainList,
       error: crt?.crtError ?? crt?.crtNameError ?? crt?.hackerTargetError ?? crt?.certSpotterError,
     },
     headers,
@@ -464,6 +565,30 @@ export async function runAutoFinder(
     links: links ?? { internal: [], external: [] },
     jsFiles: jsFiles ?? [],
     secrets: secrets ?? [],
+    apiSpecs: apiSpecs ?? [],
+    graphqlFindings: graphqlFindings ?? [],
+    takeoverFindings: takeoverFindings ?? [],
+    dnssec: dnssec ?? null,
+    emails,
+    emailBreaches,
+    dorks: dorks ?? { google: [], github: [], gitlabUrl: gitlabSearchUrl(domain) },
+  };
+}
+
+// A report cached in chrome.storage.local from before these fields existed
+// won't have them - reading it back would otherwise crash the UI/exporters
+// on undefined.filter(). Backfill safe defaults at the one place stored
+// reports re-enter the app.
+export function normalizeAutoFinderReport(r: AutoFinderReport): AutoFinderReport {
+  return {
+    ...r,
+    apiSpecs: r.apiSpecs ?? [],
+    graphqlFindings: r.graphqlFindings ?? [],
+    takeoverFindings: r.takeoverFindings ?? [],
+    dnssec: r.dnssec ?? null,
+    emails: r.emails ?? [],
+    emailBreaches: r.emailBreaches ?? [],
+    dorks: r.dorks ?? { google: [], github: [], gitlabUrl: '' },
   };
 }
 
@@ -552,6 +677,30 @@ export function autoFinderToMarkdown(r: AutoFinderReport): string {
     '_Pattern matching only - expect false positives (test fixtures, docs, minified noise). Verify every hit manually._',
     '',
     r.secrets.length ? r.secrets.map((s) => `- **${s.type}**: \`${s.match}\``).join('\n') : '_None found._',
+    '',
+    `## Exposed API specs (${r.apiSpecs.filter((s) => s.found).length})`,
+    r.apiSpecs.filter((s) => s.found).map((s) => `- ${s.path} (${s.kind}) - ${s.url}`).join('\n') || '_None found._',
+    '',
+    `## GraphQL introspection (${r.graphqlFindings.filter((g) => g.verdict === 'introspection-enabled').length} enabled)`,
+    r.graphqlFindings.filter((g) => g.verdict === 'introspection-enabled').map((g) => `- ${g.url} - ${g.summary?.typeCount ?? '?'} types`).join('\n') || '_None enabled._',
+    '',
+    `## Subdomain takeover (${r.takeoverFindings.filter((t) => t.verdict === 'high' || t.verdict === 'medium').length} flagged)`,
+    r.takeoverFindings.filter((t) => t.verdict === 'high' || t.verdict === 'medium').map((t) => `- **${t.verdict.toUpperCase()}** ${t.subdomain} - ${t.detail}`).join('\n') || '_None flagged._',
+    '',
+    '## DNSSEC',
+    r.dnssec ? `${r.dnssec.verdict}: ${r.dnssec.detail}` : '_Not evaluated._',
+    '',
+    `## Emails found on page (${r.emails.length})`,
+    r.emails.map((e) => {
+      const b = r.emailBreaches.find((x) => x.email === e);
+      if (!b) return `- ${e}`;
+      return b.result.ok ? `- ${e} - ${b.result.breached ? `**BREACHED** (${b.result.breaches.length}, via ${b.result.source})` : `clean (via ${b.result.source})`}` : `- ${e} - breach check failed`;
+    }).join('\n') || '_None found._',
+    '',
+    '## Dork links (click to investigate manually)',
+    ...r.dorks.google.map((d) => `- [Google] ${d.label}: \`${d.query}\``),
+    ...r.dorks.github.map((d) => `- [GitHub] ${d.label}: \`${d.query}\``),
+    `- [GitLab] ${r.dorks.gitlabUrl}`,
   ];
   return lines.join('\n');
 }

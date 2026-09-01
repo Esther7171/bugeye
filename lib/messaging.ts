@@ -16,7 +16,6 @@ export type BgRequest =
   | { type: 'FETCH_HACKERTARGET_WHOIS'; domain: string }
   | { type: 'HTTP_PROBE'; url: string }
   | { type: 'FETCH_GITHUB_EMAIL'; email: string }
-  | { type: 'REVERSE_WHOIS'; mode: 'keyword' | 'company' | 'email' | 'name'; query: string; apiKey: string }
   | { type: 'GET_URL_HEADERS'; url: string }
   | { type: 'GET_TAB_HEADERS'; tabId: number; url: string }
   | { type: 'OPEN_TABS'; urls: string[]; delayMs: number; newWindow: boolean; groupTitle?: string }
@@ -187,7 +186,6 @@ export interface BgResponseMap {
     commitsError?: string;
     error?: string;
   };
-  REVERSE_WHOIS: { ok: boolean; raw?: unknown; error?: string };
   GET_URL_HEADERS: UrlHeadersResult;
   GET_TAB_HEADERS: TabHeadersResult;
   OPEN_TABS: { opened: number };

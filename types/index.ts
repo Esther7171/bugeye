@@ -6,6 +6,7 @@ export type PillarId =
   | 'encode-payload'
   | 'cli-bridge'
   | 'osint'
+  | 'vuln-hunting'
   | 'utility';
 
 export interface ModuleMeta {

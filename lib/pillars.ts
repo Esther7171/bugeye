@@ -6,6 +6,7 @@ import {
   Binary,
   Terminal,
   Radar,
+  Bug,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -25,6 +26,7 @@ export const PILLARS: Pillar[] = [
   { id: 'encode-payload', name: 'Encode / Payload', icon: Binary },
   { id: 'cli-bridge', name: 'CLI Bridge', icon: Terminal },
   { id: 'osint', name: 'OSINT', icon: Radar },
+  { id: 'vuln-hunting', name: 'Vuln Hunting', icon: Bug },
   { id: 'utility', name: 'Utility', icon: Wrench },
 ];
 
@@ -115,7 +117,7 @@ export const MODULES: ModuleMeta[] = [
   },
   {
     id: 'payloadlib',
-    pillar: 'encode-payload',
+    pillar: 'vuln-hunting',
     name: 'PayloadLib',
     description: 'Searchable library of XSS, SQLi, LFI/RFI, SSTI, XXE and redirect payloads.',
     status: 'live',
@@ -276,7 +278,7 @@ export const MODULES: ModuleMeta[] = [
   },
   {
     id: 'retirejs',
-    pillar: 'tab-inspector',
+    pillar: 'vuln-hunting',
     name: 'RetireJS',
     description: 'Detects outdated JS libraries with known CVEs from a curated signature set.',
     status: 'live',
@@ -353,7 +355,7 @@ export const MODULES: ModuleMeta[] = [
   },
   {
     id: 'graphqlcheck',
-    pillar: 'osint',
+    pillar: 'vuln-hunting',
     name: 'GraphQLCheck',
     description: 'Checks common GraphQL paths for introspection left enabled. Single introspection query per path.',
     status: 'live',
@@ -415,13 +417,6 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
-    id: 'phoneanalyze',
-    pillar: 'osint',
-    name: 'PhoneAnalyze',
-    description: 'Parses a phone number: country, region, line type and format validity.',
-    status: 'live',
-  },
-  {
     id: 'googledork',
     pillar: 'osint',
     name: 'GoogleDork',
@@ -458,21 +453,21 @@ export const MODULES: ModuleMeta[] = [
   },
   {
     id: 'blindxss',
-    pillar: 'encode-payload',
+    pillar: 'vuln-hunting',
     name: 'BlindXSS',
     description: 'Generates blind-XSS payloads pointing at your collector, plus WAF-bypass variants.',
     status: 'live',
   },
   {
     id: 'blindsqli',
-    pillar: 'encode-payload',
+    pillar: 'vuln-hunting',
     name: 'BlindSQLi',
     description: 'Generates out-of-band and time-based blind SQLi payloads pointing at your collector.',
     status: 'live',
   },
   {
     id: 'phpfilterchain',
-    pillar: 'encode-payload',
+    pillar: 'vuln-hunting',
     name: 'PHPFilterChain',
     description: 'Generates a php://filter conversion chain that reproduces arbitrary text, for LFI-to-RCE testing.',
     status: 'live',
@@ -547,13 +542,8 @@ export const MODULES: ModuleMeta[] = [
     description: 'Registrar and contact data via RDAP, HackerTarget WHOIS API, and the who.is web page.',
     status: 'live',
   },
-  {
-    id: 'reversewhois',
-    pillar: 'osint',
-    name: 'ReverseWhois',
-    description: 'Finds other domains registered under the same name, company, email or keyword. Needs your own Whoxy API key.',
-    status: 'live',
-  },
+  // reversewhois removed: every reverse-WHOIS data source is paid, so the
+  // module could never work without the user bringing their own Whoxy key.
   {
     id: 'dnsseccheck',
     pillar: 'osint',

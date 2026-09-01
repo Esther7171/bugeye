@@ -8,8 +8,12 @@ export function mailSearchLinks(email: string): MailSearchLink[] {
   const raw = encodeURIComponent(email);
   const domain = email.split('@')[1] ?? '';
   const domainQ = encodeURIComponent(domain);
+  const siteLinkedin = encodeURIComponent(`"${email}" site:linkedin.com`);
+  const siteDomain = domain ? encodeURIComponent(`"${email}" site:${domain}`) : '';
   return [
     { label: 'Google', url: `https://www.google.com/search?q=${q}` },
+    { label: 'Google: LinkedIn mentions', url: `https://www.google.com/search?q=${siteLinkedin}` },
+    ...(siteDomain ? [{ label: `Google: ${domain} mentions`, url: `https://www.google.com/search?q=${siteDomain}` }] : []),
     { label: 'Bing', url: `https://www.bing.com/search?q=${q}` },
     { label: 'DuckDuckGo', url: `https://duckduckgo.com/?q=${q}` },
     { label: 'GitHub code', url: `https://github.com/search?q=${raw}&type=code` },

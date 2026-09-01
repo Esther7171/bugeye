@@ -61,7 +61,6 @@ export const MODULE_COMPONENTS: Record<string, LazyExoticComponent<ComponentType
   mailhunt: lazy(() => import('@/components/modules/mailhunt/MailHunt')),
   userhunt: lazy(() => import('@/components/modules/userhunt/UserHunt')),
   breachcheck: lazy(() => import('@/components/modules/breachcheck/BreachCheck')),
-  phoneanalyze: lazy(() => import('@/components/modules/phoneanalyze/PhoneAnalyze')),
   googledork: lazy(() => import('@/components/modules/googledork/GoogleDork')),
   gitdork: lazy(() => import('@/components/modules/gitdork/GitDork')),
   fuzzbuild: lazy(() => import('@/components/modules/fuzzbuild/FuzzBuild')),
@@ -83,5 +82,4 @@ export const MODULE_COMPONENTS: Record<string, LazyExoticComponent<ComponentType
   hostcluster: lazy(() => import('@/components/modules/hostcluster/HostCluster')),
   trackerscan: lazy(() => import('@/components/modules/trackerscan/TrackerScan')),
   whoislookup: lazy(() => import('@/components/modules/whoislookup/WhoisLookup')),
-  reversewhois: lazy(() => import('@/components/modules/reversewhois/ReverseWhois')),
 };
