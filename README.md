@@ -21,44 +21,88 @@ is not supported.
 
 ## Install for testing (not on any store yet)
 
-BugEye isn't published to the Chrome Web Store or Firefox Add-ons yet, so for
-now it's installed manually from a zip - no coding tools required. This is
-the "sideloading" step you'd use to share a build with a friend for feedback
-before submitting to the stores.
+**This section is for testers, not programmers.** You do not need to install
+Node.js, npm, or run any commands - just download a file and click a few
+buttons in your browser's settings. (If you're a developer who wants to run
+the code from source instead, skip down to the [Develop](#develop) section.)
 
-**Get the zip:** download the right one for your browser from the
-[**Releases page**](https://github.com/Esther7171/bugeye/releases/latest) -
-no account or coding tools needed. (You can also build your own from source
-with `npm install` then `npm run zip` / `npm run zip:firefox`, which produces
-the same files under `.output/`.)
+BugEye isn't published to the Chrome Web Store or Firefox Add-ons yet, so
+until then, this "sideloading" process is the only way to install it.
 
-### Chrome, Edge, Brave, Opera
+### Step 1: Download the file
 
-1. Unzip the chrome zip into its own folder.
-2. Open `chrome://extensions` (Edge: `edge://extensions`, Brave:
-   `brave://extensions`, Opera: `opera://extensions`).
-3. Turn on **Developer mode** (top-right toggle).
-4. Click **Load unpacked** and select the folder you unzipped.
-5. Pin BugEye from the puzzle-piece icon in the toolbar, then click it (or
-   press `Ctrl+Shift+K`) to open the side panel.
+Go to the [**Releases page**](https://github.com/Esther7171/bugeye/releases/latest)
+and click the file for your browser to download it:
 
-This install persists across restarts. To get updates, unzip a newer build
-over the old folder and click the refresh icon on the extension's card in
-`chrome://extensions`.
+- **Chrome, Edge, Brave, or Opera** → click `bugeye-0.1.0-chrome.zip`
+- **Firefox** → click `bugeye-0.1.0-firefox.zip`
 
-### Firefox
+It'll save to your computer's Downloads folder, same as any other download.
 
-1. Unzip the firefox zip into its own folder.
-2. Open `about:debugging#/runtime/this-firefox`.
-3. Click **Load Temporary Add-on** and select the `manifest.json` file
-   inside the folder you unzipped (not the folder itself).
-4. Open it via the toolbar button, `Ctrl+Shift+K`, or **View > Sidebar >
-   BugEye**.
+### Step 2: Unzip it
 
-Firefox's "temporary" add-ons are removed when the browser fully restarts -
-you'll need to repeat step 2-3 each time. That's a Firefox limitation for
-unsigned extensions, not a BugEye bug; it goes away once BugEye is signed
-and published on addons.mozilla.org.
+A `.zip` file is a compressed folder - your computer needs to unpack it
+before the files inside can be used.
+
+- **Windows:** find the downloaded file in File Explorer, right-click it,
+  and choose **Extract All...** This creates a new, uncompressed folder
+  next to it.
+- **Mac:** find it in Finder and double-click it. This creates a new folder
+  next to it automatically.
+
+Keep track of where that new folder ends up (usually right there in
+Downloads) - you'll pick it in Step 4.
+
+### Step 3: Turn on Developer mode
+
+This is a normal, safe setting built into every Chromium/Firefox browser
+for installing extensions that aren't from the official store. It doesn't
+make your browser less secure by itself.
+
+**Chrome, Edge, Brave, Opera:**
+1. Copy this into your address bar and press Enter: `chrome://extensions`
+   (Edge: `edge://extensions`, Brave: `brave://extensions`, Opera:
+   `opera://extensions`)
+2. In the top-right corner of that page, find the **Developer mode** switch
+   and turn it on.
+
+**Firefox:**
+1. Copy this into your address bar and press Enter:
+   `about:debugging#/runtime/this-firefox`
+   (Nothing extra to turn on for Firefox - go straight to Step 4.)
+
+### Step 4: Load the extension
+
+**Chrome, Edge, Brave, Opera:**
+1. On the extensions page, click the **Load unpacked** button that
+   appeared after you turned on Developer mode.
+2. A file picker opens - select the folder you unzipped in Step 2 (select
+   the folder itself, not a file inside it), then confirm.
+3. BugEye now appears in your list of extensions.
+
+**Firefox:**
+1. On the page from Step 3, click **Load Temporary Add-on...**
+2. In the file picker, open the folder you unzipped and select the
+   `manifest.json` file inside it (this time it's a specific file, not the
+   folder).
+3. BugEye now appears in your list of add-ons.
+
+### Step 5: Open it
+
+- Click the puzzle-piece icon in your browser's toolbar, find BugEye, and
+  click the pin icon so it stays visible.
+- Click the BugEye icon (or press `Ctrl+Shift+K`) to open its side panel.
+
+### Keeping it working
+
+- **Chrome/Edge/Brave/Opera:** this install stays put even if you restart
+  your browser. To get a future update, download the new zip, unzip it over
+  the same folder, then click the refresh icon on BugEye's card on the
+  extensions page.
+- **Firefox:** add-ons loaded this way ("temporary") are removed every time
+  Firefox fully restarts - you'll need to repeat Steps 3-4 again afterward.
+  That's a Firefox rule for unsigned extensions, not a BugEye bug. It goes
+  away once BugEye is signed and published on addons.mozilla.org.
 
 ### Giving feedback
 
