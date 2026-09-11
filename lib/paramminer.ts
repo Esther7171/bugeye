@@ -33,8 +33,7 @@ export function mineParams(urls: string[]): MinedParams {
 
     const template = new URL(parsed.origin + parsed.pathname);
     for (const key of keys) template.searchParams.set(key, 'FUZZ');
-    // Un-encode the FUZZ marker so the template stays readable/pasteable.
-    templates.add(template.toString().replace(/FUZZ/g, 'FUZZ'));
+    templates.add(template.toString());
   }
 
   return {

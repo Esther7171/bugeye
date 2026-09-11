@@ -71,7 +71,9 @@ export function AuthDiff({ onBack }: ModuleComponentProps) {
         <ModuleNote>
           Sends two read-only GETs: one with the browser's cookies for that site (your logged-in
           session) and one with none. If the anonymous request returns the same protected content,
-          authorization may be missing. Only test URLs you are authorized to assess.
+          authorization may be missing. Cookie sessions only - APIs authenticated by a bearer token
+          or custom header won't carry that credential here, so a "protected" verdict isn't proof
+          for those. Only test URLs you are authorized to assess.
         </ModuleNote>
 
         <div className="flex gap-2">

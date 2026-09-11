@@ -48,7 +48,7 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
     try {
       const granted = await ensureMany(SOURCE_ORIGINS);
       if (!granted) {
-        setNote('Host permission was not granted for crt.sh / crt.name / OTX.');
+        setNote('Host permission was not granted for crt.sh / crt.name / subdomain.center.');
         return;
       }
       // HackerTarget and CertSpotter both send permissive CORS headers, so
