@@ -21,6 +21,13 @@ export interface GuideCrossLink {
   label: string;
 }
 
+// An external, authoritative reference for the topic (HackTricks, write-ups,
+// tooling). Rendered as an opened-in-new-tab link, never auto-fetched.
+export interface GuideReference {
+  label: string;
+  url: string;
+}
+
 export interface GuideEntry {
   id: string;
   title: string;
@@ -28,6 +35,7 @@ export interface GuideEntry {
   sections: GuideSection[];
   snippetGroups?: GuideSnippetGroup[];
   crossLinks?: GuideCrossLink[];
+  references?: GuideReference[];
   note?: string;
 }
 
@@ -38,9 +46,49 @@ export interface GuideEntry {
 // bomb, or anything else whose purpose is to crash a target).
 export const GUIDES: GuideEntry[] = [
   {
+    id: 'exif-metadata-exposure',
+    title: 'EXIF / Image Metadata Exposure',
+    summary: 'User-uploaded images that keep their EXIF/IPTC/XMP metadata leak GPS location, device identifiers, timestamps and hidden thumbnails.',
+    sections: [
+      {
+        heading: 'What it is',
+        body: 'Photos carry embedded metadata (EXIF, plus IPTC and XMP). If an app stores and re-serves uploaded images without stripping it, anyone who downloads the image gets the original metadata: exact GPS coordinates (to a few meters), camera make/model and serial number, the software used, and precise capture timestamps with timezone. Embedded thumbnails can even preserve the pre-crop version of an image, exposing content the user thought they had removed.',
+      },
+      {
+        heading: 'Where it hits',
+        body: 'Any feature that accepts an image and serves it back to other users or publicly: avatars and profile photos, marketplace/listing images, chat and support attachments, comment images, and CDN-hosted user media. The bug is that the original file is served untouched instead of a re-encoded, metadata-stripped copy.',
+      },
+      {
+        heading: 'How to check safely',
+        body: 'Upload an image that has known EXIF (GPS + camera data) using a sample from the exif-sample-meta-data repo below, or your own phone photo with location on. Then fetch the stored/served image back (right-click, open the direct CDN URL) and run it through ExifPeek. If the GPS and device tags survive the round-trip, the app is not stripping metadata. Compare against a site that does strip (e.g. most social networks) to confirm your test image genuinely carried the tags.',
+      },
+      {
+        heading: 'Report as',
+        body: '"User-uploaded images are served with original EXIF metadata intact, leaking GPS location and device fingerprints of the uploader." Rate impact by what actually leaks: precise home/GPS coordinates of real users is a genuine privacy issue; camera model alone is low severity. Include the exact tags recovered and the served URL as proof.',
+      },
+      {
+        heading: 'Fix guidance',
+        body: 'Strip metadata server-side on upload by re-encoding the image (e.g. ImageMagick `convert in.jpg -strip out.jpg`, `exiftool -all= file`, or sharp with metadata disabled). Strip at the source, never rely on the client. Verify all three containers (EXIF, IPTC, XMP) are removed, and regenerate thumbnails from the stripped image so no pre-crop data survives.',
+      },
+    ],
+    crossLinks: [{ pillar: 'osint', moduleId: 'exifpeek', label: 'Open ExifPeek to read metadata from an image (in-browser, nothing uploaded)' }],
+    references: [
+      { label: 'HackTricks: Image/file-type metadata tricks', url: 'https://hacktricks.wiki/en/generic-methodologies-and-resources/basic-forensic-methodology/specific-software-file-type-tricks/index.html' },
+      { label: 'Privacy at Risk: EXIF Metadata Exposure in User-Uploaded Images (write-up)', url: 'https://samshadow.medium.com/privacy-at-risk-exif-metadata-exposure-in-user-uploaded-images-c2481f876d03' },
+      { label: 'EXIF metadata privacy risks and how to strip it', url: 'https://imageupload.app/en/blog/2026-03-13-exif-metadata-privacy-risks-and-how-to-strip-it' },
+      { label: 'EXIF data: what it leaks', url: 'https://openimages.app/docs/exif-data-what-it-leaks/' },
+      { label: 'EXIF data privacy risk: how to remove metadata from photos', url: 'https://imageupload.io/blog/exif-data-privacy-risk-how-to-remove-metadata-from-photos' },
+      { label: 'Sample images with EXIF metadata (test files, GitHub)', url: 'https://github.com/thatraghavarora/exif-sample-meta-data' },
+    ],
+    note: 'ExifPeek parses images entirely in your browser; nothing is uploaded. Only test against images and targets you are authorized to assess.',
+  },
+  {
     id: 'zip-bomb',
     title: 'Zip Bomb (Decompression DoS)',
     summary: 'A small archive that expands to a massive size on extraction, exhausting disk or memory.',
+    references: [
+      { label: 'HackTricks: File Upload', url: 'https://hacktricks.wiki/en/pentesting-web/file-upload/index.html' },
+    ],
     sections: [
       {
         heading: 'What it is',
@@ -68,6 +116,9 @@ export const GUIDES: GuideEntry[] = [
     id: 'image-bomb',
     title: 'Image Decompression / Pixel-Flood (Resource Exhaustion)',
     summary: 'A small image that decodes to enormous pixel dimensions, exhausting memory or CPU during processing.',
+    references: [
+      { label: 'HackTricks: File Upload', url: 'https://hacktricks.wiki/en/pentesting-web/file-upload/index.html' },
+    ],
     sections: [
       {
         heading: 'What it is',
@@ -96,6 +147,9 @@ export const GUIDES: GuideEntry[] = [
     id: 'csv-injection',
     title: 'CSV / Formula Injection',
     summary: 'Cells beginning with =, +, - or @ can execute as spreadsheet formulas when exported data is opened.',
+    references: [
+      { label: 'HackTricks: Formula/CSV/Doc/LaTeX/Ghostscript Injection', url: 'https://hacktricks.wiki/en/pentesting-web/formula-csv-doc-latex-ghostscript-injection.html' },
+    ],
     sections: [
       {
         heading: 'What it is',
@@ -142,6 +196,10 @@ export const GUIDES: GuideEntry[] = [
     id: 'xss-reference',
     title: 'XSS Payload Reference',
     summary: 'Reflected, stored and DOM XSS, with a short categorized reference of common test payloads.',
+    references: [
+      { label: 'HackTricks: XSS (Cross-Site Scripting)', url: 'https://hacktricks.wiki/en/pentesting-web/xss-cross-site-scripting/index.html' },
+      { label: 'HackTricks: PoCs and Polyglots cheatsheet', url: 'https://hacktricks.wiki/en/pentesting-web/pocs-and-polygloths-cheatsheet/index.html' },
+    ],
     sections: [
       {
         heading: 'The three XSS types',
@@ -196,6 +254,9 @@ export const GUIDES: GuideEntry[] = [
     id: 'sqli-reference',
     title: 'SQL Injection Payload Reference',
     summary: 'In-band/union, error-based, boolean-blind and time-blind SQLi, with a short categorized reference.',
+    references: [
+      { label: 'HackTricks: SQL Injection', url: 'https://hacktricks.wiki/en/pentesting-web/sql-injection/index.html' },
+    ],
     sections: [
       {
         heading: 'The four SQLi types',
@@ -236,6 +297,9 @@ export const GUIDES: GuideEntry[] = [
     id: 'burp-proxy',
     title: 'Using Burp Suite with BugEye (Proxy Setup Guide)',
     summary: "How to route your browser through Burp for manual testing. BugEye does not request the proxy permission.",
+    references: [
+      { label: 'HackTricks: Web Vulnerabilities Methodology', url: 'https://hacktricks.wiki/en/pentesting-web/web-vulnerabilities-methodology.html' },
+    ],
     sections: [
       {
         heading: 'What this is',
@@ -274,6 +338,9 @@ export const GUIDES: GuideEntry[] = [
     id: 'waf-bypass-methodology',
     title: 'WAF Bypass Testing (manual methodology)',
     summary: 'How to test WAF bypass responsibly: one payload at a time through a proxy, never automated spraying.',
+    references: [
+      { label: 'HackTricks: Proxy / WAF Protections Bypass', url: 'https://hacktricks.wiki/en/pentesting-web/proxy-waf-protections-bypass.html' },
+    ],
     sections: [
       {
         heading: 'Concept',
@@ -302,6 +369,11 @@ export const GUIDES: GuideEntry[] = [
     id: 'header-injection-howto',
     title: 'HTTP Header Injection / Bypass (how-to)',
     summary: 'Worked examples for testing header-trusting access controls with HeaderInject, category by category.',
+    references: [
+      { label: 'HackTricks: 403 & 401 Bypasses', url: 'https://hacktricks.wiki/en/network-services-pentesting/pentesting-web/403-and-401-bypasses.html' },
+      { label: 'HackTricks: Abusing Hop-by-Hop Headers', url: 'https://hacktricks.wiki/en/pentesting-web/abusing-hop-by-hop-headers.html' },
+      { label: 'HackTricks: CRLF (0d0a) Injection', url: 'https://hacktricks.wiki/en/pentesting-web/crlf-0d-0a.html' },
+    ],
     sections: [
       {
         heading: 'What this is',
@@ -346,6 +418,10 @@ export const GUIDES: GuideEntry[] = [
     id: 'payload-usage-howto',
     title: 'Using Payloads (how to test PayloadLib entries manually)',
     summary: 'The workflow for taking a copied reference payload and testing it responsibly, plus what a real hit looks like per class.',
+    references: [
+      { label: 'HackTricks: Web Vulnerabilities Methodology', url: 'https://hacktricks.wiki/en/pentesting-web/web-vulnerabilities-methodology.html' },
+      { label: 'HackTricks: PoCs and Polyglots cheatsheet', url: 'https://hacktricks.wiki/en/pentesting-web/pocs-and-polygloths-cheatsheet/index.html' },
+    ],
     sections: [
       {
         heading: 'What PayloadLib is',
@@ -375,6 +451,10 @@ export const GUIDES: GuideEntry[] = [
     id: 'lpe-exploit-tools',
     title: 'Privilege Escalation & Exploit Collections',
     summary: 'A curated index of third-party local-privilege-escalation exploits and exploit-code repositories.',
+    references: [
+      { label: 'HackTricks: Linux Privilege Escalation', url: 'https://hacktricks.wiki/en/linux-hardening/privilege-escalation/' },
+      { label: 'HackTricks: Windows Local Privilege Escalation', url: 'https://hacktricks.wiki/en/windows-hardening/windows-local-privilege-escalation/index.html' },
+    ],
     sections: [
       {
         heading: 'What this is',
@@ -482,6 +562,9 @@ export const GUIDES: GuideEntry[] = [
     id: 'file-transfer-cheatsheet',
     title: 'File Transfer Cheat Sheet',
     summary: 'Copy-paste commands for moving files to and from a target over HTTP, SMB, netcat, SSH and more.',
+    references: [
+      { label: 'HackTricks: Exfiltration', url: 'https://hacktricks.wiki/en/generic-hacking/exfiltration.html' },
+    ],
     sections: [
       {
         heading: 'What this is',
@@ -555,6 +638,10 @@ export const GUIDES: GuideEntry[] = [
     id: 'os-commands-cheatsheet',
     title: 'OS Commands Cheat Sheet',
     summary: 'Common Linux command-line reference for post-access enumeration: users, files, processes, networking and services.',
+    references: [
+      { label: 'HackTricks: Linux Privilege Escalation', url: 'https://hacktricks.wiki/en/linux-hardening/privilege-escalation/' },
+      { label: 'HackTricks: Reverse Shells', url: 'https://hacktricks.wiki/en/generic-hacking/reverse-shells/index.html' },
+    ],
     sections: [
       {
         heading: 'What this is',
@@ -643,6 +730,9 @@ export const GUIDES: GuideEntry[] = [
     id: 'aws-s3-cheatsheet',
     title: 'AWS S3 Cheat Sheet',
     summary: 'AWS CLI commands for listing, downloading and probing S3 buckets discovered during recon.',
+    references: [
+      { label: 'HackTricks: Buckets (S3/GCS/Azure)', url: 'https://hacktricks.wiki/en/network-services-pentesting/pentesting-web/buckets/index.html' },
+    ],
     sections: [
       {
         heading: 'What this is',
@@ -667,6 +757,9 @@ export const GUIDES: GuideEntry[] = [
     id: 'port-forwarding-tunneling',
     title: 'Port Forwarding & Tunneling',
     summary: 'Commands for socat, SSH, Chisel, Ligolo-ng, dnscat2 and sshuttle to pivot traffic between networks.',
+    references: [
+      { label: 'HackTricks: Tunneling and Port Forwarding', url: 'https://hacktricks.wiki/en/generic-hacking/tunneling-and-port-forwarding.html' },
+    ],
     sections: [
       {
         heading: 'What this is',

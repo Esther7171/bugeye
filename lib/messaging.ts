@@ -12,6 +12,7 @@ export type BgRequest =
   | { type: 'FETCH_CRTNAME'; domain: string }
   | { type: 'FETCH_HACKERTARGET'; domain: string }
   | { type: 'FETCH_CERTSPOTTER'; domain: string }
+  | { type: 'FETCH_SUBDOMAINCENTER'; domain: string }
   | { type: 'FETCH_RDAP'; domain: string }
   | { type: 'FETCH_HACKERTARGET_WHOIS'; domain: string }
   | { type: 'HTTP_PROBE'; url: string }
@@ -175,6 +176,7 @@ export interface BgResponseMap {
   FETCH_CRTNAME: { ok: boolean; hostnames: string[]; status: number | null; error?: string };
   FETCH_HACKERTARGET: { ok: boolean; hostnames: string[]; status: number | null; error?: string };
   FETCH_CERTSPOTTER: { ok: boolean; hostnames: string[]; status: number | null; error?: string };
+  FETCH_SUBDOMAINCENTER: { ok: boolean; hostnames: string[]; status: number | null; error?: string };
   FETCH_RDAP: { ok: boolean; status: number | null; raw?: unknown; tldUnsupported?: boolean; error?: string };
   FETCH_HACKERTARGET_WHOIS: { ok: boolean; text?: string; status: number | null; error?: string };
   HTTP_PROBE: { ok: boolean; status: number | null; finalUrl?: string; body?: string; error?: string };

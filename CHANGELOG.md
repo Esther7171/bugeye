@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.1.0 (2026-09-11)
+
+First store-submission build.
+
+- SubFinder / AutoFinder: added subdomain.center as a subdomain source and
+  removed AlienVault OTX, which now requires authentication for the passive-DNS
+  endpoint and returned nothing for anonymous callers. crt.sh remains flaky
+  (intermittent 502s), so the extra independent source keeps results coming
+  when it is down. Sources are now crt.sh, crt.name, CertSpotter, HackerTarget
+  and subdomain.center, cross-checked and de-duplicated.
+- Renamed the GuideBook module to "Bug Bounty Playbook" (same checklists and
+  guides; saved progress is preserved).
+- Playbook: each guide now links out to the relevant HackTricks page, with a
+  top-level HackTricks link, and a new "EXIF / Image Metadata Exposure" guide
+  (how to test upload flows for unstripped EXIF/GPS, cross-linked to ExifPeek).
+- Privacy policy updated to match the current set of external services.
+
 ## 0.1.0 (2026-08-30)
 
 Initial public build.

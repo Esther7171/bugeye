@@ -162,7 +162,7 @@ CLI Bridge · OSINT · Utility
   GitFinder, Wayback, ContactGrab, EmailHunter, EmailAnalyze, MailHunt,
   UserHunt, BreachCheck, GoogleDork, GitDork, TakeoverCheck,
   DNSRecords, DNSSECCheck, HostCluster, WhoisLookup
-- **Utility**: AutoFinder, GuideBook, UploadTest, TargetSave, ExportAll,
+- **Utility**: AutoFinder, Bug Bounty Playbook, UploadTest, TargetSave, ExportAll,
   CopyAsCurl, JSONView
 
 See `components/modules/registry.ts` for the id -> component map.

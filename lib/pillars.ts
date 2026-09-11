@@ -70,7 +70,7 @@ export const MODULES: ModuleMeta[] = [
     id: 'subfinder',
     pillar: 'osint',
     name: 'SubFinder',
-    description: 'Enumerate subdomains across 5 cross-checked sources: crt.sh, crt.name, CertSpotter, HackerTarget, OTX.',
+    description: 'Enumerate subdomains across 5 cross-checked sources: crt.sh, crt.name, CertSpotter, HackerTarget, subdomain.center.',
     status: 'live',
   },
   {
@@ -174,8 +174,8 @@ export const MODULES: ModuleMeta[] = [
   {
     id: 'guidebook',
     pillar: 'utility',
-    name: 'GuideBook',
-    description: 'Offline methodology checklists for upload, recon, auth and headers.',
+    name: 'Bug Bounty Playbook',
+    description: 'Methodology checklists and guides for upload, recon, auth and headers, with HackTricks links.',
     status: 'live',
   },
   {

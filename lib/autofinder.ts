@@ -1,5 +1,5 @@
 import { sendToBackground } from '@/lib/messaging';
-import { fetchCrtSh, fetchCrtName, fetchHackerTarget, fetchCertSpotter, fetchOtxPassiveDns } from '@/lib/subfinder';
+import { fetchCrtSh, fetchCrtName, fetchHackerTarget, fetchCertSpotter, fetchSubdomainCenter } from '@/lib/subfinder';
 import { gradeHeaders, type HeaderGradeReport } from '@/lib/headergrade';
 import { auditCsp, type CspAuditReport } from '@/lib/cspaudit';
 import { assessClickjacking, type ClickjackResult } from '@/lib/clickjack';
@@ -56,7 +56,7 @@ export type AutoFinderTaskId =
 
 export const AUTOFINDER_TASKS: { id: AutoFinderTaskId; label: string }[] = [
   { id: 'dns', label: 'DNS resolution' },
-  { id: 'subdomains', label: 'Subdomains (crt.sh + crt.name + CertSpotter + HackerTarget + OTX)' },
+  { id: 'subdomains', label: 'Subdomains (crt.sh + crt.name + CertSpotter + HackerTarget + subdomain.center)' },
   { id: 'headers', label: 'Response headers' },
   { id: 'csp', label: 'CSP audit' },
   { id: 'clickjack', label: 'Clickjack check' },
@@ -264,19 +264,26 @@ export async function runAutoFinder(
   };
 
   // --- Phase 1: independent fetches ---
-  const [dohResult, crt, otx, headersRes, homepageRes, certsRes, faviconRes] = await Promise.all([
+  const [dohResult, crt, headersRes, homepageRes, certsRes, faviconRes] = await Promise.all([
     run('dns', () => sendToBackground({ type: 'DOH_RESOLVE', hostname: domain }), (r) => (r.ok ? `${r.addresses?.length ?? 0} address(es)` : r.error)),
     run(
       'subdomains',
       async () => {
-        const [crtRes, crtNameRes, hackerTargetRes, certSpotterRes] = await Promise.all([
+        const [crtRes, crtNameRes, hackerTargetRes, certSpotterRes, subdomainCenterRes] = await Promise.all([
           fetchCrtSh(domain),
           fetchCrtName(domain),
           fetchHackerTarget(domain),
           fetchCertSpotter(domain),
+          fetchSubdomainCenter(domain),
         ]);
         const merged = Array.from(
-          new Set([...crtRes.hostnames, ...crtNameRes.hostnames, ...hackerTargetRes.hostnames, ...certSpotterRes.hostnames]),
+          new Set([
+            ...crtRes.hostnames,
+            ...crtNameRes.hostnames,
+            ...hackerTargetRes.hostnames,
+            ...certSpotterRes.hostnames,
+            ...subdomainCenterRes.hostnames,
+          ]),
         ).sort();
         return {
           hostnames: merged,
@@ -284,11 +291,11 @@ export async function runAutoFinder(
           crtNameError: crtNameRes.error,
           hackerTargetError: hackerTargetRes.error,
           certSpotterError: certSpotterRes.error,
+          subdomainCenterError: subdomainCenterRes.error,
         };
       },
-      (r) => (r.hostnames.length ? `${r.hostnames.length} found` : r.crtError ?? r.crtNameError ?? r.hackerTargetError ?? r.certSpotterError ?? 'none found'),
+      (r) => (r.hostnames.length ? `${r.hostnames.length} found` : r.crtError ?? r.crtNameError ?? r.hackerTargetError ?? r.certSpotterError ?? r.subdomainCenterError ?? 'none found'),
     ),
-    fetchOtxPassiveDns(domain).catch(() => [] as string[]),
     run('headers', () => sendToBackground({ type: 'GET_URL_HEADERS', url: homeUrl }), (r) => (Object.keys(r.headers).length ? `${Object.keys(r.headers).length} headers` : r.error)),
     sendToBackground({ type: 'FETCH_TEXT', url: homeUrl }).catch(() => ({ ok: false, data: undefined, status: undefined, error: 'fetch failed' }) as const),
     run('ssl', () => sendToBackground({ type: 'FETCH_CRTSH_CERTS', domain }), (r) => (r.ok ? `${r.entries.length} cert entries` : r.error)),
@@ -299,7 +306,7 @@ export async function runAutoFinder(
   const html = homepageRes.ok && homepageRes.data ? homepageRes.data : '';
   const addresses = dohResult?.ok ? (dohResult.addresses ?? []) : [];
   const ip = addresses[0] ?? null;
-  const subdomainList = Array.from(new Set([...(crt?.hostnames ?? []), ...otx])).sort();
+  const subdomainList = Array.from(new Set(crt?.hostnames ?? [])).sort();
 
   const hasHeaders = Object.keys(headers).length > 0;
   const headerGrade = hasHeaders ? gradeHeaders(headers) : null;
@@ -539,7 +546,7 @@ export async function runAutoFinder(
     dns: { addresses, error: dohResult?.error },
     subdomains: {
       list: subdomainList,
-      error: crt?.crtError ?? crt?.crtNameError ?? crt?.hackerTargetError ?? crt?.certSpotterError,
+      error: crt?.crtError ?? crt?.crtNameError ?? crt?.hackerTargetError ?? crt?.certSpotterError ?? crt?.subdomainCenterError,
     },
     headers,
     headerGrade: headerGrade ?? null,

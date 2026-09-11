@@ -293,6 +293,44 @@ async function handleFetchCertSpotter(rawDomain: string): Promise<BgResponseMap[
   }
 }
 
+// api.subdomain.center is a free passive-DNS/subdomain aggregator that
+// returns a flat JSON array of hostnames. It does not send CORS headers, so
+// unlike HackerTarget/CertSpotter it relies on the broad host grant SubFinder
+// already requests. It's a genuinely different dataset from the CT-log
+// sources, so it fills gaps when crt.sh is down or rate-limiting.
+async function handleFetchSubdomainCenter(rawDomain: string): Promise<BgResponseMap['FETCH_SUBDOMAINCENTER']> {
+  const domain = rawDomain.trim().toLowerCase().replace(/^www\./, '');
+  if (!domain) return { ok: false, hostnames: [], status: null, error: 'Empty domain' };
+
+  try {
+    const res = await fetchWithTimeout(
+      `https://api.subdomain.center/?domain=${encodeURIComponent(domain)}`,
+      { headers: { Accept: 'application/json' } },
+      15000,
+    );
+    if (!res.ok) {
+      return { ok: false, hostnames: [], status: res.status, error: httpStatusMessage(res.status) };
+    }
+    const json = (await res.json()) as unknown;
+    if (!Array.isArray(json)) {
+      return { ok: false, hostnames: [], status: res.status, error: 'Unexpected subdomain.center response shape' };
+    }
+
+    const names = new Set<string>();
+    for (const raw of json) {
+      if (typeof raw !== 'string') continue;
+      const clean = raw.trim().toLowerCase().replace(/^\*\./, '');
+      if (clean && (clean === domain || clean.endsWith(`.${domain}`))) names.add(clean);
+    }
+
+    const hostnames = Array.from(names).sort();
+    console.log(`[BugEye] subdomain.center parsed ${hostnames.length} unique hostnames for ${domain} (status ${res.status})`);
+    return { ok: true, hostnames, status: res.status };
+  } catch (err) {
+    return { ok: false, hostnames: [], status: null, error: describeFetchError(err) };
+  }
+}
+
 // RDAP is the IETF/ICANN-standard HTTP+JSON replacement for the legacy
 // WHOIS protocol (which needs a raw TCP socket on port 43 - not something a
 // browser can open at all). rdap.org is ICANN's public bootstrap service: it
@@ -1216,6 +1254,9 @@ export default defineBackground(() => {
           break;
         case 'FETCH_CERTSPOTTER':
           sendResponse(await handleFetchCertSpotter(message.domain));
+          break;
+        case 'FETCH_SUBDOMAINCENTER':
+          sendResponse(await handleFetchSubdomainCenter(message.domain));
           break;
         case 'FETCH_RDAP':
           sendResponse(await handleFetchRdap(message.domain));

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, ExternalLink } from 'lucide-react';
 import { ModuleHeader } from '@/components/shell/ModuleHeader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -25,7 +25,7 @@ export function GuideBook({ onBack, onNavigate }: ModuleComponentProps) {
   }
 
   function exportProgress() {
-    const lines = ['# GuideBook progress', ''];
+    const lines = ['# Bug Bounty Playbook progress', ''];
     for (const group of CHECKLISTS) {
       lines.push(`## ${group.name}`, '');
       for (const item of group.items) {
@@ -42,8 +42,8 @@ export function GuideBook({ onBack, onNavigate }: ModuleComponentProps) {
   return (
     <div className="flex flex-col">
       <ModuleHeader
-        title="GuideBook"
-        description="Offline methodology checklists. Nothing here runs automatically."
+        title="Bug Bounty Playbook"
+        description="Methodology checklists and guides, with links out to HackTricks. Nothing here runs automatically."
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">
@@ -55,6 +55,19 @@ export function GuideBook({ onBack, onNavigate }: ModuleComponentProps) {
             Export progress
           </Button>
         </div>
+
+        <a
+          href="https://hacktricks.wiki/en/index.html"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center justify-between gap-2 rounded-md border border-border bg-muted/40 p-2.5 text-xs hover:border-primary/40"
+        >
+          <span className="min-w-0">
+            <span className="font-medium">HackTricks</span>
+            <span className="ml-1 text-muted-foreground">— the full pentest/bug-bounty knowledge base</span>
+          </span>
+          <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" />
+        </a>
 
         {CHECKLISTS.map((group) => (
           <div key={group.id} className="flex flex-col gap-2">
@@ -134,6 +147,25 @@ export function GuideBook({ onBack, onNavigate }: ModuleComponentProps) {
                   {link.label} <ArrowRight className="size-3" />
                 </button>
               ))}
+
+              {guide.references && guide.references.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    References
+                  </p>
+                  {guide.references.map((ref) => (
+                    <a
+                      key={ref.url}
+                      href={ref.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 self-start text-[11px] text-primary hover:underline"
+                    >
+                      {ref.label} <ExternalLink className="size-3 shrink-0" />
+                    </a>
+                  ))}
+                </div>
+              )}
 
               {guide.note && <p className="text-[10px] italic text-muted-foreground">{guide.note}</p>}
             </div>

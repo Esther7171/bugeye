@@ -12,6 +12,8 @@ node_modules
 dist
 bugeye-v1
 bugeye-v1.zip
+bugeye-v1-firefox
+bugeye-v1-firefox.zip
 stats.html
 stats-*.json
 .wxt

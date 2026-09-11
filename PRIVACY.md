@@ -1,6 +1,6 @@
 # BugEye Privacy Policy
 
-Last updated: 2026
+Last updated: September 2026
 
 ## Summary
 
@@ -29,7 +29,7 @@ Remove the extension or clear its storage to erase all of this.
 
 When you use a feature, BugEye sends requests directly from your browser to
 the relevant public service (for example: crt.sh, crt.name, CertSpotter,
-HackerTarget (including its free WHOIS API), AlienVault OTX, Shodan
+HackerTarget (including its free WHOIS API), subdomain.center, Shodan
 InternetDB, ipwho.is / ip-api.com, DNS-over-HTTPS resolvers, XposedOrNot,
 Wayback Machine, rdap.org, who.is, Gravatar, GitHub, hstspreload.org) to provide the result
 you asked for. There is no BugEye server; nothing is proxied through us. Each

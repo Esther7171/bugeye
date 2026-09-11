@@ -12,14 +12,14 @@ const PILLARS = [
   { code: 'EP', name: 'Encode / Payload', desc: 'An encode, decode and hash toolkit, plus a searchable library of XSS, SQLi and other reference payloads.' },
   { code: 'CB', name: 'CLI Bridge', desc: 'Builds copy-paste commands for nuclei, ffuf, wordlists and more. Nothing runs inside the extension.' },
   { code: 'OS', name: 'OSINT', desc: 'Subdomains, WHOIS, DNS, certificates, breach and leak checks, all from public sources.' },
-  { code: 'UT', name: 'Utility', desc: "AutoFinder's one-pass domain scan, GuideBook's methodology reference and the rest of the toolbox." },
+  { code: 'UT', name: 'Utility', desc: "AutoFinder's one-pass domain scan, the Bug Bounty Playbook's methodology reference and the rest of the toolbox." },
 ];
 
 const FEATURES = [
   { id: 'feature-autofinder', title: 'One pass, full picture', desc: 'AutoFinder runs every domain-based check at once, DNS through exposed secrets, diffs the result against your last scan of that target, and exports as Markdown, JSON or a formatted Word report with color-coded findings.' },
   { id: 'feature-reference', title: 'Reference, never automated', desc: 'Every payload, reverse-shell one-liner, and exploit-tool link BugEye surfaces is copy-paste. It does not send payloads, brute force logins, or run anything against a target on its own.' },
   { id: 'feature-permission', title: 'One prompt, not fifty', desc: 'Grant host access once, up front, and every tool works on every site afterward with no repeated per-domain permission nags.' },
-  { id: 'feature-guidebook', title: 'Method, not just tools', desc: 'GuideBook explains what a finding actually means, how to verify it safely, and how to report it, not just how to trigger it.' },
+  { id: 'feature-guidebook', title: 'Method, not just tools', desc: 'The Bug Bounty Playbook explains what a finding actually means, how to verify it safely, and how to report it, not just how to trigger it, with links out to HackTricks.' },
   { id: 'feature-telemetry', title: 'Nothing phones home', desc: "No telemetry, no BugEye-run servers. Cross-origin lookups go straight from your own background worker to the source you're querying." },
   { id: 'feature-cross-browser', title: 'One codebase, every browser', desc: 'The same source builds a Chromium package for Edge and Opera, and a separate Firefox package, with identical features and permission scope across all three.' },
 ];

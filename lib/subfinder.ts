@@ -37,17 +37,11 @@ export async function fetchCertSpotter(domain: string): Promise<SubdomainSourceR
   return { hostnames: result.hostnames, status: result.status, error: result.error };
 }
 
-export async function fetchOtxPassiveDns(domain: string): Promise<string[]> {
-  const result = await sendToBackground({
-    type: 'FETCH_JSON',
-    url: `https://otx.alienvault.com/api/v1/indicators/domain/${encodeURIComponent(domain)}/passive_dns`,
-  });
-  if (!result.ok || typeof result.data !== 'object' || result.data === null) return [];
-  const records = (result.data as { passive_dns?: Array<{ hostname?: string }> }).passive_dns ?? [];
-  const names = new Set<string>();
-  for (const r of records) {
-    const hostname = r.hostname?.toLowerCase().trim();
-    if (hostname && hostname.endsWith(domain)) names.add(hostname);
-  }
-  return Array.from(names).sort();
+// api.subdomain.center: a free passive-DNS/aggregator source, independent of
+// the certificate-transparency logs above. Useful as a fallback when crt.sh
+// is throwing 502s or rate-limiting, which it does intermittently.
+export async function fetchSubdomainCenter(domain: string): Promise<SubdomainSourceResult> {
+  const result = await sendToBackground({ type: 'FETCH_SUBDOMAINCENTER', domain });
+  return { hostnames: result.hostnames, status: result.status, error: result.error };
 }
+

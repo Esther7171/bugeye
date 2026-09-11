@@ -113,6 +113,7 @@ export function AutoFinder({ onBack, onNavigate }: ModuleComponentProps) {
       `https://*.${target}/*`,
       'https://crt.sh/*',
       'https://crt.name/*',
+      'https://api.subdomain.center/*',
       'https://web.archive.org/*',
     ]);
     if (!granted) {

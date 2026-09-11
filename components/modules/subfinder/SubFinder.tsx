@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useTarget } from '@/components/shell/TargetProvider';
 import { useHostPermission } from '@/lib/useHostPermission';
 import { sendToBackground } from '@/lib/messaging';
-import { fetchCrtSh, fetchCrtName, fetchHackerTarget, fetchCertSpotter, fetchOtxPassiveDns } from '@/lib/subfinder';
+import { fetchCrtSh, fetchCrtName, fetchHackerTarget, fetchCertSpotter, fetchSubdomainCenter } from '@/lib/subfinder';
 import { mapLimit } from '@/lib/concurrency';
 import { normalizeDomain } from '@/lib/utils';
 import { exportJson, exportText } from '@/lib/export';
@@ -19,7 +19,11 @@ import { bulkListStore, lastSubdomainsStore } from '@/lib/storage';
 import { formatTimestamp } from '@/lib/utils';
 import type { ModuleComponentProps } from '@/types';
 
-const SOURCE_ORIGINS = ['https://crt.sh/*', 'https://crt.name/*', 'https://otx.alienvault.com/*'];
+const SOURCE_ORIGINS = [
+  'https://crt.sh/*',
+  'https://crt.name/*',
+  'https://api.subdomain.center/*',
+];
 
 export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
   const { target, setTarget } = useTarget();
@@ -49,12 +53,12 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
       }
       // HackerTarget and CertSpotter both send permissive CORS headers, so
       // they run without any host permission at all, unlike the other three.
-      const [crt, crtName, hackerTarget, certSpotter, otx] = await Promise.all([
+      const [crt, crtName, hackerTarget, certSpotter, subdomainCenter] = await Promise.all([
         fetchCrtSh(clean),
         fetchCrtName(clean),
         fetchHackerTarget(clean),
         fetchCertSpotter(clean),
-        fetchOtxPassiveDns(clean),
+        fetchSubdomainCenter(clean),
       ]);
 
       const bySource = new Map<string, Set<string>>();
@@ -68,7 +72,7 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
       addSource(crtName.hostnames, 'crt.name');
       addSource(hackerTarget.hostnames, 'HackerTarget');
       addSource(certSpotter.hostnames, 'CertSpotter');
-      addSource(otx, 'OTX');
+      addSource(subdomainCenter.hostnames, 'subdomain.center');
 
       const all = Array.from(bySource.keys()).sort();
       const sourceMap: Record<string, string[]> = {};
@@ -80,12 +84,13 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
         lastSubdomainsStore.set({ domain: clean, subdomains: all, generatedAt: formatTimestamp() });
       }
 
-      const summary = `crt.sh: ${crt.hostnames.length}, crt.name: ${crtName.hostnames.length}, HackerTarget: ${hackerTarget.hostnames.length}, CertSpotter: ${certSpotter.hostnames.length}, OTX: ${otx.length}, unique total: ${all.length}`;
+      const summary = `crt.sh: ${crt.hostnames.length}, crt.name: ${crtName.hostnames.length}, HackerTarget: ${hackerTarget.hostnames.length}, CertSpotter: ${certSpotter.hostnames.length}, subdomain.center: ${subdomainCenter.hostnames.length}, unique total: ${all.length}`;
       const errors = [
         crt.error && `crt.sh: ${crt.error}`,
         crtName.error && `crt.name: ${crtName.error}`,
         hackerTarget.error && `HackerTarget: ${hackerTarget.error}`,
         certSpotter.error && `CertSpotter: ${certSpotter.error}`,
+        subdomainCenter.error && `subdomain.center: ${subdomainCenter.error}`,
       ]
         .filter(Boolean)
         .join(' | ');
@@ -120,7 +125,7 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
     <div className="flex flex-col">
       <ModuleHeader
         title="SubFinder"
-        description="Enumerates subdomains via 5 sources (crt.sh, crt.name, CertSpotter, HackerTarget, OTX), cross-checked and de-duplicated."
+        description="Enumerates subdomains via 5 sources (crt.sh, crt.name, CertSpotter, HackerTarget, subdomain.center), cross-checked and de-duplicated."
         onBack={onBack}
       />
       <div className="flex flex-col gap-3 p-3">
