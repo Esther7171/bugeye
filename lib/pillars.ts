@@ -74,6 +74,13 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'paramminer',
+    pillar: 'osint',
+    name: 'ParamMiner',
+    description: 'Mine historical query parameters for a domain from the Wayback Machine - hidden input surface for fuzzing.',
+    status: 'live',
+  },
+  {
     id: 'bucketspot',
     pillar: 'osint',
     name: 'BucketSpot',
@@ -123,6 +130,13 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'authdiff',
+    pillar: 'vuln-hunting',
+    name: 'AuthDiff',
+    description: 'Fetch a URL with your session and again anonymously, then diff the responses to spot missing access control (IDOR/BOLA).',
+    status: 'live',
+  },
+  {
     id: 'linuxcmds',
     pillar: 'cli-bridge',
     name: 'LinuxCmds',
@@ -169,6 +183,13 @@ export const MODULES: ModuleMeta[] = [
     pillar: 'page-recon',
     name: 'SecretScan',
     description: 'Best-effort scan of page HTML/JS for exposed keys and tokens.',
+    status: 'live',
+  },
+  {
+    id: 'sourcemapfind',
+    pillar: 'page-recon',
+    name: 'SourceMapFind',
+    description: 'Detects exposed JavaScript source maps (.map) that reconstruct a site\'s original source.',
     status: 'live',
   },
   {

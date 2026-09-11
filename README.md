@@ -149,17 +149,17 @@ CLI Bridge · OSINT · Utility
 - **Tab Inspector**: HeaderGrade, CookieJar, ClickjackCheck, CSPAudit,
   CORSCheck, CachePoison, HstsPreload, RetireJS, RedirectTrace, CVELookup,
   HTTPMethods, StorageDump, TechStack, WAFDetect
-- **Page Recon**: LinkGrab, JSList, SriCheck, SecretScan, FormAudit, HiddenFind,
-  LinkedContent, TrackerScan
+- **Page Recon**: LinkGrab, JSList, SourceMapFind, SriCheck, SecretScan,
+  FormAudit, HiddenFind, LinkedContent, TrackerScan
 - **List Triage**: BulkOpen
 - **Traffic**: HeaderInject, UASwitch, RefControl, ReqLogger
 - **Encode/Payload**: EncoderKit (Base64/URL/HTML/Hex/JWT/Hash/Chain), JwtAudit,
-  ShellGen, PayloadLib, BlindXSS, BlindSQLi
+  ShellGen, PayloadLib, AuthDiff, BlindXSS, BlindSQLi
 - **CLI Bridge**: ReconBuild, NetCmds, LinuxCmds, PEASGet, FuzzBuild,
   WordlistPick, StegGen
 - **OSINT**: SubFinder, BucketSpot, ExifPeek, SSLInspect, FaviconHash, IPGeo,
   ShodanPeek, RobotsPeek, SitemapFind, WellKnownScan, ApiSpec, PanelHunt,
-  GitFinder, Wayback, ContactGrab, EmailHunter, EmailAnalyze, MailHunt,
+  GitFinder, Wayback, ParamMiner, ContactGrab, EmailHunter, EmailAnalyze, MailHunt,
   UserHunt, BreachCheck, GoogleDork, GitDork, TakeoverCheck,
   DNSRecords, DNSSECCheck, HostCluster, WhoisLookup
 - **Utility**: AutoFinder, Bug Bounty Playbook, UploadTest, TargetSave, ExportAll,

@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 (2026-09-11)
+
+Three new modules:
+
+- **SourceMapFind** (Page Recon): scans the current page's scripts for reachable
+  JavaScript source maps (`.map`), via the declared `//# sourceMappingURL`
+  comment or the conventional `<file>.js.map` path, and lists the original
+  source paths an exposed map reveals.
+- **ParamMiner** (OSINT): mines historical query parameters for a domain from
+  the Wayback Machine CDX index and builds `FUZZ` templates - hidden input
+  surface for fuzzing, often on endpoints no longer linked from the live site.
+- **AuthDiff** (Vuln Hunting): fetches a URL once with the browser's session
+  cookies and once anonymously (read-only GETs), then diffs the responses to
+  surface missing access control (IDOR/BOLA). Verdict plus a body diff.
+
 ## 1.1.0 (2026-09-11)
 
 First store-submission build.

@@ -905,6 +905,39 @@ async function handleCachePoisonProbe(url: string): Promise<BgResponseMap['CACHE
   }
 }
 
+// Fetches the same URL twice: once carrying the browser's cookies for that
+// site (the user's real session) and once with none. Comparing the two is the
+// fastest broken-access-control / IDOR check there is - if the anonymous
+// request gets the same protected content, authorization is missing. Read-only
+// GET; nothing is modified on the target.
+async function fetchAuthDiffSide(url: string, credentials: RequestCredentials): Promise<import('@/lib/messaging').AuthDiffSide> {
+  try {
+    const res = await fetchWithTimeout(url, { method: 'GET', redirect: 'follow', credentials }, 10000);
+    const body = await res.text();
+    return {
+      status: res.status,
+      finalUrl: res.url,
+      length: body.length,
+      body: body.slice(0, 100000),
+      contentType: res.headers.get('content-type') ?? undefined,
+    };
+  } catch (err) {
+    return { status: null, error: describeFetchError(err) };
+  }
+}
+
+async function handleAuthDiffProbe(url: string): Promise<BgResponseMap['AUTH_DIFF_PROBE']> {
+  try {
+    const [authed, anon] = await Promise.all([
+      fetchAuthDiffSide(url, 'include'),
+      fetchAuthDiffSide(url, 'omit'),
+    ]);
+    return { ok: true, authed, anon };
+  } catch (err) {
+    return { ok: false, error: describeFetchError(err) };
+  }
+}
+
 async function handleHttpMethodsCheck(url: string): Promise<BgResponseMap['HTTP_METHODS_CHECK']> {
   try {
     const res = await fetchWithTimeout(url, { method: 'OPTIONS' }, 8000);
@@ -1340,6 +1373,9 @@ export default defineBackground(() => {
           break;
         case 'HTTP_POST_PROBE':
           sendResponse(await handleHttpPostProbe(message.url, message.body, message.contentType));
+          break;
+        case 'AUTH_DIFF_PROBE':
+          sendResponse(await handleAuthDiffProbe(message.url));
           break;
         default:
           sendResponse({ ok: false, error: 'Unknown message type' });

@@ -45,7 +45,8 @@ export type BgRequest =
     }
   | { type: 'CACHE_POISON_PROBE'; url: string }
   | { type: 'BREACH_CHECK'; email: string; hibpApiKey?: string }
-  | { type: 'HTTP_POST_PROBE'; url: string; body: string; contentType?: string };
+  | { type: 'HTTP_POST_PROBE'; url: string; body: string; contentType?: string }
+  | { type: 'AUTH_DIFF_PROBE'; url: string };
 
 export interface RequestLogEntry {
   id: string;
@@ -154,6 +155,15 @@ export interface BreachCheckResult {
   error?: string;
 }
 
+export interface AuthDiffSide {
+  status: number | null;
+  finalUrl?: string;
+  length?: number;
+  body?: string;
+  contentType?: string;
+  error?: string;
+}
+
 export interface ShodanInternetDbResult {
   ok: boolean;
   ip: string;
@@ -209,6 +219,7 @@ export interface BgResponseMap {
   DOH_QUERY: DohQueryResult;
   BREACH_CHECK: BreachCheckResult;
   HTTP_POST_PROBE: { ok: boolean; status: number | null; body?: string; error?: string };
+  AUTH_DIFF_PROBE: { ok: boolean; authed?: AuthDiffSide; anon?: AuthDiffSide; error?: string };
 }
 
 export async function sendToBackground<T extends BgRequest>(
