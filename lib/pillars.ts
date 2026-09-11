@@ -16,18 +16,21 @@ export interface Pillar {
   id: PillarId;
   name: string;
   icon: LucideIcon;
+  // Plain-language one-liner shown at the top of the pillar's tool list, so a
+  // newcomer knows what the group is for without opening each tool.
+  description: string;
 }
 
 export const PILLARS: Pillar[] = [
-  { id: 'tab-inspector', name: 'Tab Inspector', icon: Tablet },
-  { id: 'page-recon', name: 'Page Recon', icon: FileSearch },
-  { id: 'list-triage', name: 'List Triage', icon: ListChecks },
-  { id: 'traffic', name: 'Traffic', icon: Activity },
-  { id: 'encode-payload', name: 'Encode / Payload', icon: Binary },
-  { id: 'cli-bridge', name: 'CLI Bridge', icon: Terminal },
-  { id: 'osint', name: 'OSINT', icon: Radar },
-  { id: 'vuln-hunting', name: 'Vuln Hunting', icon: Bug },
-  { id: 'utility', name: 'Utility', icon: Wrench },
+  { id: 'tab-inspector', name: 'Tab Inspector', icon: Tablet, description: 'Inspect the page you are on: security headers, cookies, tech stack, TLS and CSP.' },
+  { id: 'page-recon', name: 'Page Recon', icon: FileSearch, description: 'Pull apart the current page: links, scripts, source maps, secrets and forms.' },
+  { id: 'list-triage', name: 'List Triage', icon: ListChecks, description: 'Take a list of URLs and open, alive-check or sort them in bulk.' },
+  { id: 'traffic', name: 'Traffic', icon: Activity, description: 'Change the requests your browser sends: headers, User-Agent and Referer.' },
+  { id: 'encode-payload', name: 'Encode / Payload', icon: Binary, description: 'Encode and decode data, inspect JWTs, and browse test payloads.' },
+  { id: 'cli-bridge', name: 'CLI Bridge', icon: Terminal, description: 'Copy-paste command-line recipes for recon, file transfer and pivoting.' },
+  { id: 'osint', name: 'OSINT', icon: Radar, description: 'Learn about a domain from public sources: subdomains, DNS, breaches and people.' },
+  { id: 'vuln-hunting', name: 'Vuln Hunting', icon: Bug, description: 'Manual checks and payload references for common web vulnerabilities.' },
+  { id: 'utility', name: 'Utility', icon: Wrench, description: 'One-click full scans, the Bug Bounty Playbook, saved targets and exports.' },
 ];
 
 export const MODULES: ModuleMeta[] = [
@@ -597,4 +600,31 @@ export const MODULES: ModuleMeta[] = [
 
 export function modulesForPillar(pillar: PillarId): ModuleMeta[] {
   return MODULES.filter((m) => m.pillar === pillar);
+}
+
+export function pillarById(pillar: PillarId): Pillar | undefined {
+  return PILLARS.find((p) => p.id === pillar);
+}
+
+export function pillarName(pillar: PillarId): string {
+  return pillarById(pillar)?.name ?? pillar;
+}
+
+// Ranked search across every module (name and description), used by the
+// in-panel "search all tools" box. Name matches outrank description matches so
+// an exact tool name always comes first.
+export function searchModules(query: string): ModuleMeta[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const scored: { mod: ModuleMeta; score: number }[] = [];
+  for (const mod of MODULES) {
+    const name = mod.name.toLowerCase();
+    let score = 0;
+    if (name === q) score = 100;
+    else if (name.startsWith(q)) score = 80;
+    else if (name.includes(q)) score = 60;
+    else if (mod.description.toLowerCase().includes(q)) score = 30;
+    if (score > 0) scored.push({ mod, score });
+  }
+  return scored.sort((a, b) => b.score - a.score || a.mod.name.localeCompare(b.mod.name)).map((s) => s.mod);
 }

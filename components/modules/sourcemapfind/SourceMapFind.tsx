@@ -7,6 +7,8 @@ import { CopyButton } from '@/components/shell/CopyButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useHostPermission } from '@/lib/useHostPermission';
 import { useActiveTab } from '@/lib/useActiveTab';
 import { mapLimit } from '@/lib/concurrency';
@@ -43,6 +45,7 @@ export function SourceMapFind({ onBack }: ModuleComponentProps) {
   const [scanning, setScanning] = useState(false);
   const [note, setNote] = useState('');
   const [pageUrl, setPageUrl] = useState('');
+  const [probeGuessed, setProbeGuessed] = useState(true);
   const { ensure, pending } = useHostPermission();
   const { tabId, url, origin: activeOrigin } = useActiveTab();
 
@@ -71,7 +74,7 @@ export function SourceMapFind({ onBack }: ModuleComponentProps) {
       await mapLimit(
         scripts,
         6,
-        (scriptUrl) => analyzeScriptForSourceMap(scriptUrl),
+        (scriptUrl) => analyzeScriptForSourceMap(scriptUrl, probeGuessed),
         (result) => setFindings((prev) => [...prev, result].sort((a, b) => Number(b.accessible) - Number(a.accessible))),
       );
     } finally {
@@ -94,6 +97,13 @@ export function SourceMapFind({ onBack }: ModuleComponentProps) {
           exposed <code>.map</code> reveals original, unminified source (often including internal
           paths and comments).
         </ModuleNote>
+
+        <div className="flex items-center gap-2">
+          <Switch id="probe-guessed" checked={probeGuessed} onCheckedChange={setProbeGuessed} />
+          <Label htmlFor="probe-guessed" className="text-muted-foreground">
+            Also probe guessed <code>.js.map</code> paths (more thorough, more requests)
+          </Label>
+        </div>
 
         <Button size="sm" onClick={scan} disabled={scanning || pending} className="w-fit">
           {scanning || pending ? <Loader2 className="size-3 animate-spin" /> : null}

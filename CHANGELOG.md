@@ -15,6 +15,18 @@ Three new modules:
   cookies and once anonymously (read-only GETs), then diffs the responses to
   surface missing access control (IDOR/BOLA). Verdict plus a body diff.
 
+Navigation & usability:
+
+- Every tool list now shows a header naming the current section and what it is
+  for, plus an always-visible "search all tools" box that filters by plain
+  words (e.g. "subdomain", "cookies", "headers") across every section, with the
+  matching tool's section shown as a tag. Nothing was removed; the icon rail and
+  Ctrl+K palette still work as before.
+- Wayback lookups (Wayback, ParamMiner) now retry with backoff and give a clear
+  "archive temporarily overloaded" message instead of failing silently.
+- SourceMapFind gained a toggle for the guessed `.js.map` probing (on by
+  default) so it can run leaner on script-heavy pages.
+
 ## 1.1.0 (2026-09-11)
 
 First store-submission build.

@@ -71,7 +71,10 @@ async function probeMap(mapUrl: string): Promise<MapProbe> {
   return sources ? { accessible: true, httpStatus: res.status ?? 200, sources } : { accessible: false, httpStatus: res.status ?? null };
 }
 
-export async function analyzeScriptForSourceMap(scriptUrl: string): Promise<SourceMapFinding> {
+// probeGuessed=false skips the extra <file>.js.map request for scripts that
+// carry no sourceMappingURL comment, roughly halving requests on script-heavy
+// pages at the cost of missing maps that are deployed but not declared.
+export async function analyzeScriptForSourceMap(scriptUrl: string, probeGuessed = true): Promise<SourceMapFinding> {
   const jsRes = await sendToBackground({ type: 'FETCH_TEXT', url: scriptUrl });
   if (!jsRes.ok || typeof jsRes.data !== 'string') {
     return {
@@ -104,7 +107,7 @@ export async function analyzeScriptForSourceMap(scriptUrl: string): Promise<Sour
   // <file>.js.map path, which is often left deployed even when the comment is
   // stripped from the bundle.
   const guess = `${scriptUrl.split('#')[0]!.split('?')[0]}.map`;
-  if (guess !== declared) {
+  if (probeGuessed && guess !== declared) {
     const probe = await probeMap(guess);
     if (probe.accessible) {
       return {

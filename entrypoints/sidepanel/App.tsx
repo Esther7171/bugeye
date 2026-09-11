@@ -88,7 +88,7 @@ export default function App() {
                   </Suspense>
                 </ModuleErrorBoundary>
               ) : (
-                <PillarView pillar={pillar} onOpenModule={openModule} />
+                <PillarView pillar={pillar} onOpenModule={openModule} onNavigate={navigateTo} />
               )}
             </main>
           </div>
