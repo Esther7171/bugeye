@@ -22,6 +22,14 @@ Three new modules:
   key are badged, and ones BugEye already does natively link straight to that
   in-app module. Passive - only opens links, no keys or new permissions.
 
+- **UrlScanPeek** (OSINT): searches urlscan.io's key-free public API for a
+  domain and lists recent public scans - live URLs, unique subdomains, IPs,
+  servers and page titles - with unique hostnames sendable to BulkOpen.
+- **IPGeo + GreyNoise**: IPGeo can now check GreyNoise's free community API for
+  an IP (opt-in button that requests site access), showing whether the IP has
+  been seen mass-scanning the internet and its benign/suspicious/malicious
+  classification.
+
 Navigation & usability:
 
 - Every tool list now shows a header naming the current section and what it is

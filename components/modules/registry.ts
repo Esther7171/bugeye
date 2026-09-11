@@ -25,6 +25,7 @@ export const MODULE_COMPONENTS: Record<string, LazyExoticComponent<ComponentType
   sourcemapfind: lazy(() => import('@/components/modules/sourcemapfind/SourceMapFind')),
   paramminer: lazy(() => import('@/components/modules/paramminer/ParamMiner')),
   searchengines: lazy(() => import('@/components/modules/searchengines/SearchEngines')),
+  urlscanpeek: lazy(() => import('@/components/modules/urlscanpeek/UrlScanPeek')),
   authdiff: lazy(() => import('@/components/modules/authdiff/AuthDiff')),
   secretscan: lazy(() => import('@/components/modules/secretscan/SecretScan')),
   guidebook: lazy(() => import('@/components/modules/guidebook/GuideBook')),

@@ -91,6 +91,13 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'urlscanpeek',
+    pillar: 'osint',
+    name: 'UrlScanPeek',
+    description: 'Search urlscan.io public scans for a domain: live URLs, subdomains, IPs and page metadata (no API key).',
+    status: 'live',
+  },
+  {
     id: 'bucketspot',
     pillar: 'osint',
     name: 'BucketSpot',

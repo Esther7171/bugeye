@@ -926,6 +926,44 @@ async function fetchAuthDiffSide(url: string, credentials: RequestCredentials): 
   }
 }
 
+// GreyNoise's free community API returns whether an IP has been seen mass-
+// scanning the internet, and a benign/suspicious/malicious classification. It
+// answers 404 (with a JSON body) for IPs it has never observed - a normal,
+// meaningful result, not an error. No API key required. It sends no CORS
+// header, so this relies on the broad host grant like the other keyless APIs.
+async function handleFetchGreyNoise(ip: string): Promise<BgResponseMap['FETCH_GREYNOISE']> {
+  try {
+    const res = await fetchWithTimeout(`https://api.greynoise.io/v3/community/${encodeURIComponent(ip)}`, {}, 10000);
+    if (res.status === 404) {
+      return { ok: true, ip, observed: false };
+    }
+    if (!res.ok) {
+      return { ok: false, ip, observed: false, error: httpStatusMessage(res.status) };
+    }
+    const json = (await res.json()) as {
+      noise?: boolean;
+      riot?: boolean;
+      classification?: string;
+      name?: string;
+      last_seen?: string;
+      link?: string;
+    };
+    return {
+      ok: true,
+      ip,
+      observed: true,
+      noise: json.noise,
+      riot: json.riot,
+      classification: json.classification,
+      name: json.name,
+      lastSeen: json.last_seen,
+      link: json.link,
+    };
+  } catch (err) {
+    return { ok: false, ip, observed: false, error: describeFetchError(err) };
+  }
+}
+
 async function handleAuthDiffProbe(url: string): Promise<BgResponseMap['AUTH_DIFF_PROBE']> {
   try {
     const [authed, anon] = await Promise.all([
@@ -1376,6 +1414,9 @@ export default defineBackground(() => {
           break;
         case 'AUTH_DIFF_PROBE':
           sendResponse(await handleAuthDiffProbe(message.url));
+          break;
+        case 'FETCH_GREYNOISE':
+          sendResponse(await handleFetchGreyNoise(message.ip));
           break;
         default:
           sendResponse({ ok: false, error: 'Unknown message type' });

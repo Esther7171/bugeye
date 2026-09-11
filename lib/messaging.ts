@@ -46,7 +46,8 @@ export type BgRequest =
   | { type: 'CACHE_POISON_PROBE'; url: string }
   | { type: 'BREACH_CHECK'; email: string; hibpApiKey?: string }
   | { type: 'HTTP_POST_PROBE'; url: string; body: string; contentType?: string }
-  | { type: 'AUTH_DIFF_PROBE'; url: string };
+  | { type: 'AUTH_DIFF_PROBE'; url: string }
+  | { type: 'FETCH_GREYNOISE'; ip: string };
 
 export interface RequestLogEntry {
   id: string;
@@ -155,6 +156,19 @@ export interface BreachCheckResult {
   error?: string;
 }
 
+export interface GreyNoiseResult {
+  ok: boolean;
+  ip: string;
+  observed: boolean; // whether GreyNoise has seen this IP scanning the internet
+  noise?: boolean;
+  riot?: boolean; // "Rule It Out" - a known benign/common business service
+  classification?: string; // benign | suspicious | malicious | unknown
+  name?: string;
+  lastSeen?: string;
+  link?: string;
+  error?: string;
+}
+
 export interface AuthDiffSide {
   status: number | null;
   finalUrl?: string;
@@ -220,6 +234,7 @@ export interface BgResponseMap {
   BREACH_CHECK: BreachCheckResult;
   HTTP_POST_PROBE: { ok: boolean; status: number | null; body?: string; error?: string };
   AUTH_DIFF_PROBE: { ok: boolean; authed?: AuthDiffSide; anon?: AuthDiffSide; error?: string };
+  FETCH_GREYNOISE: GreyNoiseResult;
 }
 
 export async function sendToBackground<T extends BgRequest>(

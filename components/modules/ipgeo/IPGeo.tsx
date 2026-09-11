@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, MapPin, ExternalLink, Send } from 'lucide-react';
+import { Loader2, MapPin, ExternalLink, Send, Radar } from 'lucide-react';
 import { ModuleHeader } from '@/components/shell/ModuleHeader';
 import { CopyButton } from '@/components/shell/CopyButton';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTarget } from '@/components/shell/TargetProvider';
-import { sendToBackground, type IpGeoResult } from '@/lib/messaging';
+import { useHostPermission } from '@/lib/useHostPermission';
+import { sendToBackground, type IpGeoResult, type GreyNoiseResult } from '@/lib/messaging';
 import { isIpAddress, normalizeDomain } from '@/lib/utils';
 import { bulkListStore } from '@/lib/storage';
 import type { ModuleComponentProps } from '@/types';
@@ -19,12 +20,32 @@ export function IPGeo({ onBack, onNavigate }: ModuleComponentProps) {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<IpGeoResult | null>(null);
   const [note, setNote] = useState('');
+  const [greyNoise, setGreyNoise] = useState<GreyNoiseResult | null>(null);
+  const [gnLoading, setGnLoading] = useState(false);
+  const { ensure, pending } = useHostPermission();
+
+  async function checkGreyNoise(ip: string) {
+    setGnLoading(true);
+    setGreyNoise(null);
+    try {
+      // ensure() must be the first await to preserve the click's user gesture.
+      const granted = await ensure('https://api.greynoise.io/*');
+      if (!granted) {
+        setGreyNoise({ ok: false, ip, observed: false, error: 'Site access was not granted.' });
+        return;
+      }
+      setGreyNoise(await sendToBackground({ type: 'FETCH_GREYNOISE', ip }));
+    } finally {
+      setGnLoading(false);
+    }
+  }
 
   async function lookup(input: string) {
     if (!input.trim()) return;
     setLoading(true);
     setNote('');
     setResult(null);
+    setGreyNoise(null);
     try {
       let ip: string;
       if (isIpAddress(input.trim())) {
@@ -140,6 +161,56 @@ export function IPGeo({ onBack, onNavigate }: ModuleComponentProps) {
                 <Send className="size-3" /> Send to BulkOpen
               </Button>
               <CopyButton text={JSON.stringify(result, null, 2)} label="Copy JSON" />
+            </div>
+
+            <div className="flex flex-col gap-2 border-t border-border pt-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-muted-foreground">GreyNoise scanner intel</Label>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => checkGreyNoise(result.ip)}
+                  disabled={gnLoading || pending}
+                >
+                  {gnLoading || pending ? <Loader2 className="size-3 animate-spin" /> : <Radar className="size-3" />}
+                  Check GreyNoise
+                </Button>
+              </div>
+
+              {greyNoise && !greyNoise.ok && (
+                <p className="text-[11px] text-muted-foreground">{greyNoise.error ?? 'GreyNoise lookup failed.'}</p>
+              )}
+              {greyNoise?.ok && !greyNoise.observed && (
+                <p className="text-[11px] text-muted-foreground">
+                  Not observed mass-scanning the internet (GreyNoise has no record of this IP).
+                </p>
+              )}
+              {greyNoise?.ok && greyNoise.observed && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Badge
+                    variant={
+                      greyNoise.riot
+                        ? 'success'
+                        : greyNoise.classification === 'malicious'
+                          ? 'destructive'
+                          : greyNoise.classification === 'benign'
+                            ? 'success'
+                            : 'warning'
+                    }
+                  >
+                    {greyNoise.riot ? 'known service (RIOT)' : greyNoise.classification ?? 'seen scanning'}
+                  </Badge>
+                  {greyNoise.name && greyNoise.name !== 'unknown' && <Badge variant="muted">{greyNoise.name}</Badge>}
+                  {greyNoise.lastSeen && (
+                    <span className="text-[10px] text-muted-foreground">last seen {greyNoise.lastSeen}</span>
+                  )}
+                  {greyNoise.link && (
+                    <a href={greyNoise.link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 text-[11px] text-primary hover:underline">
+                      details <ExternalLink className="size-2.5" />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </>
         )}
