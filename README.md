@@ -159,7 +159,7 @@ CLI Bridge · OSINT · Utility
   WordlistPick, StegGen
 - **OSINT**: SubFinder, BucketSpot, ExifPeek, SSLInspect, FaviconHash, IPGeo,
   ShodanPeek, RobotsPeek, SitemapFind, WellKnownScan, ApiSpec, PanelHunt,
-  GitFinder, Wayback, ParamMiner, ContactGrab, EmailHunter, EmailAnalyze, MailHunt,
+  GitFinder, Wayback, ParamMiner, SearchEngines, ContactGrab, EmailHunter, EmailAnalyze, MailHunt,
   UserHunt, BreachCheck, GoogleDork, GitDork, TakeoverCheck,
   DNSRecords, DNSSECCheck, HostCluster, WhoisLookup
 - **Utility**: AutoFinder, Bug Bounty Playbook, UploadTest, TargetSave, ExportAll,

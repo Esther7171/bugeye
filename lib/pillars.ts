@@ -84,6 +84,13 @@ export const MODULES: ModuleMeta[] = [
     status: 'live',
   },
   {
+    id: 'searchengines',
+    pillar: 'osint',
+    name: 'SearchEngines',
+    description: 'One-click deep links into 30+ recon/OSINT search engines (Shodan, Censys, FOFA, urlscan, VirusTotal...), pre-filled with your target.',
+    status: 'live',
+  },
+  {
     id: 'bucketspot',
     pillar: 'osint',
     name: 'BucketSpot',

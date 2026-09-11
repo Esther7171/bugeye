@@ -15,6 +15,13 @@ Three new modules:
   cookies and once anonymously (read-only GETs), then diffs the responses to
   surface missing access control (IDOR/BOLA). Verdict plus a body diff.
 
+- **SearchEngines** (OSINT): one-click deep links into 30+ recon/OSINT search
+  engines (Shodan, Censys, ZoomEye, FOFA, Netlas, LeakIX, SecurityTrails,
+  urlscan, VirusTotal, GreyNoise, Exploit-DB, PublicWWW and more), pre-filled
+  with the current target and grouped by purpose. Engines requiring a login/API
+  key are badged, and ones BugEye already does natively link straight to that
+  in-app module. Passive - only opens links, no keys or new permissions.
+
 Navigation & usability:
 
 - Every tool list now shows a header naming the current section and what it is
