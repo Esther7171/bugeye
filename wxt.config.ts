@@ -59,6 +59,10 @@ export default defineConfig({
               gecko: {
                 id: 'bugeye@esther7171.github.io',
                 strict_min_version: '128.0',
+                // AMO requires new extensions to declare data collection. BugEye
+                // collects nothing (no telemetry, no data sent to us), so this is
+                // the explicit "none" declaration.
+                data_collection_permissions: { required: ['none'] },
               },
             },
           }),
