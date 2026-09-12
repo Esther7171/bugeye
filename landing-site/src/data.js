@@ -1,0 +1,123 @@
+// Shared pillar + tool data for the home page and the features guide, so both
+// pages stay in sync. Mirrors lib/pillars.ts in the extension.
+
+export const PILLARS = [
+  { code: 'TI', name: 'Tab Inspector', desc: "Headers, cookies, JWTs, CSP, clickjacking, CORS and storage, read straight from the tab you're on." },
+  { code: 'PR', name: 'Page Recon', desc: 'Pulls links, scripts, forms, hidden fields and embedded resources out of the rendered page.' },
+  { code: 'LT', name: 'List Triage', desc: 'Paste, normalize, alive-check and bulk-open large lists of endpoints in one pass.' },
+  { code: 'TR', name: 'Traffic', desc: 'Rewrites headers, spoofs the user agent, strips referrers and logs requests on the active tab.' },
+  { code: 'EP', name: 'Encode / Payload', desc: 'An encode, decode and hash toolkit, plus a searchable library of XSS, SQLi and other reference payloads.' },
+  { code: 'CB', name: 'CLI Bridge', desc: 'Builds copy-paste commands for nuclei, ffuf, wordlists and more. Nothing runs inside the extension.' },
+  { code: 'OS', name: 'OSINT', desc: 'Subdomains, WHOIS, DNS, certificates, breach and leak checks, plus deep links into 30+ recon search engines, all from public sources.' },
+  { code: 'VH', name: 'Vuln Hunting', desc: 'Manual checks and payload references: access-control diffing (IDOR/BOLA), outdated JS, WordPress, GraphQL introspection and blind XSS/SQLi.' },
+  { code: 'UT', name: 'Utility', desc: "AutoFinder's one-pass domain scan, the Bug Bounty Playbook's methodology reference and the rest of the toolbox." },
+];
+
+// Each tool: [name, one-line description]. Grouped by pillar (id matches the
+// extension's pillar ids so anchors are stable).
+export const TOOLS = [
+  { id: 'tab-inspector', code: 'TI', name: 'Tab Inspector', items: [
+    ['HeaderGrade', 'Grade security headers A-F for the current tab or a URL.'],
+    ['TechStack', 'Fingerprints tech from headers, cookies, meta tags, script filenames and page JS globals.'],
+    ['CookieJar', 'Inspect cookies: SameSite, Secure/HttpOnly, and __Host-/__Secure- prefix correctness.'],
+    ['ClickjackCheck', 'Tests if the page can be framed. Verdict plus a downloadable PoC HTML.'],
+    ['CSPAudit', 'Parses Content-Security-Policy and grades it, flagging unsafe-inline, unsafe-eval and wildcards.'],
+    ['CORSCheck', 'Best-effort test for Origin reflection in Access-Control-Allow-Origin.'],
+    ['CachePoison', 'Canary in unkeyed headers; flags reflection into a cacheable response whose Vary omits that header.'],
+    ['HstsPreload', 'Checks whether the domain is on the public Chromium HSTS preload list (hstspreload.org).'],
+    ['RedirectTrace', 'Follows a redirect chain hop by hop and flags open-redirect or parameter leakage.'],
+    ['CVELookup', 'Builds search links for a tech + version across NVD, MITRE and other CVE databases.'],
+    ['HTTPMethods', 'Safe OPTIONS probe to see which HTTP methods a server advertises as allowed.'],
+    ['StorageDump', 'Reads and exports localStorage, sessionStorage and IndexedDB database names.'],
+    ['WAFDetect', 'Passive WAF/CDN fingerprinting via response headers, cookies and block-page signatures.'],
+  ] },
+  { id: 'page-recon', code: 'PR', name: 'Page Recon', items: [
+    ['LinkGrab', 'Extract and classify every link, script and form action on the page.'],
+    ['JSList', 'List every JavaScript file loaded by the current page.'],
+    ['SriCheck', 'Cross-origin script/link tags missing Subresource Integrity (or integrity without crossorigin).'],
+    ['SecretScan', 'Best-effort scan of page HTML/JS for exposed keys and tokens.'],
+    ['SourceMapFind', "Detects exposed JavaScript source maps (.map) that reconstruct a site's original source."],
+    ['FormAudit', 'Lists every form: method, action, whether HTTPS, and CSRF token presence.'],
+    ['HiddenFind', 'Extracts HTML comments and type=hidden input fields, which often leak info.'],
+    ['LinkedContent', 'Lists linked/embedded resources grouped by type, flagging third-party hosts.'],
+    ['TrackerScan', 'Scans the page for known third-party trackers and analytics scripts.'],
+  ] },
+  { id: 'list-triage', code: 'LT', name: 'List Triage', items: [
+    ['BulkOpen', 'Paste, normalize, alive-check and open many endpoints.'],
+  ] },
+  { id: 'traffic', code: 'TR', name: 'Traffic', items: [
+    ['HeaderInject', 'Add or overwrite request headers on the active tab.'],
+    ['UASwitch', 'Swap the User-Agent sent by the active tab. Desktop, mobile, Googlebot or custom.'],
+    ['RefControl', 'Strip or spoof the Referer header sent by the active tab.'],
+    ['ReqLogger', 'Log requests the active tab makes: method, URL, status. Filter and export.'],
+  ] },
+  { id: 'encode-payload', code: 'EP', name: 'Encode / Payload', items: [
+    ['EncoderKit', 'Base64 / URL / HTML entity / Hex / JWT / hashing toolkit.'],
+    ['JwtAudit', 'JWT deep-check: alg:none, missing/expired exp, weak kid, jku/x5u/jwk. Decode-only.'],
+    ['ShellGen', 'Reverse-shell one-liners for every common interpreter, plus TTY upgrades.'],
+  ] },
+  { id: 'cli-bridge', code: 'CB', name: 'CLI Bridge', items: [
+    ['ReconBuild', 'Build copy-paste CLI commands for bbot, httpx, katana & more.'],
+    ['NetCmds', 'Ping, traceroute, WHOIS and nmap as copy-paste CLI. Browsers cannot open raw sockets, so nothing is executed here.'],
+    ['LinuxCmds', 'Copy-paste cheats for privesc enumeration, file transfer and pivoting.'],
+    ['PEASGet', 'Official LinPEAS/WinPEAS download links and run snippets.'],
+    ['FuzzBuild', 'Builds ffuf/wfuzz/gobuster/feroxbuster commands for path, param, header, vhost or body fuzzing.'],
+    ['WordlistPick', 'Common SecLists wordlists: local -w path or a wget command to fetch one.'],
+    ['StegGen', 'Generates steghide/zsteg/exiftool/binwalk command lines for a given file.'],
+  ] },
+  { id: 'osint', code: 'OS', name: 'OSINT', items: [
+    ['SubFinder', 'Enumerate subdomains across 5 cross-checked sources: crt.sh, crt.name, CertSpotter, HackerTarget, subdomain.center.'],
+    ['ParamMiner', 'Mine historical query parameters for a domain from the Wayback Machine - hidden input surface for fuzzing.'],
+    ['SearchEngines', 'One-click deep links into 30+ recon/OSINT search engines (Shodan, Censys, FOFA, urlscan, VirusTotal...), pre-filled with your target.'],
+    ['UrlScanPeek', 'Search urlscan.io public scans for a domain: live URLs, subdomains, IPs and page metadata (no API key).'],
+    ['BucketSpot', 'Scan the current page for exposed cloud storage buckets.'],
+    ['ExifPeek', 'Parse EXIF metadata from an image entirely client-side.'],
+    ['SSLInspect', 'Certificate issuer, validity, expiry countdown and SANs via CT logs.'],
+    ['FaviconHash', 'Shodan-compatible favicon MurmurHash3, with a one-click Shodan search link.'],
+    ['IPGeo', 'Resolve the target and geolocate its IP: country, ISP, ASN, hosting flag, plus GreyNoise scanner intel.'],
+    ['ShodanPeek', 'Free InternetDB lookup: open ports, known CVEs, hostnames, tags.'],
+    ['RobotsPeek', 'Fetches robots.txt: Disallow paths and Sitemap references.'],
+    ['SitemapFind', 'Fetches and parses sitemap.xml, following nested sitemap-index files.'],
+    ['WellKnownScan', 'Checks common /.well-known/ paths: security.txt, OpenID config, app links.'],
+    ['ApiSpec', 'Finds exposed swagger.json, openapi.json/yaml, Swagger UI, and Postman collections.'],
+    ['PanelHunt', 'Probes a curated list of common admin/login/sensitive paths. Light probing only.'],
+    ['GitFinder', 'Detects exposed .git, .svn and .env via marker-file validation.'],
+    ['Wayback', 'Queries the Wayback Machine CDX API for archived URLs of the domain.'],
+    ['ContactGrab', 'Scrapes the page for emails, phone links and social profile links.'],
+    ['EmailHunter', 'Aggregates emails from the page and its internal links, plus pattern-guessing.'],
+    ['EmailAnalyze', 'Format validity, MX/SPF/DMARC lookup, disposable-provider check, Gravatar presence.'],
+    ['MailHunt', 'Public email OSINT: Gravatar profile, GitHub search, and search-engine links.'],
+    ['UserHunt', 'Checks a username against public profiles (GitHub, GitLab, Reddit, npm and more).'],
+    ['BreachCheck', 'Checks an email against known breaches via XposedOrNot, or HIBP with your own key.'],
+    ['GoogleDork', 'Ready-to-click Google dork queries for a domain.'],
+    ['GitDork', 'GitHub/GitLab code-search queries for leaked secrets tied to a company.'],
+    ['TakeoverCheck', 'Subdomain takeover detection: CNAME fingerprint plus best-effort page-body confirmation.'],
+    ['DNSRecords', 'Full DNS record lookup: A, AAAA, CNAME, MX, NS, TXT, SOA, CAA, plus SPF/DMARC/DKIM and PTR.'],
+    ['WhoisLookup', 'Registrar and contact data via RDAP, HackerTarget WHOIS API, and the who.is web page.'],
+    ['DNSSECCheck', 'Checks whether DNSSEC is enabled and validating for the domain.'],
+    ['HostCluster', 'Groups subdomains by shared IP and flags ones outside the apex domain.'],
+  ] },
+  { id: 'vuln-hunting', code: 'VH', name: 'Vuln Hunting', items: [
+    ['PayloadLib', 'Searchable library of XSS, SQLi, LFI/RFI, SSTI, XXE and redirect payloads.'],
+    ['AuthDiff', 'Fetch a URL with your session and again anonymously, then diff the responses to spot missing access control (IDOR/BOLA).'],
+    ['RetireJS', 'Detects outdated JS libraries with known CVEs from a curated signature set.'],
+    ['WPCheck', 'Detects the WordPress core version, plugins and themes in use, linking each to its WPScan vulnerability page.'],
+    ['GraphQLCheck', 'Checks common GraphQL paths for introspection left enabled. Single introspection query per path.'],
+    ['BlindXSS', 'Generates blind-XSS payloads pointing at your collector, plus WAF-bypass variants.'],
+    ['BlindSQLi', 'Generates out-of-band and time-based blind SQLi payloads pointing at your collector.'],
+    ['PHPFilterChain', 'Generates a php://filter conversion chain that reproduces arbitrary text, for LFI-to-RCE testing.'],
+  ] },
+  { id: 'utility', code: 'UT', name: 'Utility', items: [
+    ['AutoFinder', 'Runs every domain-based check in one pass, compiles a report, and diffs against the last scan of that target.'],
+    ['Bug Bounty Playbook', 'Methodology checklists and guides for upload, recon, auth and headers, with HackTricks links.'],
+    ['UploadTest', 'Generate single test files to verify upload validation. Never floods.'],
+    ['TargetSave', 'Save targets you come back to, with when they were saved and last used.'],
+    ['ExportAll', 'A per-target notes scratchpad, exportable as Markdown or JSON.'],
+    ['CopyAsCurl', 'Turns a captured or manually entered request into a curl command.'],
+    ['JSONView', 'Pretty-print and collapsible tree view for pasted JSON or API responses.'],
+  ] },
+];
+
+export const TOOL_COUNT = TOOLS.reduce((n, g) => n + g.items.length, 0);
+
+export const toolSlug = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');

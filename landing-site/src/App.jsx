@@ -3,33 +3,7 @@ import bugeyeLogo from './assets/bugeye_logo.png';
 import edgeLogo from './assets/edge-logo.svg';
 import firefoxLogo from './assets/firefox-logo.svg';
 import operaLogo from './assets/opera-logo.svg';
-
-const PILLARS = [
-  { code: 'TI', name: 'Tab Inspector', desc: "Headers, cookies, JWTs, CSP, clickjacking, CORS and storage, read straight from the tab you're on." },
-  { code: 'PR', name: 'Page Recon', desc: 'Pulls links, scripts, forms, hidden fields and embedded resources out of the rendered page.' },
-  { code: 'LT', name: 'List Triage', desc: 'Paste, normalize, alive-check and bulk-open large lists of endpoints in one pass.' },
-  { code: 'TR', name: 'Traffic', desc: 'Rewrites headers, spoofs the user agent, strips referrers and logs requests on the active tab.' },
-  { code: 'EP', name: 'Encode / Payload', desc: 'An encode, decode and hash toolkit, plus a searchable library of XSS, SQLi and other reference payloads.' },
-  { code: 'CB', name: 'CLI Bridge', desc: 'Builds copy-paste commands for nuclei, ffuf, wordlists and more. Nothing runs inside the extension.' },
-  { code: 'OS', name: 'OSINT', desc: 'Subdomains, WHOIS, DNS, certificates, breach and leak checks, plus deep links into 30+ recon search engines, all from public sources.' },
-  { code: 'VH', name: 'Vuln Hunting', desc: 'Manual checks and payload references: access-control diffing (IDOR/BOLA), outdated JS, WordPress, GraphQL introspection and blind XSS/SQLi.' },
-  { code: 'UT', name: 'Utility', desc: "AutoFinder's one-pass domain scan, the Bug Bounty Playbook's methodology reference and the rest of the toolbox." },
-];
-
-// The full inventory, grouped by pillar - kept in sync with lib/pillars.ts.
-const TOOLS = [
-  { code: 'TI', name: 'Tab Inspector', items: ['HeaderGrade', 'TechStack', 'CookieJar', 'ClickjackCheck', 'CSPAudit', 'CORSCheck', 'CachePoison', 'HstsPreload', 'RedirectTrace', 'CVELookup', 'HTTPMethods', 'StorageDump', 'WAFDetect'] },
-  { code: 'PR', name: 'Page Recon', items: ['LinkGrab', 'JSList', 'SriCheck', 'SecretScan', 'SourceMapFind', 'FormAudit', 'HiddenFind', 'LinkedContent', 'TrackerScan'] },
-  { code: 'LT', name: 'List Triage', items: ['BulkOpen'] },
-  { code: 'TR', name: 'Traffic', items: ['HeaderInject', 'UASwitch', 'RefControl', 'ReqLogger'] },
-  { code: 'EP', name: 'Encode / Payload', items: ['EncoderKit', 'JwtAudit', 'ShellGen'] },
-  { code: 'CB', name: 'CLI Bridge', items: ['ReconBuild', 'NetCmds', 'LinuxCmds', 'PEASGet', 'FuzzBuild', 'WordlistPick', 'StegGen'] },
-  { code: 'OS', name: 'OSINT', items: ['SubFinder', 'ParamMiner', 'SearchEngines', 'UrlScanPeek', 'BucketSpot', 'ExifPeek', 'SSLInspect', 'FaviconHash', 'IPGeo', 'ShodanPeek', 'RobotsPeek', 'SitemapFind', 'WellKnownScan', 'ApiSpec', 'PanelHunt', 'GitFinder', 'Wayback', 'ContactGrab', 'EmailHunter', 'EmailAnalyze', 'MailHunt', 'UserHunt', 'BreachCheck', 'GoogleDork', 'GitDork', 'TakeoverCheck', 'DNSRecords', 'WhoisLookup', 'DNSSECCheck', 'HostCluster'] },
-  { code: 'VH', name: 'Vuln Hunting', items: ['PayloadLib', 'AuthDiff', 'RetireJS', 'WPCheck', 'GraphQLCheck', 'BlindXSS', 'BlindSQLi', 'PHPFilterChain'] },
-  { code: 'UT', name: 'Utility', items: ['AutoFinder', 'Bug Bounty Playbook', 'UploadTest', 'TargetSave', 'ExportAll', 'CopyAsCurl', 'JSONView'] },
-];
-
-const TOOL_COUNT = TOOLS.reduce((n, g) => n + g.items.length, 0);
+import { PILLARS, TOOLS, TOOL_COUNT, toolSlug } from './data.js';
 
 // The custom target cursor hides the native cursor and tracks the mouse - on
 // touch / coarse-pointer devices that just leaves a stuck element and no
@@ -129,7 +103,11 @@ export default function App() {
                   <span className="toolset-count">{g.items.length}</span>
                 </div>
                 <ul className="toolset-tags">
-                  {g.items.map(t => <li className="cursor-target" key={t}>{t}</li>)}
+                  {g.items.map(([name]) => (
+                    <li key={name}>
+                      <a className="cursor-target" href={`./features.html#tool-${toolSlug(name)}`}>{name}</a>
+                    </li>
+                  ))}
                 </ul>
               </div>
             ))}
