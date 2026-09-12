@@ -1,9 +1,5 @@
 import TargetCursor from './components/TargetCursor.jsx';
-import { TOOLS, TOOL_COUNT, toolSlug } from './data.js';
-
-// Same rule the home page uses: only mount the reticle cursor where there's a
-// real hovering pointer (not on touch devices).
-const FINE_POINTER = typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+import { TOOLS, TOOL_COUNT, toolSlug, FINE_POINTER } from './data.js';
 
 export default function FeaturesGuide() {
   return (

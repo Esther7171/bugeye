@@ -3,12 +3,7 @@ import bugeyeLogo from './assets/bugeye_logo.png';
 import edgeLogo from './assets/edge-logo.svg';
 import firefoxLogo from './assets/firefox-logo.svg';
 import operaLogo from './assets/opera-logo.svg';
-import { PILLARS, TOOLS, TOOL_COUNT, toolSlug } from './data.js';
-
-// The custom target cursor hides the native cursor and tracks the mouse - on
-// touch / coarse-pointer devices that just leaves a stuck element and no
-// visible cursor, so it's only mounted where there's a real hovering pointer.
-const FINE_POINTER = typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
+import { PILLARS, TOOLS, TOOL_COUNT, toolSlug, FINE_POINTER } from './data.js';
 
 const FEATURES = [
   { id: 'feature-autofinder', title: 'One pass, full picture', desc: 'AutoFinder runs every domain-based check at once, DNS through exposed secrets, diffs the result against your last scan of that target, and exports as Markdown, JSON or a formatted Word report with color-coded findings.' },

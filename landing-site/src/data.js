@@ -121,3 +121,12 @@ export const TOOLS = [
 export const TOOL_COUNT = TOOLS.reduce((n, g) => n + g.items.length, 0);
 
 export const toolSlug = name => name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+
+// Only mount the custom reticle cursor on a real desktop pointer: a fine,
+// hovering pointer AND a wide viewport. This keeps it off phones, tablets, and
+// narrow/resized windows, where it just leaves a stray floating reticle and
+// hides the native cursor. Evaluated once at load; pages reload on navigation.
+export const FINE_POINTER =
+  typeof window !== 'undefined' &&
+  !!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches &&
+  window.innerWidth >= 768;
