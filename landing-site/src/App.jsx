@@ -124,7 +124,7 @@ export default function App() {
                   <span className="toolset-count">{g.items.length}</span>
                 </div>
                 <ul className="toolset-tags">
-                  {g.items.map(t => <li key={t}>{t}</li>)}
+                  {g.items.map(t => <li className="cursor-target" key={t}>{t}</li>)}
                 </ul>
               </div>
             ))}

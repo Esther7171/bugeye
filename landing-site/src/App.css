@@ -298,9 +298,14 @@ h1, h2, h3 {
   background: var(--shadow);
   border: 1px solid var(--line);
   padding: 5px 10px;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
 }
-.toolset-row:hover .toolset-tags li { border-color: var(--line); }
+.toolset-tags li:hover {
+  border-color: var(--signal);
+  color: var(--paper-bright);
+  background: var(--shadow-2);
+}
 @media (max-width: 720px) {
   .toolset-row { grid-template-columns: 1fr; gap: 12px; }
 }
