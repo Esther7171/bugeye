@@ -3,7 +3,7 @@
   "description": "Minimal-permission browser toolkit for passive recon, OSINT and web-app pentest triage.",
   "private": true,
   "version": "1.0.0",
-  "license": "BSD-3-Clause",
+  "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
     "dev": "wxt",

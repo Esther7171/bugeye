@@ -94,7 +94,7 @@ Initial public build.
   rate limits and empty results.
 - Added the BugEye logo (`assets/bugeye_logo.png`, source art, not shipped in
   the built extension) and generated the icon set (16/32/48/96/128) from it.
-- Added LICENSE (BSD 3-Clause) and this changelog.
+- Added LICENSE (AGPL-3.0) and this changelog.
 - Replaced QuickRecon with AutoFinder: runs every domain-based check (DNS,
   subdomains, headers, CSP, clickjacking, CORS, HTTP methods, TLS cert,
   favicon hash, IP geolocation, Shodan InternetDB, robots.txt, sitemap.xml,
