@@ -57,7 +57,7 @@ export default defineConfig({
         : {
             browser_specific_settings: {
               gecko: {
-                id: 'bugeye@esther7171.github.io',
+                id: 'bugeye-recon@esther7171.github.io',
                 strict_min_version: '128.0',
                 // AMO requires new extensions to declare data collection. BugEye
                 // collects nothing (no telemetry, no data sent to us), so this is
