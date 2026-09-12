@@ -249,6 +249,12 @@ h1, h2, h3 {
   font-size: 17px;
   margin: 14px 0 0;
 }
+.toolset-guide-link {
+  color: var(--signal-bright);
+  text-decoration: none;
+  border-bottom: 1px solid var(--signal-dim);
+}
+.toolset-guide-link:hover { border-color: var(--signal-bright); }
 /* One row per pillar: a fixed label column on the left, tool chips flowing on
    the right. Reads top-to-bottom in pillar order, and short pillars never leave
    a stretched empty box the way an equal-height card grid did. */

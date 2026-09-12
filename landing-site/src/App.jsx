@@ -114,7 +114,12 @@ export default function App() {
 
         <section className="section wrap">
           <p className="eyebrow">The full toolset</p>
-          <p className="toolset-lede">{TOOL_COUNT} tools, all live, grouped by pillar.</p>
+          <p className="toolset-lede">
+            {TOOL_COUNT} tools, all live, grouped by pillar.{' '}
+            <a className="cursor-target toolset-guide-link" href="./features.html">
+              Open the full guide, with a description of every tool &rarr;
+            </a>
+          </p>
           <div className="toolset">
             {TOOLS.map(g => (
               <div className="toolset-row" key={g.code}>
@@ -218,6 +223,7 @@ export default function App() {
         <footer className="wrap">
           <span className="brand">BugEye</span>
           <nav>
+            <a className="cursor-target" href="./features.html">Features</a>
             <a className="cursor-target" href="./privacy.html">Privacy Policy</a>
             <a className="cursor-target" href="https://github.com/Esther7171/bugeye">
               <GitHubIcon />
