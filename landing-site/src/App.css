@@ -249,36 +249,37 @@ h1, h2, h3 {
   font-size: 17px;
   margin: 14px 0 0;
 }
-/* Masonry via CSS columns: cards pack top-to-bottom and only take the height
-   of their own contents, so short pillars never leave a stretched empty box
-   next to a tall one like OSINT. */
+/* One row per pillar: a fixed label column on the left, tool chips flowing on
+   the right. Reads top-to-bottom in pillar order, and short pillars never leave
+   a stretched empty box the way an equal-height card grid did. */
 .toolset {
   margin-top: 32px;
-  column-count: 3;
-  column-gap: 18px;
+  border-top: 1px solid var(--line);
 }
-.toolset-group {
-  break-inside: avoid;
-  margin: 0 0 18px;
-  border: 1px solid var(--line);
-  background: var(--shadow);
-  padding: 18px 18px 20px;
+.toolset-row {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  gap: 28px;
+  align-items: start;
+  padding: 22px 14px;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s ease;
 }
-@media (max-width: 900px) { .toolset { column-count: 2; } }
-.toolset-head {
+.toolset-row:hover { background: var(--shadow); }
+.toolset-label {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 14px;
 }
-.toolset-head h3 { font-size: 19px; flex: 1; min-width: 0; }
+.toolset-label h3 { font-size: 21px; line-height: 1.1; }
 .toolset-count {
   font-family: var(--font-type);
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--fog);
   border: 1px solid var(--line);
-  padding: 1px 8px;
+  padding: 1px 7px;
 }
 .toolset-tags {
   list-style: none;
@@ -286,7 +287,7 @@ h1, h2, h3 {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
+  gap: 8px;
 }
 .toolset-tags li {
   font-family: var(--font-type);
@@ -294,9 +295,14 @@ h1, h2, h3 {
   font-size: 13px;
   letter-spacing: 0.01em;
   color: var(--paper);
-  background: var(--void);
-  border: 1px solid var(--line-soft);
-  padding: 4px 9px;
+  background: var(--shadow);
+  border: 1px solid var(--line);
+  padding: 5px 10px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.toolset-row:hover .toolset-tags li { border-color: var(--line); }
+@media (max-width: 720px) {
+  .toolset-row { grid-template-columns: 1fr; gap: 12px; }
 }
 
 /* ---------- Feature list ---------- */
@@ -513,8 +519,7 @@ footer nav svg { width: 17px; height: 17px; fill: currentColor; }
   .pillar-row { padding: 18px 4px; }
   .pillar-row h3 { font-size: 21px; }
 
-  .toolset { column-count: 1; }
-  .toolset-group { padding: 16px; }
+  .toolset-row { padding: 18px 4px; }
 
   .kit-card { padding: 22px; }
   .howto { padding: 22px; }

@@ -117,8 +117,8 @@ export default function App() {
           <p className="toolset-lede">{TOOL_COUNT} tools, all live, grouped by pillar.</p>
           <div className="toolset">
             {TOOLS.map(g => (
-              <div className="toolset-group" key={g.code}>
-                <div className="toolset-head">
+              <div className="toolset-row" key={g.code}>
+                <div className="toolset-label">
                   <span className="pillar-code">{g.code}</span>
                   <h3>{g.name}</h3>
                   <span className="toolset-count">{g.items.length}</span>
