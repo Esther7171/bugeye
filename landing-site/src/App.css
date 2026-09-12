@@ -249,17 +249,22 @@ h1, h2, h3 {
   font-size: 17px;
   margin: 14px 0 0;
 }
+/* Masonry via CSS columns: cards pack top-to-bottom and only take the height
+   of their own contents, so short pillars never leave a stretched empty box
+   next to a tall one like OSINT. */
 .toolset {
   margin-top: 32px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 18px;
+  column-count: 3;
+  column-gap: 18px;
 }
 .toolset-group {
+  break-inside: avoid;
+  margin: 0 0 18px;
   border: 1px solid var(--line);
   background: var(--shadow);
   padding: 18px 18px 20px;
 }
+@media (max-width: 900px) { .toolset { column-count: 2; } }
 .toolset-head {
   display: flex;
   align-items: center;
@@ -508,7 +513,7 @@ footer nav svg { width: 17px; height: 17px; fill: currentColor; }
   .pillar-row { padding: 18px 4px; }
   .pillar-row h3 { font-size: 21px; }
 
-  .toolset { grid-template-columns: 1fr; gap: 14px; }
+  .toolset { column-count: 1; }
   .toolset-group { padding: 16px; }
 
   .kit-card { padding: 22px; }
