@@ -139,31 +139,33 @@ looks wrong are especially useful.
 - `assets/bugeye_logo.png` - source logo art. Not shipped in the built
   extension; only `public/` is copied into `.output`.
 
-## The 8 pillars
+## The 9 pillars
 
 Tab Inspector · Page Recon · List Triage · Traffic · Encode/Payload ·
-CLI Bridge · OSINT · Utility
+CLI Bridge · OSINT · Vuln Hunting · Utility
 
-## Modules (all live)
+## Modules (82, all live)
 
-- **Tab Inspector**: HeaderGrade, CookieJar, ClickjackCheck, CSPAudit,
-  CORSCheck, CachePoison, HstsPreload, RetireJS, RedirectTrace, CVELookup,
-  HTTPMethods, StorageDump, TechStack, WAFDetect
-- **Page Recon**: LinkGrab, JSList, SourceMapFind, SriCheck, SecretScan,
+- **Tab Inspector**: HeaderGrade, TechStack, CookieJar, ClickjackCheck,
+  CSPAudit, CORSCheck, CachePoison, HstsPreload, RedirectTrace, CVELookup,
+  HTTPMethods, StorageDump, WAFDetect
+- **Page Recon**: LinkGrab, JSList, SriCheck, SecretScan, SourceMapFind,
   FormAudit, HiddenFind, LinkedContent, TrackerScan
 - **List Triage**: BulkOpen
 - **Traffic**: HeaderInject, UASwitch, RefControl, ReqLogger
 - **Encode/Payload**: EncoderKit (Base64/URL/HTML/Hex/JWT/Hash/Chain), JwtAudit,
-  ShellGen, PayloadLib, AuthDiff, BlindXSS, BlindSQLi
+  ShellGen
 - **CLI Bridge**: ReconBuild, NetCmds, LinuxCmds, PEASGet, FuzzBuild,
   WordlistPick, StegGen
-- **OSINT**: SubFinder, BucketSpot, ExifPeek, SSLInspect, FaviconHash, IPGeo,
-  ShodanPeek, RobotsPeek, SitemapFind, WellKnownScan, ApiSpec, PanelHunt,
-  GitFinder, Wayback, ParamMiner, SearchEngines, UrlScanPeek, ContactGrab, EmailHunter, EmailAnalyze, MailHunt,
-  UserHunt, BreachCheck, GoogleDork, GitDork, TakeoverCheck,
-  DNSRecords, DNSSECCheck, HostCluster, WhoisLookup
-- **Utility**: AutoFinder, Bug Bounty Playbook, UploadTest, TargetSave, ExportAll,
-  CopyAsCurl, JSONView
+- **OSINT**: SubFinder, ParamMiner, SearchEngines, UrlScanPeek, BucketSpot,
+  ExifPeek, SSLInspect, FaviconHash, IPGeo, ShodanPeek, RobotsPeek, SitemapFind,
+  WellKnownScan, ApiSpec, PanelHunt, GitFinder, Wayback, ContactGrab,
+  EmailHunter, EmailAnalyze, MailHunt, UserHunt, BreachCheck, GoogleDork,
+  GitDork, TakeoverCheck, DNSRecords, WhoisLookup, DNSSECCheck, HostCluster
+- **Vuln Hunting**: PayloadLib, AuthDiff, RetireJS, WPCheck, GraphQLCheck,
+  BlindXSS, BlindSQLi, PHPFilterChain
+- **Utility**: AutoFinder, Bug Bounty Playbook, UploadTest, TargetSave,
+  ExportAll, CopyAsCurl, JSONView
 
 See `components/modules/registry.ts` for the id -> component map.
 
@@ -182,6 +184,35 @@ npm run compile      # type-check only
 
 **Firefox:** `npm run build:firefox`, then `about:debugging#/runtime/this-firefox` → Load Temporary Add-on → select `.output/firefox-mv3/manifest.json`. Open via the toolbar button, `Ctrl+Shift+K`, or View → Sidebar → BugEye.
 
+### Building store packages
+
+`npm run package` builds and zips both browsers at once, writing to `.output/`:
+
+```powershell
+npm run package
+```
+
+Produces `bugeye-<version>-chrome.zip` (Chrome Web Store / Edge Add-ons),
+`bugeye-<version>-firefox.zip` (AMO), and `bugeye-<version>-sources.zip` (the
+reviewable source bundle for AMO). All three are attached to each GitHub
+release.
+
+### For AMO (addons.mozilla.org) reviewers
+
+BugEye's uploaded add-on is bundled/minified, so AMO requires the source. On
+the submission, attach the release's `bugeye-<version>-sources.zip` and give
+these exact build steps:
+
+```bash
+npm ci
+npm run zip:firefox
+```
+
+This reproduces the reviewed add-on at `.output/bugeye-<version>-firefox.zip`.
+Node 20+ is the only prerequisite; no API keys or network services are needed
+to build. The extension collects no data (`data_collection_permissions` is
+declared as `none`).
+
 ## Permissions
 
 Declared upfront: `storage`, `cookies`, `tabs`, `activeTab`, `scripting`,
@@ -199,19 +230,15 @@ public service you asked it to query. See [PRIVACY.md](PRIVACY.md) for the
 full policy, also published at
 https://esther7171.github.io/bugeye/privacy.
 
-### Publishing the privacy policy (one-time, manual)
+### Privacy policy (published)
 
-The policy source lives at `docs/privacy.md`. To make it public via GitHub
-Pages:
+The policy source lives at `docs/privacy.md` and is served live via GitHub
+Pages (Settings → Pages → Deploy from a branch → `master` / `/docs`) at:
 
-1. Go to the repo's **Settings > Pages**.
-2. Under **Source**, choose **Deploy from a branch**.
-3. Set **Branch** to `master` (or `main`) and **Folder** to `/docs`, then
-   **Save**.
-4. GitHub builds and serves the site within a few minutes. The final URL to
-   paste into the Chrome Web Store / Edge Add-ons privacy field is:
-   https://esther7171.github.io/bugeye/privacy
-   (GitHub Pages runs Jekyll by default on `/docs`; `docs/privacy.md` sets
-   `permalink: /privacy` in its front matter so it is served at that exact
-   path. If it 404s at first, give the Pages build a minute and check the
-   trailing-slash version, https://esther7171.github.io/bugeye/privacy/.)
+**https://esther7171.github.io/bugeye/privacy**
+
+Paste that URL into the Chrome Web Store / Edge Add-ons / AMO privacy field.
+(`docs/privacy.md` sets `permalink: /privacy` in its front matter so Jekyll
+serves it at that exact path. To update the policy, edit `docs/privacy.md`,
+keep `PRIVACY.md` and `landing-site/public/privacy.html` in sync, and push -
+Pages rebuilds automatically.)

@@ -242,6 +242,58 @@ h1, h2, h3 {
   .pillar-row { grid-template-columns: 1fr; gap: 8px; }
 }
 
+/* ---------- Full toolset ---------- */
+
+.toolset-lede {
+  color: var(--fog);
+  font-size: 17px;
+  margin: 14px 0 0;
+}
+.toolset {
+  margin-top: 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+.toolset-group {
+  border: 1px solid var(--line);
+  background: var(--shadow);
+  padding: 18px 18px 20px;
+}
+.toolset-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.toolset-head h3 { font-size: 19px; flex: 1; min-width: 0; }
+.toolset-count {
+  font-family: var(--font-type);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--fog);
+  border: 1px solid var(--line);
+  padding: 1px 8px;
+}
+.toolset-tags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.toolset-tags li {
+  font-family: var(--font-type);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  color: var(--paper);
+  background: var(--void);
+  border: 1px solid var(--line-soft);
+  padding: 4px 9px;
+}
+
 /* ---------- Feature list ---------- */
 
 .feature-list {
@@ -437,4 +489,38 @@ footer nav svg { width: 17px; height: 17px; fill: currentColor; }
   .case-intro .stamp { justify-self: start; }
   .feature-row { grid-template-columns: 1fr; gap: 8px; margin: 0; padding: 20px 0; }
   .section { padding: 60px 0; }
+}
+
+/* ---------- Phone ---------- */
+
+@media (max-width: 560px) {
+  body { font-size: 17px; }
+  .wrap { padding: 0 18px; }
+  .section { padding: 48px 0; }
+
+  .hero { padding: 64px 0 48px; }
+  .hero-frame { width: 160px; height: 160px; margin-bottom: 22px; }
+  .hero .lede { font-size: 16.5px; margin-top: 22px; }
+  .badge-row { gap: 8px; margin-top: 24px; }
+  .badge { font-size: 13.5px; padding: 8px 12px; }
+
+  .case-intro p { font-size: 17px; }
+  .pillar-row { padding: 18px 4px; }
+  .pillar-row h3 { font-size: 21px; }
+
+  .toolset { grid-template-columns: 1fr; gap: 14px; }
+  .toolset-group { padding: 16px; }
+
+  .kit-card { padding: 22px; }
+  .howto { padding: 22px; }
+  .howto-cols { gap: 24px; }
+  .placard { padding: 24px 20px; }
+
+  footer { padding: 40px 0 56px; }
+  footer nav { gap: 18px; font-size: 15px; }
+}
+
+/* Touch devices: never hide the native cursor for a custom one. */
+@media (hover: none), (pointer: coarse) {
+  * { cursor: auto !important; }
 }

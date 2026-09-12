@@ -11,9 +11,30 @@ const PILLARS = [
   { code: 'TR', name: 'Traffic', desc: 'Rewrites headers, spoofs the user agent, strips referrers and logs requests on the active tab.' },
   { code: 'EP', name: 'Encode / Payload', desc: 'An encode, decode and hash toolkit, plus a searchable library of XSS, SQLi and other reference payloads.' },
   { code: 'CB', name: 'CLI Bridge', desc: 'Builds copy-paste commands for nuclei, ffuf, wordlists and more. Nothing runs inside the extension.' },
-  { code: 'OS', name: 'OSINT', desc: 'Subdomains, WHOIS, DNS, certificates, breach and leak checks, all from public sources.' },
+  { code: 'OS', name: 'OSINT', desc: 'Subdomains, WHOIS, DNS, certificates, breach and leak checks, plus deep links into 30+ recon search engines, all from public sources.' },
+  { code: 'VH', name: 'Vuln Hunting', desc: 'Manual checks and payload references: access-control diffing (IDOR/BOLA), outdated JS, WordPress, GraphQL introspection and blind XSS/SQLi.' },
   { code: 'UT', name: 'Utility', desc: "AutoFinder's one-pass domain scan, the Bug Bounty Playbook's methodology reference and the rest of the toolbox." },
 ];
+
+// The full inventory, grouped by pillar - kept in sync with lib/pillars.ts.
+const TOOLS = [
+  { code: 'TI', name: 'Tab Inspector', items: ['HeaderGrade', 'TechStack', 'CookieJar', 'ClickjackCheck', 'CSPAudit', 'CORSCheck', 'CachePoison', 'HstsPreload', 'RedirectTrace', 'CVELookup', 'HTTPMethods', 'StorageDump', 'WAFDetect'] },
+  { code: 'PR', name: 'Page Recon', items: ['LinkGrab', 'JSList', 'SriCheck', 'SecretScan', 'SourceMapFind', 'FormAudit', 'HiddenFind', 'LinkedContent', 'TrackerScan'] },
+  { code: 'LT', name: 'List Triage', items: ['BulkOpen'] },
+  { code: 'TR', name: 'Traffic', items: ['HeaderInject', 'UASwitch', 'RefControl', 'ReqLogger'] },
+  { code: 'EP', name: 'Encode / Payload', items: ['EncoderKit', 'JwtAudit', 'ShellGen'] },
+  { code: 'CB', name: 'CLI Bridge', items: ['ReconBuild', 'NetCmds', 'LinuxCmds', 'PEASGet', 'FuzzBuild', 'WordlistPick', 'StegGen'] },
+  { code: 'OS', name: 'OSINT', items: ['SubFinder', 'ParamMiner', 'SearchEngines', 'UrlScanPeek', 'BucketSpot', 'ExifPeek', 'SSLInspect', 'FaviconHash', 'IPGeo', 'ShodanPeek', 'RobotsPeek', 'SitemapFind', 'WellKnownScan', 'ApiSpec', 'PanelHunt', 'GitFinder', 'Wayback', 'ContactGrab', 'EmailHunter', 'EmailAnalyze', 'MailHunt', 'UserHunt', 'BreachCheck', 'GoogleDork', 'GitDork', 'TakeoverCheck', 'DNSRecords', 'WhoisLookup', 'DNSSECCheck', 'HostCluster'] },
+  { code: 'VH', name: 'Vuln Hunting', items: ['PayloadLib', 'AuthDiff', 'RetireJS', 'WPCheck', 'GraphQLCheck', 'BlindXSS', 'BlindSQLi', 'PHPFilterChain'] },
+  { code: 'UT', name: 'Utility', items: ['AutoFinder', 'Bug Bounty Playbook', 'UploadTest', 'TargetSave', 'ExportAll', 'CopyAsCurl', 'JSONView'] },
+];
+
+const TOOL_COUNT = TOOLS.reduce((n, g) => n + g.items.length, 0);
+
+// The custom target cursor hides the native cursor and tracks the mouse - on
+// touch / coarse-pointer devices that just leaves a stuck element and no
+// visible cursor, so it's only mounted where there's a real hovering pointer.
+const FINE_POINTER = typeof window !== 'undefined' && window.matchMedia?.('(hover: hover) and (pointer: fine)').matches;
 
 const FEATURES = [
   { id: 'feature-autofinder', title: 'One pass, full picture', desc: 'AutoFinder runs every domain-based check at once, DNS through exposed secrets, diffs the result against your last scan of that target, and exports as Markdown, JSON or a formatted Word report with color-coded findings.' },
@@ -35,7 +56,7 @@ function GitHubIcon() {
 export default function App() {
   return (
     <>
-      <TargetCursor cursorColor="#fbf7ee" cursorColorOnTarget="#f0463a" spinDuration={2.4} />
+      {FINE_POINTER && <TargetCursor cursorColor="#fbf7ee" cursorColorOnTarget="#f0463a" spinDuration={2.4} />}
 
       <main>
         <section className="hero wrap">
@@ -47,7 +68,7 @@ export default function App() {
           <h1>BugEye</h1>
           <p className="tagline">spot what others miss</p>
           <p className="lede">
-            A browser extension for <em>passive recon, OSINT and pentest triage</em>. Seventy-plus tools across eight pillars,
+            A browser extension for <em>passive recon, OSINT and pentest triage</em>. {TOOL_COUNT} tools across nine pillars,
             built to observe and report, not to attack on your behalf.
           </p>
           <div className="badge-row">
@@ -79,13 +100,32 @@ export default function App() {
         </section>
 
         <section className="section wrap">
-          <p className="eyebrow">The eight pillars</p>
+          <p className="eyebrow">The nine pillars</p>
           <div className="pillar-manifest">
             {PILLARS.map(p => (
               <div className="pillar-row cursor-target" key={p.code}>
                 <span className="pillar-code">{p.code}</span>
                 <h3>{p.name}</h3>
                 <p>{p.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="section wrap">
+          <p className="eyebrow">The full toolset</p>
+          <p className="toolset-lede">{TOOL_COUNT} tools, all live, grouped by pillar.</p>
+          <div className="toolset">
+            {TOOLS.map(g => (
+              <div className="toolset-group" key={g.code}>
+                <div className="toolset-head">
+                  <span className="pillar-code">{g.code}</span>
+                  <h3>{g.name}</h3>
+                  <span className="toolset-count">{g.items.length}</span>
+                </div>
+                <ul className="toolset-tags">
+                  {g.items.map(t => <li key={t}>{t}</li>)}
+                </ul>
               </div>
             ))}
           </div>
