@@ -1,8 +1,21 @@
 # Changelog
 
-## 1.2.0 (2026-09-11)
+## 1.0.0 (2026-09-12)
 
-Three new modules:
+First public release — 82 tools across 9 pillars for passive recon, OSINT and
+pentest triage.
+
+Final polish:
+
+- WAFDetect: expanded WAF/CDN fingerprints — Akamai Bot Manager cookies
+  (`ak_bmsc`, `bm_sz`, `bm_lso`, `_abck`), CloudFront, Fastly, Vercel, Netlify,
+  Azure Front Door, Citrix NetScaler, plus more Cloudflare/F5. (Use "Current
+  tab" for header-based detection; a typed-URL fetch is CORS-limited.)
+- SubFinder: recognizable/high-value subdomains (api, admin, dev, vpn, mail,
+  git, sso…) are now scored and shown first, marked ★, instead of alphabetical
+  noise from the bulk sources.
+
+New modules:
 
 - **SourceMapFind** (Page Recon): scans the current page's scripts for reachable
   JavaScript source maps (`.map`), via the declared `//# sourceMappingURL`
@@ -42,9 +55,7 @@ Navigation & usability:
 - SourceMapFind gained a toggle for the guessed `.js.map` probing (on by
   default) so it can run leaner on script-heavy pages.
 
-## 1.1.0 (2026-09-11)
-
-First store-submission build.
+### Recon sources, playbook rename & privacy
 
 - SubFinder / AutoFinder: added subdomain.center as a subdomain source and
   removed AlienVault OTX, which now requires authentication for the passive-DNS

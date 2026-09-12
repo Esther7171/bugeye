@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useTarget } from '@/components/shell/TargetProvider';
 import { useHostPermission } from '@/lib/useHostPermission';
 import { sendToBackground } from '@/lib/messaging';
-import { fetchCrtSh, fetchCrtName, fetchHackerTarget, fetchCertSpotter, fetchSubdomainCenter } from '@/lib/subfinder';
+import { fetchCrtSh, fetchCrtName, fetchHackerTarget, fetchCertSpotter, fetchSubdomainCenter, sortByInterest, isInterestingHost } from '@/lib/subfinder';
 import { mapLimit } from '@/lib/concurrency';
 import { normalizeDomain } from '@/lib/utils';
 import { exportJson, exportText } from '@/lib/export';
@@ -30,6 +30,7 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
   const [domain, setDomain] = useState(target);
   const [loading, setLoading] = useState(false);
   const [subdomains, setSubdomains] = useState<string[]>([]);
+  const [apex, setApex] = useState('');
   const [sources, setSources] = useState<Record<string, string[]>>({});
   const [resolved, setResolved] = useState<Record<string, string[]>>({});
   const [resolving, setResolving] = useState(false);
@@ -40,6 +41,7 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
   async function run() {
     const clean = normalizeDomain(domain);
     if (!clean) return;
+    setApex(clean);
     setNote('');
     setLoading(true);
     setSubdomains([]);
@@ -74,7 +76,10 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
       addSource(certSpotter.hostnames, 'CertSpotter');
       addSource(subdomainCenter.hostnames, 'subdomain.center');
 
-      const all = Array.from(bySource.keys()).sort();
+      // Surface recognizable/high-value subdomains (api, admin, dev, vpn, mail,
+      // git...) first, then the rest alphabetically, instead of burying them
+      // under thousands of generated names from the bulk sources.
+      const all = sortByInterest(Array.from(bySource.keys()), clean);
       const sourceMap: Record<string, string[]> = {};
       for (const [host, labels] of bySource) sourceMap[host] = Array.from(labels).sort();
 
@@ -84,7 +89,8 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
         lastSubdomainsStore.set({ domain: clean, subdomains: all, generatedAt: formatTimestamp() });
       }
 
-      const summary = `crt.sh: ${crt.hostnames.length}, crt.name: ${crtName.hostnames.length}, HackerTarget: ${hackerTarget.hostnames.length}, CertSpotter: ${certSpotter.hostnames.length}, subdomain.center: ${subdomainCenter.hostnames.length}, unique total: ${all.length}`;
+      const notableCount = all.filter((h) => isInterestingHost(h, clean)).length;
+      const summary = `crt.sh: ${crt.hostnames.length}, crt.name: ${crtName.hostnames.length}, HackerTarget: ${hackerTarget.hostnames.length}, CertSpotter: ${certSpotter.hostnames.length}, subdomain.center: ${subdomainCenter.hostnames.length}, unique total: ${all.length} (${notableCount} notable, shown first)`;
       const errors = [
         crt.error && `crt.sh: ${crt.error}`,
         crtName.error && `crt.name: ${crtName.error}`,
@@ -161,6 +167,11 @@ export function SubFinder({ onBack, onNavigate }: ModuleComponentProps) {
                       onClick={() => setTarget(s)}
                       title="Set as target"
                     >
+                      {isInterestingHost(s, apex) && (
+                        <span className="mr-1 text-primary" title="Notable subdomain">
+                          ★
+                        </span>
+                      )}
                       {s}
                     </button>
                     <div className="flex shrink-0 items-center gap-1">
