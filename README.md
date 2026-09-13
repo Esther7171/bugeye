@@ -5,6 +5,7 @@
 </div>
 
 <div align="center">BugEye - spot what others miss</div>
+<p></p>
 
 A minimal-permission MV3 browser extension for passive recon, OSINT and web-app
 pentest triage. Built with [WXT](https://wxt.dev), React, TypeScript, Tailwind
