@@ -83,9 +83,9 @@ live, use the steps below.
 Go to the **[Releases page](https://github.com/Esther7171/bugeye/releases/latest)**
 and open the **Assets** list:
 
-<p align="center">
-  <img src="assets/image/store/releases.png" alt="BugEye release assets - download the zip for your browser" width="820" />
-</p>
+<div align="center">
+  <img width="1350" height="295" alt="image" src="https://github.com/user-attachments/assets/083e1308-2b21-418b-b8be-5ea66b44bda3" />
+</div>
 
 Download the file that matches your browser:
 
