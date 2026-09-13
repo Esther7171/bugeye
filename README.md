@@ -164,7 +164,7 @@ press Enter, then flip the switch:
 pass and compiles a report you can export as Markdown, JSON or Word.
 
 <p align="center">
-  <img src="assets/image/store/01-autofinder-1280x800.png" alt="BugEye AutoFinder one-pass domain report" width="820" />
+  <img width="1890" height="914" alt="bugeye testing" src="https://github.com/user-attachments/assets/dcf828ad-f357-4602-8976-30a3534899e5" />
 </p>
 
 ---
