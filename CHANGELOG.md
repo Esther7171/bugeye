@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1 (2026-09-13)
+
+- SubFinder / AutoFinder: fixed a crash ("hostnames is not iterable") where one
+  timed-out or off-shaped source response could wipe out the whole subdomain
+  result. Each source now degrades to an empty list independently, so the other
+  sources still return results.
+- New Firefox add-on id (`bugeye-recon@esther7171.github.io`).
+
 ## 1.0.0 (2026-09-12)
 
 First public release — 82 tools across 9 pillars for passive recon, OSINT and

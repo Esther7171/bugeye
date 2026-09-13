@@ -278,11 +278,11 @@ export async function runAutoFinder(
         ]);
         const merged = Array.from(
           new Set([
-            ...crtRes.hostnames,
-            ...crtNameRes.hostnames,
-            ...hackerTargetRes.hostnames,
-            ...certSpotterRes.hostnames,
-            ...subdomainCenterRes.hostnames,
+            ...(crtRes.hostnames ?? []),
+            ...(crtNameRes.hostnames ?? []),
+            ...(hackerTargetRes.hostnames ?? []),
+            ...(certSpotterRes.hostnames ?? []),
+            ...(subdomainCenterRes.hostnames ?? []),
           ]),
         ).sort();
         return {

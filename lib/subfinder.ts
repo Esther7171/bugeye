@@ -11,7 +11,7 @@ export interface SubdomainSourceResult {
 // Both SubFinder and AutoFinder go through this single helper.
 export async function fetchCrtSh(domain: string): Promise<SubdomainSourceResult> {
   const result = await sendToBackground({ type: 'FETCH_CRTSH', domain });
-  return { hostnames: result.hostnames, status: result.status, error: result.error };
+  return { hostnames: result.hostnames ?? [], status: result.status, error: result.error };
 }
 
 // High-value subdomain labels a tester usually cares about first. Bulk sources
@@ -65,7 +65,7 @@ export function sortByInterest(hosts: string[], apex: string): string[] {
 // subdomains crt.sh's index misses, and vice versa.
 export async function fetchCrtName(domain: string): Promise<SubdomainSourceResult> {
   const result = await sendToBackground({ type: 'FETCH_CRTNAME', domain });
-  return { hostnames: result.hostnames, status: result.status, error: result.error };
+  return { hostnames: result.hostnames ?? [], status: result.status, error: result.error };
 }
 
 // HackerTarget's free hostsearch API: DNS-derived, not certificate-log
@@ -73,14 +73,14 @@ export async function fetchCrtName(domain: string): Promise<SubdomainSourceResul
 // crt.name (catches subdomains that never got a public TLS cert).
 export async function fetchHackerTarget(domain: string): Promise<SubdomainSourceResult> {
   const result = await sendToBackground({ type: 'FETCH_HACKERTARGET', domain });
-  return { hostnames: result.hostnames, status: result.status, error: result.error };
+  return { hostnames: result.hostnames ?? [], status: result.status, error: result.error };
 }
 
 // SSLMate CertSpotter: a fourth, independently-operated certificate
 // transparency search source.
 export async function fetchCertSpotter(domain: string): Promise<SubdomainSourceResult> {
   const result = await sendToBackground({ type: 'FETCH_CERTSPOTTER', domain });
-  return { hostnames: result.hostnames, status: result.status, error: result.error };
+  return { hostnames: result.hostnames ?? [], status: result.status, error: result.error };
 }
 
 // api.subdomain.center: a free passive-DNS/aggregator source, independent of
@@ -88,6 +88,6 @@ export async function fetchCertSpotter(domain: string): Promise<SubdomainSourceR
 // is throwing 502s or rate-limiting, which it does intermittently.
 export async function fetchSubdomainCenter(domain: string): Promise<SubdomainSourceResult> {
   const result = await sendToBackground({ type: 'FETCH_SUBDOMAINCENTER', domain });
-  return { hostnames: result.hostnames, status: result.status, error: result.error };
+  return { hostnames: result.hostnames ?? [], status: result.status, error: result.error };
 }
 
