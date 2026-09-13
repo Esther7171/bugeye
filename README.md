@@ -16,170 +16,180 @@ other extension.
 > fingerprints, and copy-paste CLI. It does not auto-send exploit payloads,
 > run DoS, or brute-force logins.
 
-Chromium and Firefox: built for Chrome, Edge, Brave, and Firefox (MV3). Safari
-is not supported.
-
-## Screenshots
+Works on **Chrome, Edge, Brave, Opera** and other Chromium browsers, and
+**Firefox** (MV3). Safari is not supported.
 
 <p align="center">
-  <img src="assets/image/store/01-autofinder-1280x800.png" alt="BugEye AutoFinder running every domain-based check in one pass" width="820" />
-  <br/><em>AutoFinder runs every domain-based check in one pass and compiles a report.</em>
+  <img src="assets/image/store/promo-large-1400x560.png" alt="BugEye - recon, OSINT and pentest triage" width="820" />
 </p>
 
-<p align="center">
-  <img src="assets/image/store/02-show1-1280x800.png" alt="BugEye side panel showing the tool list" width="820" />
-  <br/><em>80+ tools in a side panel, grouped into nine pillars, with a search-all-tools box.</em>
-</p>
+---
 
-## Install for testing (not on any store yet)
+## Features
 
-**This section is for testers, not programmers.** You do not need to install
-Node.js, npm, or run any commands - just download a file and click a few
-buttons in your browser's settings. (If you're a developer who wants to run
-the code from source instead, skip down to the [Develop](#develop) section.)
+BugEye puts **80+ focused tools** in a browser side panel, grouped into nine
+"pillars":
 
-BugEye isn't published to the Chrome Web Store or Firefox Add-ons yet, so
-until then, this "sideloading" process is the only way to install it.
+| Pillar | What it's for | Example tools |
+| --- | --- | --- |
+| **Tab Inspector** | Inspect the page you're on | HeaderGrade, CookieJar, CSPAudit, WAFDetect, JwtAudit |
+| **Page Recon** | Pull apart the current page | LinkGrab, JSList, SecretScan, SourceMapFind, FormAudit |
+| **List Triage** | Handle many URLs at once | BulkOpen |
+| **Traffic** | Change the requests you send | HeaderInject, UASwitch, RefControl, ReqLogger |
+| **Encode / Payload** | Encode/decode & inspect | EncoderKit, JwtAudit, ShellGen |
+| **CLI Bridge** | Copy-paste CLI recipes | ReconBuild, FuzzBuild, LinuxCmds, PEASGet |
+| **OSINT** | Domain intel from public sources | SubFinder, DNSRecords, WhoisLookup, SearchEngines, UrlScanPeek |
+| **Vuln Hunting** | Manual checks & payloads | PayloadLib, AuthDiff, RetireJS, WPCheck, GraphQLCheck |
+| **Utility** | One-click scans & workflow | AutoFinder, Bug Bounty Playbook, ExportAll |
 
-### Step 1: Download the file
+Privacy-first: **no analytics, no telemetry, no BugEye servers.** Every request
+goes straight from your browser to the public service you asked it to query.
 
-Go to the [**Releases page**](https://github.com/Esther7171/bugeye/releases/latest)
-and click the file for your browser to download it:
+> Full tool list with a one-line description of each tool:
+> **[bugeye.vercel.app/features.html](https://bugeye.vercel.app/features.html)**
 
-- **Chrome, Edge, Brave, or Opera** → click the file ending in `-chrome.zip`
-- **Firefox** → click the file ending in `-firefox.zip`
+<details>
+<summary><strong>See all 82 tools</strong></summary>
 
-It'll save to your computer's Downloads folder, same as any other download.
-
-### Step 2: Unzip it
-
-A `.zip` file is a compressed folder - your computer needs to unpack it
-before the files inside can be used.
-
-- **Windows:** find the downloaded file in File Explorer, right-click it,
-  and choose **Extract All...** This creates a new, uncompressed folder
-  next to it.
-- **Mac:** find it in Finder and double-click it. This creates a new folder
-  next to it automatically.
-
-Keep track of where that new folder ends up (usually right there in
-Downloads) - you'll pick it in Step 4.
-
-> **Don't run `npm install` or any other command here.** This folder is
-> already a finished, ready-to-use extension - that's what "unpacked" means.
-> There's nothing left to build; the next steps just point your browser at
-> this folder directly.
-
-### Step 3: Turn on Developer mode
-
-This is a normal, safe setting built into every Chromium/Firefox browser
-for installing extensions that aren't from the official store. It doesn't
-make your browser less secure by itself.
-
-**Chrome, Edge, Brave, Opera:**
-1. Copy this into your address bar and press Enter: `chrome://extensions`
-   (Edge: `edge://extensions`, Brave: `brave://extensions`, Opera:
-   `opera://extensions`)
-2. In the top-right corner of that page, find the **Developer mode** switch
-   and turn it on.
-
-**Firefox:**
-1. Copy this into your address bar and press Enter:
-   `about:debugging#/runtime/this-firefox`
-   (Nothing extra to turn on for Firefox - go straight to Step 4.)
-
-### Step 4: Load the extension
-
-**Chrome, Edge, Brave, Opera:**
-1. On the extensions page, click the **Load unpacked** button that
-   appeared after you turned on Developer mode.
-2. A file picker opens - select the folder you unzipped in Step 2 (select
-   the folder itself, not a file inside it), then confirm.
-3. BugEye now appears in your list of extensions.
-
-**Firefox:**
-1. On the page from Step 3, click **Load Temporary Add-on...**
-2. In the file picker, open the folder you unzipped and select the
-   `manifest.json` file inside it (this time it's a specific file, not the
-   folder).
-3. BugEye now appears in your list of add-ons.
-
-### Step 5: Open it
-
-- Click the puzzle-piece icon in your browser's toolbar, find BugEye, and
-  click the pin icon so it stays visible.
-- Click the BugEye icon (or press `Ctrl+Shift+K`) to open its side panel.
-
-### Keeping it working
-
-- **Chrome/Edge/Brave/Opera:** this install stays put even if you restart
-  your browser. To get a future update, download the new zip, unzip it over
-  the same folder, then click the refresh icon on BugEye's card on the
-  extensions page.
-- **Firefox:** add-ons loaded this way ("temporary") are removed every time
-  Firefox fully restarts - you'll need to repeat Steps 3-4 again afterward.
-  That's a Firefox rule for unsigned extensions, not a BugEye bug. It goes
-  away once BugEye is signed and published on addons.mozilla.org.
-
-### Giving feedback
-
-Recommendations and bugs are welcome as GitHub issues on this repo, or
-however you'd normally reach the maintainer - screenshots of anything that
-looks wrong are especially useful.
-
-## Stack
-
-- WXT (MV3, side panel primary UI)
-- React + TypeScript
-- Tailwind CSS v4 + hand-rolled shadcn-style primitives (`components/ui`)
-- lucide-react icons
-- `chrome.storage.local` for settings/state
-- All cross-origin network calls proxied through the background service worker
-- Minimal static permissions; site access is requested per-origin, on demand
-
-## Layout
-
-- `entrypoints/background.ts` - service worker: message router, fetch proxy,
-  DoH resolver, webRequest header capture, tab opener, permission requests.
-- `entrypoints/sidepanel/` - the side panel app shell (`App.tsx`).
-- `components/shell/` - sidebar, target bar, command palette, theme, banners.
-- `components/modules/<name>/` - one self-contained folder per tool.
-- `components/modules/registry.ts` - maps module id → component (drop new
-  modules in here for v2/v3).
-- `lib/` - messaging types, storage helpers, encoding/hashing, grading logic.
-- `public/icon/` - the shipped icon set (16/32/48/96/128), built from the logo.
-- `assets/bugeye_logo.png` - source logo art. Not shipped in the built
-  extension; only `public/` is copied into `.output`.
-
-## The 9 pillars
-
-Tab Inspector · Page Recon · List Triage · Traffic · Encode/Payload ·
-CLI Bridge · OSINT · Vuln Hunting · Utility
-
-## Modules (82, all live)
-
-- **Tab Inspector**: HeaderGrade, TechStack, CookieJar, ClickjackCheck,
-  CSPAudit, CORSCheck, CachePoison, HstsPreload, RedirectTrace, CVELookup,
-  HTTPMethods, StorageDump, WAFDetect
-- **Page Recon**: LinkGrab, JSList, SriCheck, SecretScan, SourceMapFind,
-  FormAudit, HiddenFind, LinkedContent, TrackerScan
+- **Tab Inspector**: HeaderGrade, TechStack, CookieJar, ClickjackCheck, CSPAudit, CORSCheck, CachePoison, HstsPreload, RedirectTrace, CVELookup, HTTPMethods, StorageDump, WAFDetect
+- **Page Recon**: LinkGrab, JSList, SriCheck, SecretScan, SourceMapFind, FormAudit, HiddenFind, LinkedContent, TrackerScan
 - **List Triage**: BulkOpen
 - **Traffic**: HeaderInject, UASwitch, RefControl, ReqLogger
-- **Encode/Payload**: EncoderKit (Base64/URL/HTML/Hex/JWT/Hash/Chain), JwtAudit,
-  ShellGen
-- **CLI Bridge**: ReconBuild, NetCmds, LinuxCmds, PEASGet, FuzzBuild,
-  WordlistPick, StegGen
-- **OSINT**: SubFinder, ParamMiner, SearchEngines, UrlScanPeek, BucketSpot,
-  ExifPeek, SSLInspect, FaviconHash, IPGeo, ShodanPeek, RobotsPeek, SitemapFind,
-  WellKnownScan, ApiSpec, PanelHunt, GitFinder, Wayback, ContactGrab,
-  EmailHunter, EmailAnalyze, MailHunt, UserHunt, BreachCheck, GoogleDork,
-  GitDork, TakeoverCheck, DNSRecords, WhoisLookup, DNSSECCheck, HostCluster
-- **Vuln Hunting**: PayloadLib, AuthDiff, RetireJS, WPCheck, GraphQLCheck,
-  BlindXSS, BlindSQLi, PHPFilterChain
-- **Utility**: AutoFinder, Bug Bounty Playbook, UploadTest, TargetSave,
-  ExportAll, CopyAsCurl, JSONView
+- **Encode/Payload**: EncoderKit (Base64/URL/HTML/Hex/JWT/Hash/Chain), JwtAudit, ShellGen
+- **CLI Bridge**: ReconBuild, NetCmds, LinuxCmds, PEASGet, FuzzBuild, WordlistPick, StegGen
+- **OSINT**: SubFinder, ParamMiner, SearchEngines, UrlScanPeek, BucketSpot, ExifPeek, SSLInspect, FaviconHash, IPGeo, ShodanPeek, RobotsPeek, SitemapFind, WellKnownScan, ApiSpec, PanelHunt, GitFinder, Wayback, ContactGrab, EmailHunter, EmailAnalyze, MailHunt, UserHunt, BreachCheck, GoogleDork, GitDork, TakeoverCheck, DNSRecords, WhoisLookup, DNSSECCheck, HostCluster
+- **Vuln Hunting**: PayloadLib, AuthDiff, RetireJS, WPCheck, GraphQLCheck, BlindXSS, BlindSQLi, PHPFilterChain
+- **Utility**: AutoFinder, Bug Bounty Playbook, UploadTest, TargetSave, ExportAll, CopyAsCurl, JSONView
 
-See `components/modules/registry.ts` for the id -> component map.
+</details>
+
+<p align="center">
+  <img src="assets/image/store/02-show1-1280x800.png" alt="BugEye side panel with the tool list and search box" width="820" />
+</p>
+
+---
+
+## Install it (manual, until the store versions are approved)
+
+**This is for everyone - no coding needed.** You just download a file, unzip
+it, flip one switch in your browser, and point the browser at the folder. It
+takes about two minutes.
+
+BugEye's Chrome Web Store / Edge / Firefox listings are in review. Until they go
+live, use the steps below.
+
+### Step 1 - Download the build for your browser
+
+Go to the **[Releases page](https://github.com/Esther7171/bugeye/releases/latest)**
+and open the **Assets** list:
+
+<p align="center">
+  <img src="assets/image/store/releases.png" alt="BugEye release assets - download the zip for your browser" width="820" />
+</p>
+
+Download the file that matches your browser:
+
+| Your browser | Download the file ending in |
+| --- | --- |
+| **Chrome, Edge, Brave, Opera, Vivaldi** and any other Chromium browser | `-chrome.zip` |
+| **Firefox** | `-firefox.zip` |
+
+> All Chromium-based browsers use the **`-chrome.zip`** build. Only Firefox uses
+> the `-firefox.zip` one. (`-sources.zip` is only for store reviewers - you
+> don't need it.)
+
+### Step 2 - Unzip it
+
+A `.zip` is a compressed folder; your computer has to unpack it first.
+
+- **Windows:** right-click the downloaded file → **Extract All...** → a new
+  folder appears next to it.
+- **Mac:** double-click it in Finder → a new folder appears next to it.
+
+Remember where that unzipped folder is - you'll pick it in Step 4.
+
+> Don't run `npm install` or any command. The unzipped folder is already a
+> finished, ready-to-use extension.
+
+### Step 3 - Turn on Developer mode
+
+This is a normal, built-in browser setting for loading extensions that aren't
+from the store yet. Copy the address for your browser into the address bar and
+press Enter, then flip the switch:
+
+| Browser | Open this address | Turn on |
+| --- | --- | --- |
+| **Chrome** | `chrome://extensions` | **Developer mode** toggle, top-right |
+| **Edge** | `edge://extensions` | **Developer mode** toggle, left sidebar |
+| **Brave** | `brave://extensions` | **Developer mode** toggle, top-right |
+| **Opera** | `opera://extensions` | **Developer mode** toggle, top-right |
+| **Firefox** | `about:debugging#/runtime/this-firefox` | *(nothing to toggle - go to Step 4)* |
+
+### Step 4 - Load the extension
+
+**Chrome / Edge / Brave / Opera / Chromium:**
+1. Click **Load unpacked** (it appears after Developer mode is on).
+2. Select the **folder** you unzipped in Step 2 (the folder itself, not a file
+   inside it).
+3. BugEye now shows up in your extensions list.
+
+**Firefox:**
+1. Click **Load Temporary Add-on...**
+2. Open the unzipped folder and select the **`manifest.json`** file inside it.
+3. BugEye now shows up in your add-ons list.
+
+### Step 5 - Open it
+
+- Click the puzzle-piece icon in the toolbar, find **BugEye**, and pin it.
+- Click the BugEye icon (or press **Ctrl+Shift+K**) to open its side panel.
+
+> **Updating / keeping it:** on Chromium browsers the install stays after a
+> restart - to update, download the newer zip, unzip over the same folder, and
+> click the refresh icon on BugEye's card. On **Firefox**, temporary add-ons are
+> removed on restart (a Firefox rule for unsigned extensions), so repeat
+> Steps 3-4 - this goes away once the signed AMO version is live.
+
+---
+
+## How to use it
+
+1. Open the side panel (toolbar icon or **Ctrl+Shift+K**).
+2. Type a **target domain** (e.g. `example.com`) in the target bar, or just use
+   the tab you're on.
+3. Pick a tool from a pillar, or type in the **search-all-tools** box.
+4. The first time a tool needs to read a site, grant access once - after that
+   every tool works with no repeated prompts.
+
+**AutoFinder** is the fastest start: it runs every domain-based check in one
+pass and compiles a report you can export as Markdown, JSON or Word.
+
+<p align="center">
+  <img src="assets/image/store/01-autofinder-1280x800.png" alt="BugEye AutoFinder one-pass domain report" width="820" />
+</p>
+
+---
+
+## Permissions
+
+Declared upfront: `storage`, `cookies`, `tabs`, `activeTab`, `scripting`,
+`webRequest`, `declarativeNetRequest`. Chromium also uses `sidePanel`; Firefox
+uses `sidebar_action` instead. No `host_permissions` are declared statically -
+each tool requests access to a specific site only when you actually use it
+against that target (see the "why these permissions?" info button at the bottom
+of the sidebar).
+
+## Privacy
+
+BugEye collects no personal data, has no analytics or telemetry, and runs no
+server of its own - every request goes straight from your browser to the public
+service you asked it to query. Anything you save (targets, notes, optional API
+keys) stays in your own browser storage.
+
+Full policy: **[esther7171.github.io/bugeye/privacy](https://esther7171.github.io/bugeye/privacy)**
+(source in [docs/privacy.md](docs/privacy.md); also mirrored in
+[PRIVACY.md](PRIVACY.md)).
+
+---
 
 ## Develop
 
@@ -192,28 +202,24 @@ npm run build:firefox
 npm run compile      # type-check only
 ```
 
-**Chrome / Edge / Brave:** `npm run build`, then `chrome://extensions` → Developer mode → Load unpacked → `.output/chrome-mv3`. Open the side panel via the toolbar icon or `Ctrl+Shift+K`.
+**Chrome / Edge / Brave:** `npm run build`, then `chrome://extensions` →
+Developer mode → Load unpacked → `.output/chrome-mv3`.
 
-**Firefox:** `npm run build:firefox`, then `about:debugging#/runtime/this-firefox` → Load Temporary Add-on → select `.output/firefox-mv3/manifest.json`. Open via the toolbar button, `Ctrl+Shift+K`, or View → Sidebar → BugEye.
+**Firefox:** `npm run build:firefox`, then
+`about:debugging#/runtime/this-firefox` → Load Temporary Add-on →
+`.output/firefox-mv3/manifest.json`.
 
 ### Building store packages
 
-`npm run package` builds and zips both browsers at once, writing to `.output/`:
+`npm run package` builds and zips both browsers, writing to `.output/`:
+`bugeye-<version>-chrome.zip` (Chrome/Edge), `bugeye-<version>-firefox.zip`
+(AMO), and `bugeye-<version>-sources.zip` (reviewable source for AMO). All three
+are attached to each GitHub release.
 
-```powershell
-npm run package
-```
+### For AMO reviewers
 
-Produces `bugeye-<version>-chrome.zip` (Chrome Web Store / Edge Add-ons),
-`bugeye-<version>-firefox.zip` (AMO), and `bugeye-<version>-sources.zip` (the
-reviewable source bundle for AMO). All three are attached to each GitHub
-release.
-
-### For AMO (addons.mozilla.org) reviewers
-
-BugEye's uploaded add-on is bundled/minified, so AMO requires the source. On
-the submission, attach the release's `bugeye-<version>-sources.zip` and give
-these exact build steps:
+The uploaded add-on is bundled/minified, so AMO requires source. Attach
+`bugeye-<version>-sources.zip` and give these build steps (Node 20+):
 
 ```bash
 npm ci
@@ -221,36 +227,27 @@ npm run zip:firefox
 ```
 
 This reproduces the reviewed add-on at `.output/bugeye-<version>-firefox.zip`.
-Node 20+ is the only prerequisite; no API keys or network services are needed
-to build. The extension collects no data (`data_collection_permissions` is
-declared as `none`).
+No API keys or network services are needed to build. The extension collects no
+data (`data_collection_permissions` is declared as `none`).
 
-## Permissions
+### Layout
 
-Declared upfront: `storage`, `cookies`, `tabs`, `activeTab`, `scripting`,
-`webRequest`, `declarativeNetRequest`. Chromium also uses `sidePanel`; Firefox
-uses `sidebar_action` instead. No `host_permissions` are declared statically -
-each module requests access to a specific origin only
-when you actually use it against that target (see the "why these
-permissions?" info button at the bottom of the sidebar).
+- `entrypoints/background.ts` - service worker: message router, fetch proxy, DoH resolver, webRequest capture, tab opener, permissions.
+- `entrypoints/sidepanel/` - the side panel app shell (`App.tsx`).
+- `components/shell/` - sidebar, target bar, command palette, theme, banners.
+- `components/modules/<name>/` - one self-contained folder per tool.
+- `components/modules/registry.ts` - maps module id → component.
+- `lib/` - messaging types, storage helpers, encoding/hashing, grading logic.
+- `landing-site/` - the marketing site (bugeye.vercel.app), deployed separately.
 
-## Privacy
+---
 
-BugEye collects no personal data, has no analytics or telemetry, and runs no
-server of its own - every request goes straight from your browser to the
-public service you asked it to query. See [PRIVACY.md](PRIVACY.md) for the
-full policy, also published at
-https://esther7171.github.io/bugeye/privacy.
+## Thanks
 
-### Privacy policy (published)
+> **A note of thanks** - BugEye is built for the security community: bug-bounty
+> hunters, CTF players, students, and VAPT teams. If it helped you spot
+> something, a ⭐ on the repo, a bug report, or a feature idea means a lot.
+> Use it responsibly, stay in scope, and happy hunting.
 
-The policy source lives at `docs/privacy.md` and is served live via GitHub
-Pages (Settings → Pages → Deploy from a branch → `master` / `/docs`) at:
-
-**https://esther7171.github.io/bugeye/privacy**
-
-Paste that URL into the Chrome Web Store / Edge Add-ons / AMO privacy field.
-(`docs/privacy.md` sets `permalink: /privacy` in its front matter so Jekyll
-serves it at that exact path. To update the policy, edit `docs/privacy.md`,
-keep `PRIVACY.md` and `landing-site/public/privacy.html` in sync, and push -
-Pages rebuilds automatically.)
+Maintained by [Esther7171](https://github.com/Esther7171) · Licensed under
+[AGPL-3.0](LICENSE).
