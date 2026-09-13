@@ -19,6 +19,18 @@ other extension.
 Chromium and Firefox: built for Chrome, Edge, Brave, and Firefox (MV3). Safari
 is not supported.
 
+## Screenshots
+
+<p align="center">
+  <img src="assets/image/store/01-autofinder-1280x800.png" alt="BugEye AutoFinder running every domain-based check in one pass" width="820" />
+  <br/><em>AutoFinder runs every domain-based check in one pass and compiles a report.</em>
+</p>
+
+<p align="center">
+  <img src="assets/image/store/02-show1-1280x800.png" alt="BugEye side panel showing the tool list" width="820" />
+  <br/><em>80+ tools in a side panel, grouped into nine pillars, with a search-all-tools box.</em>
+</p>
+
 ## Install for testing (not on any store yet)
 
 **This section is for testers, not programmers.** You do not need to install
