@@ -37,8 +37,9 @@ export default function App() {
           <h1>BugEye</h1>
           <p className="tagline">spot what others miss</p>
           <p className="lede">
-            A browser extension for <em>passive recon, OSINT and pentest triage</em>. {TOOL_COUNT} tools across nine pillars,
-            built to observe and report, not to attack on your behalf.
+            A browser extension for <em>bug bounty, VAPT and pentest triage</em> — passive recon, OSINT and web
+            security testing. {TOOL_COUNT} tools across nine pillars, built to observe and report, not to attack on
+            your behalf.
           </p>
           <div className="badge-row">
             <a className="badge badge-link cursor-target" href="#deployment">Edge, Firefox &amp; Opera</a>
