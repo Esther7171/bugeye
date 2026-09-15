@@ -6,10 +6,23 @@
 
 #### <div align="center">BugEye - spot what others miss</div>
 
+<div align="center">
+
+**The pro bug-bounty & VAPT recon toolkit — 80+ tools in your browser side panel.**
+
+[![Firefox Add-on](https://img.shields.io/amo/v/bugeye?logo=firefoxbrowser&logoColor=white&label=Firefox%20Add-on&color=FF7139)](https://addons.mozilla.org/en-US/firefox/addon/bugeye/)
+[![Website](https://img.shields.io/badge/website-bugeye.vercel.app-2b6cb0)](https://bugeye.vercel.app/)
+[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](LICENSE)
+
+</div>
+
 A minimal-permission MV3 browser extension for passive recon, OSINT and web-app
-pentest triage. Built with [WXT](https://wxt.dev), React, TypeScript, Tailwind
+pentest triage — built for **bug bounty hunters and VAPT / penetration-testing
+professionals**. Built with [WXT](https://wxt.dev), React, TypeScript, Tailwind
 CSS and shadcn-style components. Original codebase - no code reused from any
 other extension.
+
+**▶ Install on Firefox:** [addons.mozilla.org/firefox/addon/bugeye](https://addons.mozilla.org/en-US/firefox/addon/bugeye/) &nbsp;·&nbsp; Chrome / Edge / Opera builds below (store listings in review).
 
 > For contracted VAPT, bug bounty, and assets you own or are explicitly
 > authorized to test. BugEye is recon and OSINT triage: public records,

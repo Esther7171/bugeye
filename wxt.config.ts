@@ -17,7 +17,7 @@ export default defineConfig({
       name: 'BugEye',
       description:
         'BugEye - spot what others miss. Recon, OSINT and pentest triage for authorized VAPT. No auto-exploitation.',
-      version: '1.0.1',
+      version: '1.0.2',
       // sidePanel is Chrome/Edge only. WXT maps entrypoints/sidepanel to
       // side_panel (Chrome) or sidebar_action (Firefox), do not declare
       // sidePanel here or Firefox rejects the addon.
