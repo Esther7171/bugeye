@@ -141,8 +141,8 @@ export default function App() {
                 <h3>Firefox</h3>
               </div>
               <p>Firefox Browser Add-ons listing.</p>
-              <a className="btn cursor-target" href="#">Get it for Firefox</a>
-              <p className="not-yet">Not yet published, link is a placeholder.</p>
+              <a className="btn cursor-target" href="https://addons.mozilla.org/en-US/firefox/addon/bugeye/" target="_blank" rel="noopener noreferrer">Get it for Firefox</a>
+              <p className="published">Live on Firefox Add-ons.</p>
             </div>
             <div className="kit-card">
               <span className="eyebrow">Field kit C</span>
@@ -158,7 +158,7 @@ export default function App() {
 
           <div className="howto">
             <h3>Load it yourself, right now</h3>
-            <p>BugEye isn't listed on either store yet. Until it is, download the build for your browser and load it manually, developer mode only takes a minute.</p>
+            <p>BugEye is <a className="cursor-target" href="https://addons.mozilla.org/en-US/firefox/addon/bugeye/" target="_blank" rel="noopener noreferrer">live on Firefox Add-ons</a>; Edge and Opera are still in review. In the meantime you can download the build for your browser and load it manually, developer mode only takes a minute.</p>
             <div className="howto-cols">
               <div>
                 <h4>Edge / Opera</h4>

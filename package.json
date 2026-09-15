@@ -2,7 +2,7 @@
   "name": "bugeye",
   "description": "Minimal-permission browser toolkit for passive recon, OSINT and web-app pentest triage.",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {
