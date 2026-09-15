@@ -37,7 +37,7 @@ export default function App() {
           <h1>BugEye</h1>
           <p className="tagline">spot what others miss</p>
           <p className="lede">
-            A browser extension for <em>bug bounty, VAPT and pentest triage</em> — passive recon, OSINT and web
+            A browser extension for <em>bug bounty, VAPT and pentest triage</em>: passive recon, OSINT and web
             security testing. {TOOL_COUNT} tools across nine pillars, built to observe and report, not to attack on
             your behalf.
           </p>

@@ -10,12 +10,12 @@
 
 ## 1.0.0 (2026-09-12)
 
-First public release — 82 tools across 9 pillars for passive recon, OSINT and
+First public release: 82 tools across 9 pillars for passive recon, OSINT and
 pentest triage.
 
 Final polish:
 
-- WAFDetect: expanded WAF/CDN fingerprints — Akamai Bot Manager cookies
+- WAFDetect: expanded WAF/CDN fingerprints: Akamai Bot Manager cookies
   (`ak_bmsc`, `bm_sz`, `bm_lso`, `_abck`), CloudFront, Fastly, Vercel, Netlify,
   Azure Front Door, Citrix NetScaler, plus more Cloudflare/F5. (Use "Current
   tab" for header-based detection; a typed-URL fetch is CORS-limited.)
