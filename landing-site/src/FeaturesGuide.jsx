@@ -1,10 +1,15 @@
+import { useState, useEffect } from 'react';
 import TargetCursor from './components/TargetCursor.jsx';
 import { TOOLS, TOOL_COUNT, toolSlug, FINE_POINTER } from './data.js';
 
 export default function FeaturesGuide() {
+  // Client-only cursor, gated so prerendered and first client render match.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   return (
     <>
-      {FINE_POINTER && <TargetCursor cursorColor="#fbf7ee" cursorColorOnTarget="#f0463a" spinDuration={2.4} />}
+      {mounted && FINE_POINTER && <TargetCursor cursorColor="#fbf7ee" cursorColorOnTarget="#f0463a" spinDuration={2.4} />}
 
       <main className="guide wrap">
         <a className="guide-back cursor-target" href="./">&larr; Back to BugEye</a>

@@ -71,6 +71,11 @@ h1, h2, h3 {
   text-transform: uppercase;
   color: var(--signal-bright);
 }
+/* Section labels are semantic <h2> but keep the eyebrow look and the
+   spacing of the paragraph they replaced. */
+h2.eyebrow {
+  margin: 1em 0;
+}
 
 .wrap {
   max-width: 1080px;

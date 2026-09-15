@@ -19,6 +19,28 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "BugEye tool pillars",
+        "description": "The nine tool groups (pillars) in the BugEye browser extension.",
+        "url": "https://bugeye.vercel.app/features.html",
+        "numberOfItems": 9,
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Tab Inspector", "description": "Headers, cookies, JWTs, CSP, clickjacking, CORS and storage, read straight from the tab you're on." },
+          { "@type": "ListItem", "position": 2, "name": "Page Recon", "description": "Pulls links, scripts, forms, hidden fields and embedded resources out of the rendered page." },
+          { "@type": "ListItem", "position": 3, "name": "List Triage", "description": "Paste, normalize, alive-check and bulk-open large lists of endpoints in one pass." },
+          { "@type": "ListItem", "position": 4, "name": "Traffic", "description": "Rewrites headers, spoofs the user agent, strips referrers and logs requests on the active tab." },
+          { "@type": "ListItem", "position": 5, "name": "Encode / Payload", "description": "An encode, decode and hash toolkit, plus a searchable library of XSS, SQLi and other reference payloads." },
+          { "@type": "ListItem", "position": 6, "name": "CLI Bridge", "description": "Builds copy-paste commands for nuclei, ffuf, wordlists and more. Nothing runs inside the extension." },
+          { "@type": "ListItem", "position": 7, "name": "OSINT", "description": "Subdomains, WHOIS, DNS, certificates, breach and leak checks, plus deep links into recon search engines, all from public sources." },
+          { "@type": "ListItem", "position": 8, "name": "Vuln Hunting", "description": "Manual checks and payload references: access-control diffing (IDOR/BOLA), outdated JS, WordPress, GraphQL introspection and blind XSS/SQLi." },
+          { "@type": "ListItem", "position": 9, "name": "Utility", "description": "AutoFinder's one-pass domain scan, the Bug Bounty Playbook's methodology reference and the rest of the toolbox." }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

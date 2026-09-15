@@ -1,12 +1,21 @@
 import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
 import { Analytics } from '@vercel/analytics/react';
 import App from './App.jsx';
 import './App.css';
 
-createRoot(document.getElementById('root')).render(
+const container = document.getElementById('root');
+const tree = (
   <StrictMode>
     <App />
     <Analytics />
-  </StrictMode>,
+  </StrictMode>
 );
+
+// Prerendered HTML (production build): hydrate it. Dev server ships an empty
+// #root, so fall back to a fresh client render there.
+if (container.hasChildNodes()) {
+  hydrateRoot(container, tree);
+} else {
+  createRoot(container).render(tree);
+}

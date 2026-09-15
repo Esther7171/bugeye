@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import TargetCursor from './components/TargetCursor.jsx';
 import bugeyeLogo from './assets/bugeye_logo.png';
 import edgeLogo from './assets/edge-logo.svg';
@@ -23,9 +24,15 @@ function GitHubIcon() {
 }
 
 export default function App() {
+  // The custom cursor is client-only: gate it behind a mounted flag so the
+  // server-rendered (prerendered) markup and the first client render match,
+  // then let it appear after hydration on fine-pointer devices.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   return (
     <>
-      {FINE_POINTER && <TargetCursor cursorColor="#fbf7ee" cursorColorOnTarget="#f0463a" spinDuration={2.4} />}
+      {mounted && FINE_POINTER && <TargetCursor cursorColor="#fbf7ee" cursorColorOnTarget="#f0463a" spinDuration={2.4} />}
 
       <main>
         <section className="hero wrap">
@@ -49,7 +56,7 @@ export default function App() {
         </section>
 
         <section className="section wrap">
-          <p className="eyebrow">Case brief</p>
+          <h2 className="eyebrow">Case brief</h2>
           <div className="case-intro" style={{ marginTop: '18px' }}>
             <div className="stamp">
               FIELD<br />USE<br />ONLY
@@ -70,7 +77,7 @@ export default function App() {
         </section>
 
         <section className="section wrap">
-          <p className="eyebrow">The nine pillars</p>
+          <h2 className="eyebrow">The nine pillars</h2>
           <div className="pillar-manifest">
             {PILLARS.map(p => (
               <div className="pillar-row cursor-target" key={p.code}>
@@ -83,7 +90,7 @@ export default function App() {
         </section>
 
         <section className="section wrap">
-          <p className="eyebrow">The full toolset</p>
+          <h2 className="eyebrow">The full toolset</h2>
           <p className="toolset-lede">
             {TOOL_COUNT} tools, all live, grouped by pillar.{' '}
             <a className="cursor-target toolset-guide-link" href="./features.html">
@@ -111,7 +118,7 @@ export default function App() {
         </section>
 
         <section className="section wrap">
-          <p className="eyebrow">Field notes</p>
+          <h2 className="eyebrow">Field notes</h2>
           <div className="feature-list">
             {FEATURES.map(f => (
               <div className="feature-row" id={f.id} key={f.id}>
@@ -123,7 +130,7 @@ export default function App() {
         </section>
 
         <section className="section wrap" id="deployment">
-          <p className="eyebrow">Deployment</p>
+          <h2 className="eyebrow">Deployment</h2>
           <div className="kit-row">
             <div className="kit-card">
               <span className="eyebrow">Field kit A</span>
