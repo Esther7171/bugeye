@@ -22,7 +22,7 @@ professionals**. Built with [WXT](https://wxt.dev), React, TypeScript, Tailwind
 CSS and shadcn-style components. Original codebase - no code reused from any
 other extension.
 
-**▶ Install on Firefox:** [addons.mozilla.org/firefox/addon/bugeye](https://addons.mozilla.org/en-US/firefox/addon/bugeye/) &nbsp;·&nbsp; Chrome / Edge / Opera builds below (store listings in review).
+**▶ Install on Firefox:** [addons.mozilla.org/firefox/addon/bugeye](https://addons.mozilla.org/en-US/firefox/addon/bugeye/) is live on Firefox Add-ons. Chrome and Edge listings are in review; until they go live, install the Chromium build manually (see below).
 
 > For contracted VAPT, bug bounty, and assets you own or are explicitly
 > authorized to test. BugEye is recon and OSINT triage: public records,
@@ -38,6 +38,49 @@ Works on **Chrome, Edge, Brave, Opera** and other Chromium browsers, and
 
 ---
 
+## Availability
+
+| Browser | Store status |
+| --- | --- |
+| Firefox | **Live** on [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/bugeye/) |
+| Chrome | In review |
+| Edge | In review |
+
+The Chrome and Edge store listings are still in review. Until they go live, install the Chromium build manually (see [Install](#install-manually-chromium) below). All Chromium browsers (Chrome, Edge, Brave, Opera, Vivaldi) use the same `-chrome.zip` build.
+
+### Tested platforms
+
+| Platform | Browser | Testing status | Store status |
+| --- | --- | --- | --- |
+| Windows | Firefox | Tested | Live |
+| Windows | Chrome | Not tested | In review |
+| Windows | Edge | Not tested | In review |
+| macOS | Firefox | Not tested | Live |
+| macOS | Chrome | Not tested | In review |
+| macOS | Edge | Not tested | In review |
+| Linux | Firefox | Not tested | Live |
+| Linux | Chrome | Not tested | In review |
+| Linux | Edge | Not tested | In review |
+
+Testing status reflects environments that have been personally verified. Additional OS/browser combinations will be updated as they are tested.
+
+---
+
+## Contents
+
+- [Features](#features)
+- [Use cases](#use-cases)
+- [Availability](#availability)
+- [Install manually (Chromium)](#install-manually-chromium)
+- [How to use](#how-to-use)
+- [Permissions](#permissions)
+- [Privacy](#privacy)
+- [Limitations & known issues](#limitations--known-issues)
+- [Architecture](#architecture)
+- [Develop](#develop)
+
+---
+
 ## Features
 
 BugEye puts **80+ focused tools** in a browser side panel, grouped into nine
@@ -45,7 +88,7 @@ BugEye puts **80+ focused tools** in a browser side panel, grouped into nine
 
 | Pillar | What it's for | Example tools |
 | --- | --- | --- |
-| **Tab Inspector** | Inspect the page you're on | HeaderGrade, CookieJar, CSPAudit, WAFDetect, JwtAudit |
+| **Tab Inspector** | Inspect the page you're on | HeaderGrade, CookieJar, CSPAudit, CORSCheck, WAFDetect |
 | **Page Recon** | Pull apart the current page | LinkGrab, JSList, SecretScan, SourceMapFind, FormAudit |
 | **List Triage** | Handle many URLs at once | BulkOpen |
 | **Traffic** | Change the requests you send | HeaderInject, UASwitch, RefControl, ReqLogger |
@@ -82,14 +125,28 @@ goes straight from your browser to the public service you asked it to query.
 
 ---
 
-## Install it (manual, until the store versions are approved)
+## Use cases
+
+BugEye is built for authorized security work. Typical uses:
+
+- **Bug bounty reconnaissance** - map a target's surface (subdomains, DNS, headers, exposed paths) before manual testing.
+- **Web application security testing** - inspect headers, cookies, CSP, CORS, JWTs and forms on pages you are authorized to test.
+- **OSINT** - gather domain, certificate, breach and contact intelligence from public sources.
+- **VAPT reconnaissance** - passive recon and triage during contracted engagements.
+- **Security research** - fingerprint tech stacks, WAFs and outdated libraries.
+- **CTF and security labs** - quick recon, encoding/decoding and copy-paste command references.
+
+Every tool observes and reports. BugEye does not auto-send exploit payloads, brute-force logins, or run DoS.
+
+---
+
+## Install manually (Chromium)
 
 **This is for everyone - no coding needed.** You just download a file, unzip
 it, flip one switch in your browser, and point the browser at the folder. It
 takes about two minutes.
 
-BugEye's Chrome Web Store / Edge / Firefox listings are in review. Until they go
-live, use the steps below.
+Firefox users can install the signed build straight from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/bugeye/). The Chrome Web Store and Edge listings are still in review, so on Chromium browsers use the manual steps below until they go live.
 
 ### Step 1 - Download the build for your browser
 
@@ -160,7 +217,7 @@ press Enter, then flip the switch:
 > restart - to update, download the newer zip, unzip over the same folder, and
 > click the refresh icon on BugEye's card. On **Firefox**, temporary add-ons are
 > removed on restart (a Firefox rule for unsigned extensions), so repeat
-> Steps 3-4 - this goes away once the signed AMO version is live.
+> Steps 3-4 - or install the signed build from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/bugeye/), which is already live and stays installed.
 
 ---
 
@@ -198,9 +255,42 @@ server of its own - every request goes straight from your browser to the public
 service you asked it to query. Anything you save (targets, notes, optional API
 keys) stays in your own browser storage.
 
+> **Extension vs website:** based on the current source, the **extension** ships no
+> telemetry or analytics. The separate landing site (bugeye.vercel.app) may use
+> Vercel Analytics; that is the website, not the extension, and it has no bearing
+> on what the extension collects (nothing).
+
 Full policy: **[esther7171.github.io/bugeye/privacy](https://esther7171.github.io/bugeye/privacy)**
 (source in [docs/privacy.md](docs/privacy.md); also mirrored in
 [PRIVACY.md](PRIVACY.md)).
+
+---
+
+## Limitations & known issues
+
+- **CORS on typed-URL fetches.** Tools that fetch an arbitrary URL you type can be limited by the browser's CORS/security restrictions. Header-based checks are most reliable against the **current tab**.
+- **External source availability.** Some OSINT lookups rely on third-party public services that can occasionally be slow, rate-limited or unavailable.
+- **Reference tools are copy-paste only.** Payload, shell and CLI generators produce text for you to run yourself. They do not perform exploitation from inside the extension.
+
+---
+
+## Architecture
+
+High-level flow of a tool run:
+
+```
+UI (side panel / sidebar)
+  -> module registry (components/modules/registry.ts)
+  -> background worker (entrypoints/background.ts)
+  -> on-demand host permission for the target
+  -> fetch proxy / DoH resolver or browser API
+  -> result returned to the UI
+```
+
+The background worker acts as the extension's fetch proxy and DoH resolver where
+applicable, and mediates webRequest capture and tab actions. Host access is
+requested per target only when a tool needs it, not at install. BugEye is a recon
+and triage toolkit, not an automated exploitation engine.
 
 ---
 
